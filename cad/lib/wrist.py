@@ -90,7 +90,7 @@ def make_wrist(servo: ServoSpec) -> WristParts:
     # Camera aperture — center brow.
     faceplate -= Pos(0, 0, fp_h - 8) * Rot(90, 0, 0) * Cylinder(3.5, fp_t + 2)
     faceplate -= Pos(0, -fp_t / 2 - 1, fp_h - 8) * Box(
-        ELEC.usb_cam_w, 4, ELEC.usb_cam_w * 0.8
+        ELEC.esp32_cam_w, 4, ELEC.esp32_cam_w * 0.8
     )
     # Mount holes on the rear face (matches the neck leg pattern).
     for z in (18, 26):

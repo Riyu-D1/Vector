@@ -11,27 +11,30 @@
 └───────────────────────┬─────────────────────────────────────┘
                         │  WiFi/LAN — tool calls + telemetry
 ┌───────────────────────▼─────────────────────────────────────┐
-│ BRAIN — Orange Pi 5 (onboard, 6 TOPS NPU)                   │
+│ BRAIN — Orange Pi 5B 4 GB (onboard, 6 TOPS NPU)             │
 │  Robot OS: joint-space & Cartesian IK, trajectory gen,      │
 │  admittance/yield loops, NPU vision (YOLO-class), face      │
 │  renderer, voice I/O, tool API server, dataset logging      │
 │  (LeRobot-format: joints + torques + tactile + video)       │
+│  OPTIONAL — headless mode: your computer does brain duty    │
+│  over USB-C; ESP32 protocol is identical either way         │
 └───────────────────────┬─────────────────────────────────────┘
                         │  USB serial, JSON frames @ ~50–100 Hz
 ┌───────────────────────▼─────────────────────────────────────┐
-│ BRAINSTEM — ESP32-S3 (base node)                            │
-│  Hard real-time: servo bus master (UART half-duplex),       │
-│  SEA encoder reads (I2C #1), IMU (I2C #2), joint-torque     │
-│  estimator (k·Δθ), safety watchdog (estop, torque caps,     │
-│  heartbeat — dies safe if Pi stalls)                        │
+│ BRAINSTEM — ESP32-S3-DevKitC-1 (base node)                  │
+│  Hard real-time: TWO TTL servo buses (UART1 Feetech,        │
+│  UART2 Hiwonder), SEA encoder reads (I2C-1/I2C-2),          │
+│  joint-torque estimator (k·Δθ), safety watchdog (estop,     │
+│  torque caps, heartbeat — dies safe if brain stalls)        │
 └───────┬───────────────────────────────────┬───────────────┘
-        │ servo bus (3-pin TTL, daisy-chained)│ 4-wire harness (5V, GND, UART TX/RX)
-        ▼                                   ▼
-  6× serial servos                  ESP32 wrist/face node
-  (J1–J5 + gripper)                 — 2× GC9A01 eyes (SPI)
-                                    — 2× BMP390 fingertip pads (I2C)
-                                    — AS5600 tendon idler (I2C)
-                                    — USB camera passes up to Pi
+        │ 12 V TTL servo bus (daisy-chained)   │ 4-wire harness (5V, GND, UART TX/RX)
+        ▼                                    ▼
+  UART1: 5× STS3215-12V          ESP32-S3-LCD-1.28 wrist/face node
+  (J1, J3, J4, J5, gripper)      — GC9A01 eye #1 (onboard) + eye #2 (SPI)
+  UART2: 1× HTD-45H (J2)         — QMI8658 IMU (onboard)
+                                 — 2× BMP390 fingertip pads (I2C)
+                                 — AS5600 tendon idler (I2C)
+  ESP32-CAM at the wrist streams MJPEG → agent over WiFi
 ```
 
 **Why this split:** Linux SBCs are bad at real-time motor timing; MCUs are bad
@@ -68,22 +71,25 @@ weights from a finger pad.
 ## Electrical netlist (for the wiring diagram)
 
 **Power**
-- 12 V/6–8 A brick → SM-class servo rail (J2, J3)
-- Buck 12→7.4 V/3 A → STS3215 rail (J1, J4, J5, gripper) — keep ≤8 V
-- Buck 12→5 V/4 A → Orange Pi 5 + ESP32s + sensors + displays
-- Common ground; servo rails fused separately (6 A / 3 A)
+- 12 V/8 A brick → single servo rail feeding **all six servos**
+  (HTD-45H: 9–12.6 V ✓, STS3215-12V: 6–12.6 V ✓ — no 7.4 V rail needed)
+- Buck 12→5 V/≥5 A → Orange Pi 5B + ESP32s + sensors + displays
+- Common ground; servo rail fused at 6 A, logic at 3 A
 
-**Buses** (two physical servo buses — SM servos are RS485, STS are TTL)
-- RS485: ESP32-S3 UART2 → MAX3485 transceiver → SM60CL (J2), SM40BL (J3)
-- TTL half-duplex: ESP32-S3 UART1 (+DIR pin or bus hub) → STS3215 ×4 daisy-chain
-- I2C-1 (base node): AS5600 ×2 (SEA outputs) + IMU — fixed AS5600 addr is fine,
-  only these two + IMU on this bus... AS5600s share addr 0x36 → put them on
-  **separate buses**: SEA-J2 on I2C-1, SEA-J3 on I2C-2 (ESP32-S3 has two I2C
+**Buses** — all TTL, two UARTs (Hiwonder and Feetech speak different protocols,
+so each gets its own wire; both ride the same 12 V power rail)
+- UART1 (TTL half-duplex, Feetech protocol): STS3215-12V ×5 daisy-chain
+  (J1, J3, J4, J5, gripper)
+- UART2 (TTL half-duplex, Hiwonder protocol): HTD-45H (J2) — single servo on
+  its own wire, no RS485 transceiver needed
+- I2C-1 (base node): AS5600 SEA-J2; I2C-2 (base node): AS5600 SEA-J3
+  (AS5600s share fixed addr 0x36 → separate buses; ESP32-S3 has two I2C
   controllers)
 - I2C (wrist node): BMP390 ×2 (addr 0x76/0x77 — no conflict) + AS5600 idler
-- SPI (wrist node): GC9A01 ×2 (separate CS)
+  + QMI8658 IMU (onboard the ESP32-S3-LCD board)
+- SPI (wrist node): GC9A01 eye #1 (onboard) + bare GC9A01 eye #2 (separate CS)
 - UART (arm harness): base node ⇄ wrist node
-- USB: wrist camera → Pi; Pi ⇄ base node (USB serial)
+- WiFi: ESP32-CAM video → agent; Pi ⇄ base node (USB serial)
 
 ## Software blocks
 

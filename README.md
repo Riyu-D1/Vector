@@ -86,15 +86,15 @@ it for replay (leader-arm teaching built into one arm — no second arm needed).
 | Axes | 5 DOF + underactuated tendon gripper (6 servos) — J6 wrist-yaw drop-in ready |
 | Reach / height | ~400 mm reach, ~40 cm tall |
 | Rated payload | ~300 g (see [torque analysis](docs/torque-analysis.md)) |
-| Joint actuators | SM60CL-class 60 kg·cm (shoulder) + SM40BL 40 kg·cm (elbow), RS485 — plus 4× STS3215 19.5 kg·cm TTL (waist, wrist, gripper) |
+| Joint actuators | Hiwonder HTD-45H 45 kg·cm TTL (shoulder, + gravity-assist spring) + 5× STS3215-12V 30 kg·cm TTL (waist, elbow, wrist ×2, gripper) — all on one 12 V rail |
 | Joint torque sensing | Series-elastic springs + output encoders on J2/J3; servo load/current telemetry on all joints |
 | Grip force | Sprung tendon idler + encoder → calibrated N; fingertip BMP390 pads |
 | Senses | Joint torque, grip force, fingertip pressure, IMU, camera, mic |
-| Brain | Orange Pi 5 (4 GB, 6 TOPS NPU) + ESP32-S3 real-time node + ESP32 wrist node |
+| Brain | Orange Pi 5B (4 GB, 6 TOPS NPU — optional) + ESP32-S3 real-time node + ESP32-S3-LCD wrist/face node |
 | Face | 2× GC9A01 1.28" round LCD eyes at the wrist module |
 | Interface | USB-C to host *or* network API + MCP server |
-| Power | 12 V/6 A main rail → SM servos; buck →7.4 V for STS3215s; buck →5 V logic |
-| Est. build cost | **~$470–490 funded ask** — see [BOM](docs/BOM.md) |
+| Power | 12 V/8 A rail → all six servos; buck →5 V logic (single rail — no 7.4 V tap needed) |
+| Est. build cost | **~$485 with onboard brain / ~$400 headless** — verified pricing, see [BOM](docs/BOM.md) |
 
 ## Images
 

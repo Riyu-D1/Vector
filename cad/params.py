@@ -46,31 +46,35 @@ class ServoSpec:
     volts: float = 7.4
 
 
-# Feetech STS3215: 45.2 x 24.7 x 35 mm, 55 g, 19.5 kg·cm @7.4 V, TTL.
+# Feetech STS3215 **12 V variant** (ST-3215-C047 / Waveshare ST3215):
+# 45.2 x 24.7 x 35 mm, 55 g, 30 kg·cm @12 V, TTL. Selected for J1/J3/J4/J5/grip.
+# (The 7.4 V C018 variant is 19.5 kg·cm — do not order that one.)
 SERVO_SM = ServoSpec(
-    name="STS3215",
+    name="STS3215-12V",
     body_w=45.2, body_d=24.7, body_h=35.0,
-    mass_g=55.0, stall_kgcm=19.5,
-    bus="TTL", volts=7.4,
+    mass_g=55.0, stall_kgcm=30.0,
+    bus="TTL", volts=12.0,
 )
 
-# Feetech SM40BL class: ~46.5 x 28.5 x 34 mm, ~100 g, 40 kg·cm @12 V, RS485.
-SERVO_LG = ServoSpec(
-    name="SM40BL-class",
-    body_w=46.5, body_d=28.5, body_h=34.0,
-    mass_g=100.0, stall_kgcm=40.0,
-    tab_hole_pitch_w=32.0, tab_hole_pitch_h=42.0,   # VERIFY
-    bus="RS485", volts=12.0,
-)
+# Reserved slot — same STS3215-12V at the elbow (2.5x stall margin at J3).
+SERVO_LG = SERVO_SM
 
-# Feetech SM60CL class: 60 kg·cm @12 V — larger case, VERIFY envelope.
+# Hiwonder HTD-45H: 51.1 x 20.14 x 40 mm, 64 g, 45 kg·cm stall @11.1 V, TTL,
+# 9-12.6 V input. Selected for J2 + required gravity-assist spring.
+# Premium swap: Feetech SM60CL (62 x 34 x 40 mm, 180 g, 60 kg·cm, RS485) —
+# restore the commented spec if bench tests force the upgrade.
 SERVO_XL = ServoSpec(
-    name="SM60CL-class",
-    body_w=58.0, body_d=30.0, body_h=42.0,
-    mass_g=150.0, stall_kgcm=60.0,
-    tab_hole_pitch_w=40.0, tab_hole_pitch_h=50.0,   # VERIFY
-    bus="RS485", volts=12.0,
+    name="HTD-45H",
+    body_w=51.1, body_d=20.14, body_h=40.0,
+    mass_g=64.0, stall_kgcm=45.0,
+    tab_hole_pitch_w=32.0, tab_hole_pitch_h=45.0,   # VERIFY — Hiwonder tab dims
+    spline_d=6.0,                                    # VERIFY — Hiwonder spline
+    bus="TTL", volts=12.0,
 )
+# SERVO_XL = ServoSpec(
+#     name="SM60CL", body_w=62.0, body_d=34.0, body_h=40.0,
+#     mass_g=180.0, stall_kgcm=60.0, bus="RS485", volts=12.0,
+# )
 
 
 # ---------------------------------------------------------------------------
@@ -194,12 +198,12 @@ HEAT_SET = {"M2": 2.0, "M2.5": 2.5, "M3": 3.0, "M4": 4.0, "M5": 5.0}
 class ElecSpec:
     gc9a01_d: float = 33.0       # 1.28" round LCD module OD
     gc9a01_t: float = 4.0
-    usb_cam_w: float = 25.0      # micro USB camera board envelope
-    usb_cam_d: float = 8.0
+    esp32_cam_w: float = 27.0    # ESP32-CAM board (40x27) — wrist camera
+    esp32_cam_d: float = 8.0
     as5600_w: float = 22.0       # encoder breakout envelope
     as5600_t: float = 3.0
     bmp390_w: float = 14.0       # breakout envelope on fingertip
-    esp32_mini_w: float = 25.5   # ESP32-S3-MINI-class dev board width
+    esp32_s3_lcd: float = 40.0   # Waveshare ESP32-S3-LCD-1.28 wrist-node board
 
 
 ELEC = ElecSpec()

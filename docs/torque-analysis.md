@@ -32,21 +32,24 @@ derates first (see margin table).
 | Payload | 0.30 | 0.40 | 1.18 |
 | **Total** | | | **≈ 2.9 N·m** |
 
-**Actuator:** SM60CL-class serial servo → stall ≈ 5.9 N·m. **Rated/continuous
-torque is the honest number: ~18–20 kg·cm ≈ 1.8–2.0 N·m** (SM-class rated load
-≈ 30% of stall). So worst-case full-extension + 300 g payload *exceeds* the
-continuous rating — acceptable only because that pose is transient; the SEA
-gives the firmware a true torque reading to enforce duty limits and thermal
-protection. Treat 300 g as the intermittent spec and 200 g sustained.
+**Actuator: Hiwonder HTD-45H** → stall ≈ 4.4 N·m (45 kg·cm @11.1 V), real
+price $25–30 vs. $79–165 for the SM60CL it replaces. Continuous rating is not
+published; ~15 kg·cm ≈ 1.5 N·m is the working estimate.
 
-Mitigations if CAD mass grows or duty proves too high:
-- **Extension-spring gravity assist on J2** — a spring providing ~1 N·m assist
-  at max extension shifts the whole curve down; also adds physical springiness
-  (cheap, recommended — design a spring anchor point into the J2 bracket).
+**The gravity-assist spring is now required hardware, not a mitigation.** A
+~1–1.5 N·m assist at full extension drops the servo's share of the worst case
+to ~1–1.5 N·m — inside its realistic envelope. The SEA encoder reports true
+output torque, so the servo not having a load register costs nothing: firmware
+duty-limits on *measured* torque, which is more accurate than motor-current
+inference anyway.
+
+Premium swap if bench tests fail: SM60CL (60 kg·cm stall, real 20 kg·cm rated
+spec, +$50–135) — `SERVO_XL` in params.py adjusts the mount envelope.
+
+Additional margin levers, unchanged:
 - Derate payload to 200 g → worst case ≈ 2.5 N·m.
 - Reduce reach to 350 mm → worst case ≈ 2.4 N·m.
-- CyberGear drop-in at J2 (4 N·m continuous, 12 N·m peak, native torque
-  telemetry) — mount designed to accept it.
+- CyberGear drop-in at J2 (4 N·m continuous, native torque telemetry).
 
 ### J3 — elbow (load distal to J3 only)
 
@@ -57,11 +60,11 @@ Mitigations if CAD mass grows or duty proves too high:
 | Payload | 0.30 | 0.22 | 0.65 |
 | **Total** | | | **≈ 1.2 N·m** |
 
-**Actuator:** SM40BL serial servo → stall ≈ 3.9 N·m, rated ≈ 12 kg·cm ≈
-1.2 N·m continuous — essentially equal to the worst-case pose. Same story as
-J2: fine for transient worst-case, duty-managed for sustained holds (and the
-SEA reports it). To buy real margin here, the gravity-assist spring can also
-span J2–J3. ✓ (with duty caveat)
+**Actuator: STS3215-12V** → stall ≈ 2.9 N·m (30 kg·cm @12 V), ~$21 vs. $55–100
+for the SM40BL it replaces. Stall margin 2.4× over worst case; usable
+continuous ~0.9 N·m vs. ~0.8 N·m sustained need — duty-managed via its own SEA
+like J2. Bonus: same TTL bus + same protocol library as J1/J4/J5/grip — J3 is
+no longer a second servo family. ✓
 
 ### J1 — waist
 
@@ -71,7 +74,8 @@ STS3215 is ample. ✓
 ### J4/J5 — wrist
 
 Distal cluster only: ≈ 0.28 kg at ~50–80 mm + payload moments ≈ **0.2–0.5 N·m**
-worst case. STS3215 (stall ≈ 1.9 N·m) ✓
+worst case. STS3215-12V (stall ≈ 2.9 N·m) — now ~6× margin vs. the 19.5 kg·cm
+7.4 V variant originally assumed. ✓
 
 ### Gripper tendon
 

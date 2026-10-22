@@ -1,153 +1,169 @@
-"""Reusable pitch-joint module: servo cradle + (optional) SEA cartridge +
-bearing-supported output yoke.
+"""Pitch-joint module v2 — 'teardrop knuckle' styling.
 
-Joint frame:
-    axis   = local Y
-    +Y     = drive side (servo spline / SEA cartridge side)
-    -Y     = idler side (servo stub bearing)
-    +Z     = toward the distal link
-    -Z     = toward the proximal link (bracket foot)
+Static side ('bracket'): a pair of paddle plates in the bend plane (XZ) —
+a round knuckle at the axis flowing into a tapered tail that wraps the
+servo case down to a rounded foot. The servo stands with its case along Z
+and shaft along the joint axis (Y), spline toward +Y (drive side), rear
+stub into the -Y idler bearing.
 
-Static half : 'bracket' — U-frame; servo clamps between cheeks; the +Y
-              cheek carries the encoder/bearing ring for SEA joints.
-Moving half : 'yoke' — plates bolt to the SEA output hub (or the horn
-              flange on rigid joints) on +Y and ride the stub bearing on -Y.
+Moving side ('yoke'): a matching collar — two plates outside the bracket
+joined by a rounded top rail carrying the distal-link bolt pattern.
+
+The knuckle face reads as:  yoke plate → SEA spring ring / horn flange →
+small centre cap. Layered hub = intended visual.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import math
 
-from build123d import (
-    Box, Cylinder, Pos, Rot, Axis, Part, Compound, fillet,
-)
+from build123d import Box, Cylinder, Pos, Rot, Part, fillet, Location
 
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from params import ServoSpec, SEASpec, BEARINGS, TOL
+from lib.geom import paddle, rbox, y_cyl
 from lib.servo import make_servo
-from lib.sea import make_cartridge, SEAParts
+from lib.sea import make_cartridge, make_horn_flange, SEAParts
 
 
 @dataclass
 class JointParts:
-    bracket: Part            # static
-    yoke: Part               # moving output yoke (link attaches here)
-    servo: Part              # envelope
-    sea: SEAParts | None     # SEA cartridge pieces (None on rigid joints)
-    axis_gap: float          # distance between cheek inner faces
-    frame_offset: float      # -Z distance: axis → bracket foot face
+    bracket: Part            # static half (mounts to proximal structure)
+    yoke: Part               # moving half (carries the distal link)
+    servo: Part
+    servo_loc: Location      # local→joint transform for the servo part
+    sea: SEAParts | None
+    foot_drop: float         # axis → bracket foot bottom (−Z)
+    rail_top: float          # axis → yoke rail top (+Z)
+    span_y: float            # total width across the joint axis
 
 
 def make_pitch_joint(
     servo: ServoSpec,
     sea: SEASpec | None = None,
     cheek_t: float = 4.0,
-    foot_h: float = 14.0,
+    plate_t: float = 3.5,
+    foot_h: float = 12.0,
     idler_bearing: str = "6704",
 ) -> JointParts:
+    # --- servo-in-joint layout ---------------------------------------------
+    # Joint-frame servo orientation: local (x,y,z) → joint (y, z, x), with a
+    # 180° spin about the shaft so the case hangs mostly BELOW the axis.
+    gap = servo.body_h + 1.0            # span between paddle inner faces
+    case_x = servo.body_d + TOL.loose   # slim dim across the bend plane
+    case_z = servo.body_w               # case length down the tail
+    shaft_drop = 8.0                    # spline offset → case mostly below
+    case_bottom = -shaft_drop - case_z / 2
+    case_top = -shaft_drop + case_z / 2
+    foot_z = case_bottom - foot_h - 4.0
+
+    servo_loc = Pos(0, gap / 2, -8.0) * Rot(0, -90, 0) * Rot(-90, 0, 0) * Rot(
+        0, 0, 180
+    )
     sp = make_servo(servo)
 
-    # --- how far each side of the axis the cheeks must clear ----------------
-    # +Y stack: spline boss (+ spring+hub+cap depth if SEA)
-    sea_stack = (sea.disc_t + 4.0 + 5.0) if sea else 0.0
-    drive_side = servo.spline_h + sea_stack + 2.0
-    # -Y stack: body depth? no — body is BETWEEN the cheeks along Y.
-    gap = servo.body_d + drive_side + 4.0   # +Y cartridge room + rear stub room
+    # --- bracket: two paddles + rounded foot --------------------------------
+    r_disc = (sea.disc_r + 4.0) if sea else 22.0
+    tail_w = case_x + 2 * TOL.wall + 2.0          # wrap the case sides
+    foot_w = tail_w + 10.0
 
-    half_gap = gap / 2
-    cheek_h = servo.body_h + 20.0   # cheek height covers body + margins
-
-    # --- static bracket -----------------------------------------------------
-    cheek_w = servo.body_w + 16.0   # X width
-
-    drive_cheek = Pos(0, half_gap + cheek_t / 2, -cheek_h / 2 + 10) * Box(
-        cheek_w, cheek_t, cheek_h
+    cheek_drive = Pos(0, gap / 2 + cheek_t / 2, 0) * paddle(
+        r_disc, tail_w, -2.0, foot_w, foot_z + foot_h, cheek_t
     )
-    idler_cheek = Pos(0, -half_gap - cheek_t / 2, -cheek_h / 2 + 10) * Box(
-        cheek_w, cheek_t, cheek_h
+    cheek_idler = Pos(0, -gap / 2 - cheek_t / 2, 0) * paddle(
+        r_disc, tail_w, -2.0, foot_w, foot_z + foot_h, cheek_t
     )
-    foot = Pos(0, 0, -cheek_h + 10 + foot_h / 2 - 2) * Box(
-        cheek_w, gap + 2 * cheek_t, foot_h
+    foot = Pos(0, 0, foot_z + foot_h / 2) * rbox(
+        foot_w + 6, gap + 2 * cheek_t, foot_h, 3.0
     )
-    bracket = drive_cheek + idler_cheek + foot
+    bracket = cheek_drive + cheek_idler + foot
 
-    # Servo body sits in the gap; spline face toward +Y inner cheek face.
-    servo_y = servo.body_d / 2 + drive_side - half_gap
-    bracket -= Pos(0, servo_y, 10 - 4) * Box(
-        servo.body_w + TOL.loose, servo.body_d + TOL.loose, servo.body_h + 2 * TOL.loose
-    )  # body clearance through the top opening — clamp by cheek pinch
-
-    # Axis bore through both cheeks.
-    bracket -= Pos(0, 0, 0) * Rot(-90, 0, 0) * Cylinder(8.0, gap + 2 * cheek_t + 4)
-
-    # +Y cheek outer face: encoder/bearing ring for SEA joints,
-    # plain bearing seat otherwise.
-    ring_r = (sea.disc_r + TOL.loose + TOL.wall) if sea else 14.0
-    ring = Pos(0, half_gap, 0) * Rot(-90, 0, 0) * Cylinder(
-        ring_r + 4.0, 5.0
-    ) - Pos(0, half_gap, 0) * Rot(-90, 0, 0) * Cylinder(ring_r, 5.0)
-    bracket += ring
-
-    # -Y cheek: idler bearing bore aligned on axis.
-    ib_id, ib_od, ib_w = BEARINGS[idler_bearing]
-    bracket -= Pos(0, -half_gap - cheek_t, 0) * Rot(-90, 0, 0) * Cylinder(
-        (ib_od + TOL.slip) / 2, ib_w + 1.0
+    # Servo case pocket between the tails (leaves walls on the tails).
+    bracket -= Pos(0, 0, (case_top + case_bottom) / 2) * Box(
+        case_x, gap + 0.4, case_top - case_bottom + 4
     )
 
-    # Bracket→proximal-link mounting: 4× M3 on the foot corners.
+    # Axis bores.
+    bracket -= y_cyl(6.0, gap + 2 * cheek_t + 8)          # spline/stub clearance
+    bracket -= Pos(0, gap / 2, 0) * y_cyl(               # +Y: spline boss reach
+        servo.spline_d / 2 + 1.5, cheek_t + 2
+    )
+    ib_id, ib_od, ib_w = BEARINGS[idler_bearing]          # −Y: idler bearing seat
+    bracket -= Pos(0, -gap / 2 - cheek_t, 0) * y_cyl(
+        (ib_od + TOL.slip) / 2, ib_w + 0.5
+    )
+    bracket -= Pos(0, -gap / 2, 0) * y_cyl(
+        servo.stub_d / 2 + 0.5, cheek_t / 2 + 1.0        # stub enters the race
+    )
+
+    # Cap mount holes on the +Y cheek rim (SEA joints).
+    if sea:
+        cap_r = sea.disc_r - sea.ring_w - TOL.wall / 2 - 4.0
+        for i in range(3):
+            th = i * 2 * math.pi / 3 + math.pi / 6
+            bracket -= Pos(
+                cap_r * math.cos(th), gap / 2 + cheek_t - 1,
+                cap_r * math.sin(th),
+            ) * y_cyl(1.3, cheek_t)                     # M2.5 tap into cheek
+
+    # Case pinch bolts through both tails near the case bottom.
+    for z in (case_bottom + 8, case_bottom + 22):
+        for x in (-tail_w / 2 + 4, tail_w / 2 - 4):
+            bracket -= Pos(x, 0, z) * y_cyl(1.6, gap + 2 * cheek_t + 4)
+
+    # Foot → proximal-link bolt pattern (4× M3).
     for sx in (-1, 1):
         for sy in (-1, 1):
             bracket -= Pos(
-                sx * (cheek_w / 2 - 6),
-                sy * (gap / 2 + cheek_t - 8),
-                -cheek_h + 10 + foot_h - 2,
-            ) * Cylinder(1.6, 6)
+                sx * (foot_w / 2 - 3), sy * (gap / 2 + cheek_t - 9),
+                foot_z,
+            ) * Cylinder(1.7, 8)
 
-    # --- moving yoke --------------------------------------------------------
-    # Two plates straddling the bracket, joined by a top rail at +Z.
-    yoke_plate_t = 4.0
-    yoke_h = servo.body_h + 30.0
-    yoke_gap = gap + 2 * cheek_t + 2 * TOL.loose
+    # --- yoke collar ---------------------------------------------------------
+    yoke_in = gap + 2 * cheek_t + 0.6                     # clears bracket faces
+    r_yoke = r_disc + cheek_t + 0.4
+    rail_z = r_yoke + 6.0                                 # top of the collar
 
-    yoke_drive = Pos(0, yoke_gap / 2 + yoke_plate_t / 2, yoke_h / 2 - 6) * Box(
-        cheek_w + 8, yoke_plate_t, yoke_h
+    plate_drive = Pos(0, yoke_in / 2 + plate_t / 2, 0) * paddle(
+        r_yoke, tail_w + 6, -4.0, foot_w + 6, rail_z, plate_t
     )
-    yoke_idle = Pos(0, -yoke_gap / 2 - yoke_plate_t / 2, yoke_h / 2 - 6) * Box(
-        cheek_w + 8, yoke_plate_t, yoke_h
+    plate_idler = Pos(0, -yoke_in / 2 - plate_t / 2, 0) * paddle(
+        r_yoke, tail_w + 6, -4.0, foot_w + 6, rail_z, plate_t
     )
-    yoke_top = Pos(0, 0, yoke_h - 6 + 4) * Box(
-        cheek_w + 8, yoke_gap + 2 * yoke_plate_t, 8
+    rail = Pos(0, 0, rail_z + 4) * rbox(
+        foot_w + 6, yoke_in + 2 * plate_t, 8.0, 3.0
     )
-    yoke = yoke_drive + yoke_idle + yoke_top
+    yoke = plate_drive + plate_idler + rail
 
-    # Clearance bores on axis through both yoke plates.
-    yoke -= Pos(0, 0, 0) * Rot(-90, 0, 0) * Cylinder(9.0, yoke_gap + 2 * yoke_plate_t + 6)
+    # Axis bores through the plates.
+    yoke -= y_cyl(9.0, yoke_in + 2 * plate_t + 6)
 
-    # Drive plate: SEA output-hub bolt circle OR horn bolt pattern.
-    bolt_r = (sea.disc_r - sea.ring_w / 2) if sea else 10.0
+    # Drive plate bolt circle: SEA output flange rim OR rigid horn flange.
+    bolt_r = (sea.disc_r - 3.0) if sea else 9.0
+    bolt_d = 1.4 if sea else 1.7
     for i in range(4):
-        th = i * math.pi / 2
+        th = i * math.pi / 2 + math.pi / 4
         yoke -= Pos(
-            bolt_r * math.cos(th),
-            yoke_gap / 2 + yoke_plate_t / 2,
-            bolt_r * math.sin(th),
-        ) * Rot(-90, 0, 0) * Cylinder(1.6, yoke_plate_t + 2)
+            bolt_r * math.cos(th), yoke_in / 2, bolt_r * math.sin(th)
+        ) * y_cyl(bolt_d, plate_t + 2)
 
-    # Yoke→distal-link bolt circle on the top rail.
+    # Rail → distal-link bolt pattern (4× M3, axial).
     for sx in (-1, 1):
         for sy in (-1, 1):
             yoke -= Pos(
-                sx * (cheek_w / 2 - 2), sy * (yoke_gap / 2 - 8),
-                yoke_h - 6 + 4,
-            ) * Cylinder(1.6, 10)
+                sx * (foot_w / 2 - 3), sy * (yoke_in / 2 + plate_t - 9),
+                rail_z + 4,
+            ) * Cylinder(1.7, 10)
 
     return JointParts(
         bracket=bracket,
         yoke=yoke,
         servo=sp.part,
+        servo_loc=servo_loc,
         sea=make_cartridge(sea, servo.spline_d) if sea else None,
-        axis_gap=gap,
-        frame_offset=cheek_h - 10,
+        foot_drop=-foot_z,
+        rail_top=rail_z + 8,
+        span_y=yoke_in + 2 * plate_t,
     )
 
 
@@ -158,8 +174,15 @@ if __name__ == "__main__":
         ("J4", SERVO_SM, None),
     ):
         j = make_pitch_joint(sv, sea)
-        bb = j.bracket.bounding_box()
+        for nm, p in (("bracket", j.bracket), ("yoke", j.yoke)):
+            bb = p.bounding_box()
+            print(
+                f"{label} {nm:7s} {bb.size.X:.0f}×{bb.size.Y:.0f}×{bb.size.Z:.0f} mm "
+                f"vol {p.volume/1000:.1f} cm³"
+            )
+        svb = (j.servo_loc * j.servo).bounding_box()
         print(
-            f"{label}: bracket {bb.size.X:.0f}×{bb.size.Y:.0f}×{bb.size.Z:.0f} mm, "
-            f"yoke vol {j.yoke.volume/1000:.1f} cm³, sea={'yes' if j.sea else 'no'}"
+            f"    servo in joint: z {svb.min.Z:.0f}..{svb.max.Z:.0f}, "
+            f"y {svb.min.Y:.0f}..{svb.max.Y:.0f}"
         )
+        print(f"    foot_drop {j.foot_drop:.0f}, rail_top {j.rail_top:.0f}")

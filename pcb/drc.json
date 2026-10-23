@@ -1,0 +1,1176 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-10-23T16:43:10",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.0.4",
+    "schematic_parity": [],
+    "source": "soma-carrier.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Rectangle on Edge.Cuts",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "b3af8149-752c-401d-9ca4-d8942c122e05"
+                },
+                {
+                    "description": "Reference field of H1",
+                    "pos": {
+                        "x": 4.0,
+                        "y": 0.25
+                    },
+                    "uuid": "1c80b736-926a-4155-a083-9044ed806364"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Rectangle on Edge.Cuts",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "b3af8149-752c-401d-9ca4-d8942c122e05"
+                },
+                {
+                    "description": "Reference field of H2",
+                    "pos": {
+                        "x": 86.0,
+                        "y": 0.25
+                    },
+                    "uuid": "f09c11f8-487c-4842-9f0d-54aa198141fe"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Footprint 'TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal' does not match copy in library 'TerminalBlock_Phoenix'",
+            "items": [
+                {
+                    "description": "Footprint J1",
+                    "pos": {
+                        "x": 8.0,
+                        "y": 48.0
+                    },
+                    "uuid": "3df2ada3-f3f4-43d0-8f56-b83ace8853e1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal' does not match copy in library 'TerminalBlock_Phoenix'",
+            "items": [
+                {
+                    "description": "Footprint J2",
+                    "pos": {
+                        "x": 8.0,
+                        "y": 34.0
+                    },
+                    "uuid": "3913aa1c-2c90-4717-97d3-5b5208de4207"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'Fuse_Blade_Mini_directSolder' does not match copy in library 'Fuse'",
+            "items": [
+                {
+                    "description": "Footprint F1",
+                    "pos": {
+                        "x": 17.0,
+                        "y": 50.0
+                    },
+                    "uuid": "74c30f04-9961-407f-b6e1-c834539d94e0"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x19_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint U1A",
+                    "pos": {
+                        "x": 22.14,
+                        "y": 51.16
+                    },
+                    "uuid": "37db641d-0542-4d2e-bc27-0ef3b5fbfd37"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x19_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint U1B",
+                    "pos": {
+                        "x": 22.14,
+                        "y": 28.3
+                    },
+                    "uuid": "0f00313a-50e3-4ddc-aed0-4dd70315a18b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'D_DO-201_P12.70mm_Horizontal' does not match copy in library 'Diode_THT'",
+            "items": [
+                {
+                    "description": "Footprint D1",
+                    "pos": {
+                        "x": 16.0,
+                        "y": 35.0
+                    },
+                    "uuid": "67dafda6-a522-40db-904e-579508b8a05f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x04_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J7",
+                    "pos": {
+                        "x": 18.0,
+                        "y": 60.0
+                    },
+                    "uuid": "7090c1ff-e934-4c09-956e-40cbf5900f99"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x04_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J8",
+                    "pos": {
+                        "x": 30.0,
+                        "y": 64.0
+                    },
+                    "uuid": "fe0bfae7-ebfb-424d-9c9c-b34924900483"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x02_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J9",
+                    "pos": {
+                        "x": 44.0,
+                        "y": 60.0
+                    },
+                    "uuid": "365c25f2-f770-4811-8046-afb12b66cc7a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x04_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J10",
+                    "pos": {
+                        "x": 58.0,
+                        "y": 64.0
+                    },
+                    "uuid": "d081bfbd-6ba3-476b-8a8d-61909bbbb819"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of J4",
+                    "pos": {
+                        "x": 32.54,
+                        "y": 4.88
+                    },
+                    "uuid": "3f1f4fce-9ab3-4113-8c5b-3f9e6524bb5c"
+                },
+                {
+                    "description": "PCB text 'SOMA BASE CARRIER v1' on F.Silkscreen",
+                    "pos": {
+                        "x": 45.0,
+                        "y": 4.0
+                    },
+                    "uuid": "c7cb852a-2d7b-42a2-9846-dc0c8693b9a1"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PCB text 'BUS-A x2 (STS3215)' on F.Silkscreen",
+                    "pos": {
+                        "x": 37.5,
+                        "y": 5.5
+                    },
+                    "uuid": "9073a2eb-ada3-4e87-af66-ddab055d7bc6"
+                },
+                {
+                    "description": "PCB text 'SOMA BASE CARRIER v1' on F.Silkscreen",
+                    "pos": {
+                        "x": 45.0,
+                        "y": 4.0
+                    },
+                    "uuid": "c7cb852a-2d7b-42a2-9846-dc0c8693b9a1"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of J4 on F.Silkscreen",
+                    "pos": {
+                        "x": 33.34,
+                        "y": 6.57
+                    },
+                    "uuid": "77827658-2b19-4a3b-8ff9-acdf3815b8d0"
+                },
+                {
+                    "description": "PCB text 'BUS-A x2 (STS3215)' on F.Silkscreen",
+                    "pos": {
+                        "x": 37.5,
+                        "y": 5.5
+                    },
+                    "uuid": "9073a2eb-ada3-4e87-af66-ddab055d7bc6"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PCB text 'BUS-A x2 (STS3215)' on F.Silkscreen",
+                    "pos": {
+                        "x": 37.5,
+                        "y": 5.5
+                    },
+                    "uuid": "9073a2eb-ada3-4e87-af66-ddab055d7bc6"
+                },
+                {
+                    "description": "Rectangle of J4 on F.Silkscreen",
+                    "pos": {
+                        "x": 28.62,
+                        "y": 5.97
+                    },
+                    "uuid": "c0263d93-82be-451f-bcc0-36bcb2708389"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PCB text 'BUS-A x2 (STS3215)' on F.Silkscreen",
+                    "pos": {
+                        "x": 37.5,
+                        "y": 5.5
+                    },
+                    "uuid": "9073a2eb-ada3-4e87-af66-ddab055d7bc6"
+                },
+                {
+                    "description": "Segment of J4 on F.Silkscreen",
+                    "pos": {
+                        "x": 35.88,
+                        "y": 6.57
+                    },
+                    "uuid": "9d6944ef-f451-413d-8b71-cf340b09a81a"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PCB text 'BUS-A x2 (STS3215)' on F.Silkscreen",
+                    "pos": {
+                        "x": 37.5,
+                        "y": 5.5
+                    },
+                    "uuid": "9073a2eb-ada3-4e87-af66-ddab055d7bc6"
+                },
+                {
+                    "description": "Segment of J4 on F.Silkscreen",
+                    "pos": {
+                        "x": 29.2,
+                        "y": 5.97
+                    },
+                    "uuid": "9e964466-f0b6-479d-b29c-b4b8f04297b9"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of J4 on F.Silkscreen",
+                    "pos": {
+                        "x": 31.74,
+                        "y": 5.97
+                    },
+                    "uuid": "32d1a7ee-e922-447f-ab62-37db6cc95acc"
+                },
+                {
+                    "description": "PCB text 'BUS-A x2 (STS3215)' on F.Silkscreen",
+                    "pos": {
+                        "x": 37.5,
+                        "y": 5.5
+                    },
+                    "uuid": "9073a2eb-ada3-4e87-af66-ddab055d7bc6"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PCB text 'V' on F.Silkscreen",
+                    "pos": {
+                        "x": 30.0,
+                        "y": 12.0
+                    },
+                    "uuid": "3db8c3c6-3d5e-4b6d-849e-a850d5819ef7"
+                },
+                {
+                    "description": "Segment of J4 on F.Silkscreen",
+                    "pos": {
+                        "x": 30.0,
+                        "y": 11.99
+                    },
+                    "uuid": "bb2f4512-6e5d-4d96-bc77-731b8c12e708"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PCB text 'V' on F.Silkscreen",
+                    "pos": {
+                        "x": 30.0,
+                        "y": 12.0
+                    },
+                    "uuid": "3db8c3c6-3d5e-4b6d-849e-a850d5819ef7"
+                },
+                {
+                    "description": "Rectangle of J4 on F.Silkscreen",
+                    "pos": {
+                        "x": 28.62,
+                        "y": 5.97
+                    },
+                    "uuid": "c0263d93-82be-451f-bcc0-36bcb2708389"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PCB text 'V' on F.Silkscreen",
+                    "pos": {
+                        "x": 30.0,
+                        "y": 12.0
+                    },
+                    "uuid": "3db8c3c6-3d5e-4b6d-849e-a850d5819ef7"
+                },
+                {
+                    "description": "Segment of J4 on F.Silkscreen",
+                    "pos": {
+                        "x": 30.25,
+                        "y": 11.99
+                    },
+                    "uuid": "6a74a256-4263-4388-9349-162df3de5d4c"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Rectangle of J4 on F.Silkscreen",
+                    "pos": {
+                        "x": 28.62,
+                        "y": 5.97
+                    },
+                    "uuid": "c0263d93-82be-451f-bcc0-36bcb2708389"
+                },
+                {
+                    "description": "PCB text 'D' on F.Silkscreen",
+                    "pos": {
+                        "x": 32.54,
+                        "y": 12.0
+                    },
+                    "uuid": "d8eec7d9-b22e-4631-a307-6ef4c62d2b4d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of J5",
+                    "pos": {
+                        "x": 47.54,
+                        "y": 4.88
+                    },
+                    "uuid": "08d1f5df-4a8e-4053-8a20-dd67ad13fd1d"
+                },
+                {
+                    "description": "PCB text 'SOMA BASE CARRIER v1' on F.Silkscreen",
+                    "pos": {
+                        "x": 45.0,
+                        "y": 4.0
+                    },
+                    "uuid": "c7cb852a-2d7b-42a2-9846-dc0c8693b9a1"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of J5 on F.Silkscreen",
+                    "pos": {
+                        "x": 44.2,
+                        "y": 5.97
+                    },
+                    "uuid": "0541b823-bfdc-4a0c-85f3-9060cc3cae60"
+                },
+                {
+                    "description": "PCB text 'BUS-A x2 (STS3215)' on F.Silkscreen",
+                    "pos": {
+                        "x": 37.5,
+                        "y": 5.5
+                    },
+                    "uuid": "9073a2eb-ada3-4e87-af66-ddab055d7bc6"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Rectangle of J5 on F.Silkscreen",
+                    "pos": {
+                        "x": 43.62,
+                        "y": 5.97
+                    },
+                    "uuid": "0139aa3a-e69f-4eef-af22-9799ec14a34b"
+                },
+                {
+                    "description": "PCB text 'BUS-A x2 (STS3215)' on F.Silkscreen",
+                    "pos": {
+                        "x": 37.5,
+                        "y": 5.5
+                    },
+                    "uuid": "9073a2eb-ada3-4e87-af66-ddab055d7bc6"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of J5 on F.Silkscreen",
+                    "pos": {
+                        "x": 44.2,
+                        "y": 6.57
+                    },
+                    "uuid": "3989d8ce-49e0-4da6-a0da-de875320d09b"
+                },
+                {
+                    "description": "PCB text 'BUS-A x2 (STS3215)' on F.Silkscreen",
+                    "pos": {
+                        "x": 37.5,
+                        "y": 5.5
+                    },
+                    "uuid": "9073a2eb-ada3-4e87-af66-ddab055d7bc6"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PCB text 'BUS-A x2 (STS3215)' on F.Silkscreen",
+                    "pos": {
+                        "x": 37.5,
+                        "y": 5.5
+                    },
+                    "uuid": "9073a2eb-ada3-4e87-af66-ddab055d7bc6"
+                },
+                {
+                    "description": "Segment of J5 on F.Silkscreen",
+                    "pos": {
+                        "x": 45.8,
+                        "y": 6.57
+                    },
+                    "uuid": "a955087a-147c-4f32-8ab7-6895b3cf78fa"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PCB text 'BUS-B (HTD45H)' on F.Silkscreen",
+                    "pos": {
+                        "x": 70.0,
+                        "y": 5.5
+                    },
+                    "uuid": "ad978706-9573-4e70-9c33-fdb5e94d879a"
+                },
+                {
+                    "description": "Rectangle of J6 on F.Silkscreen",
+                    "pos": {
+                        "x": 68.62,
+                        "y": 5.97
+                    },
+                    "uuid": "e414775d-72ec-42df-89fa-518a14c66511"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of J6 on F.Silkscreen",
+                    "pos": {
+                        "x": 69.2,
+                        "y": 6.57
+                    },
+                    "uuid": "395cc22d-2e31-4d83-9d21-47585be56cb3"
+                },
+                {
+                    "description": "PCB text 'BUS-B (HTD45H)' on F.Silkscreen",
+                    "pos": {
+                        "x": 70.0,
+                        "y": 5.5
+                    },
+                    "uuid": "ad978706-9573-4e70-9c33-fdb5e94d879a"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PCB text 'BUS-B (HTD45H)' on F.Silkscreen",
+                    "pos": {
+                        "x": 70.0,
+                        "y": 5.5
+                    },
+                    "uuid": "ad978706-9573-4e70-9c33-fdb5e94d879a"
+                },
+                {
+                    "description": "Reference field of J6",
+                    "pos": {
+                        "x": 72.54,
+                        "y": 4.88
+                    },
+                    "uuid": "bfabc56d-f925-407f-bc7c-4c5904538870"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PCB text 'BUS-B (HTD45H)' on F.Silkscreen",
+                    "pos": {
+                        "x": 70.0,
+                        "y": 5.5
+                    },
+                    "uuid": "ad978706-9573-4e70-9c33-fdb5e94d879a"
+                },
+                {
+                    "description": "Segment of J6 on F.Silkscreen",
+                    "pos": {
+                        "x": 71.74,
+                        "y": 5.97
+                    },
+                    "uuid": "d0f3e5cb-ccb0-4896-9d15-0213efcd1473"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of U1A on F.Silkscreen",
+                    "pos": {
+                        "x": 20.76,
+                        "y": 52.54
+                    },
+                    "uuid": "3c577c04-310e-49f9-9b40-9ea6d751d89e"
+                },
+                {
+                    "description": "Reference field of U1A",
+                    "pos": {
+                        "x": 19.76,
+                        "y": 51.16
+                    },
+                    "uuid": "5be4a118-2360-4293-ac11-c7b915d077d0"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PCB text 'ENC-J2 SDA1/SCL1' on F.Silkscreen",
+                    "pos": {
+                        "x": 18.0,
+                        "y": 67.5
+                    },
+                    "uuid": "411f6000-e39d-4cc0-a6d0-87afa9c6e6fd"
+                },
+                {
+                    "description": "PCB text 'ENC-J3 SDA2/SCL2' on F.Silkscreen",
+                    "pos": {
+                        "x": 30.0,
+                        "y": 67.5
+                    },
+                    "uuid": "7161c7b0-cd2b-48c0-b59d-42113f90064e"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PCB text 'ESP32-S3-DevKitC-1  USB->LEFT' on F.Silkscreen",
+                    "pos": {
+                        "x": 45.0,
+                        "y": 39.5
+                    },
+                    "uuid": "3011c9dc-a2ab-493c-95ef-54b34386946d"
+                },
+                {
+                    "description": "PCB text 'ROW-BOT=J1  ROW-TOP=J2' on F.Silkscreen",
+                    "pos": {
+                        "x": 45.0,
+                        "y": 40.8
+                    },
+                    "uuid": "8adb68b2-3fca-4609-8779-2cc8c922b801"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PCB text 'ROW-BOT=J1  ROW-TOP=J2' on F.Silkscreen",
+                    "pos": {
+                        "x": 45.0,
+                        "y": 40.8
+                    },
+                    "uuid": "8adb68b2-3fca-4609-8779-2cc8c922b801"
+                },
+                {
+                    "description": "Reference field of R2",
+                    "pos": {
+                        "x": 35.81,
+                        "y": 41.63
+                    },
+                    "uuid": "abcdc956-34b8-4a8c-8cf9-ee33643ae79c"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PCB text '12V IN' on F.Silkscreen",
+                    "pos": {
+                        "x": 8.0,
+                        "y": 48.5
+                    },
+                    "uuid": "4a36df89-788f-476a-a531-1e13efcfdb78"
+                },
+                {
+                    "description": "Segment of J1 on F.Silkscreen",
+                    "pos": {
+                        "x": 5.7,
+                        "y": 50.66
+                    },
+                    "uuid": "6cb9ff5d-4732-4b4f-859f-28ccb894d3a5"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PCB text '12V IN' on F.Silkscreen",
+                    "pos": {
+                        "x": 8.0,
+                        "y": 48.5
+                    },
+                    "uuid": "4a36df89-788f-476a-a531-1e13efcfdb78"
+                },
+                {
+                    "description": "Segment of J1 on F.Silkscreen",
+                    "pos": {
+                        "x": 10.6,
+                        "y": 50.66
+                    },
+                    "uuid": "56ad353c-1c11-4513-ab8b-972f6ac0f551"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of J2 on F.Silkscreen",
+                    "pos": {
+                        "x": 12.1,
+                        "y": 36.66
+                    },
+                    "uuid": "50b2f050-9320-4abe-95a2-b2b2db3217a4"
+                },
+                {
+                    "description": "Reference field of D1",
+                    "pos": {
+                        "x": 12.275,
+                        "y": 28.65
+                    },
+                    "uuid": "92e9ac38-cce8-44f9-9f5c-01dc187483c9"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of D1 on F.Silkscreen",
+                    "pos": {
+                        "x": 18.725,
+                        "y": 33.535
+                    },
+                    "uuid": "a82158b8-4554-4e2c-8b1e-116048bda46f"
+                },
+                {
+                    "description": "Reference field of U1B",
+                    "pos": {
+                        "x": 19.76,
+                        "y": 28.3
+                    },
+                    "uuid": "f8075632-8ef9-4a32-9c45-502e90e54b1a"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of U1B on F.Silkscreen",
+                    "pos": {
+                        "x": 20.76,
+                        "y": 29.68
+                    },
+                    "uuid": "2c22bc11-cd13-47e3-8643-65730362a08f"
+                },
+                {
+                    "description": "Reference field of U1B",
+                    "pos": {
+                        "x": 19.76,
+                        "y": 28.3
+                    },
+                    "uuid": "f8075632-8ef9-4a32-9c45-502e90e54b1a"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Polygon of J2 on F.Silkscreen",
+                    "pos": {
+                        "x": 12.72,
+                        "y": 34.0
+                    },
+                    "uuid": "aaf89bd9-6dbd-4e93-b493-8b3577004541"
+                },
+                {
+                    "description": "Segment of D1 on F.Silkscreen",
+                    "pos": {
+                        "x": 13.275,
+                        "y": 33.535
+                    },
+                    "uuid": "ea670a85-ce8d-40d0-b622-fea03bb3ce61"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Polygon of J2 on F.Silkscreen",
+                    "pos": {
+                        "x": 12.72,
+                        "y": 34.0
+                    },
+                    "uuid": "aaf89bd9-6dbd-4e93-b493-8b3577004541"
+                },
+                {
+                    "description": "Segment of D1 on F.Silkscreen",
+                    "pos": {
+                        "x": 14.46,
+                        "y": 33.535
+                    },
+                    "uuid": "c2ac7e04-7638-47b0-a2ea-7ad80db82ae3"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Footprint text of D1 (K)",
+                    "pos": {
+                        "x": 13.7,
+                        "y": 35.0
+                    },
+                    "uuid": "9bcf19d3-697c-48c0-9bb6-e2288a7214ec"
+                },
+                {
+                    "description": "Polygon of J2 on F.Silkscreen",
+                    "pos": {
+                        "x": 12.72,
+                        "y": 34.0
+                    },
+                    "uuid": "aaf89bd9-6dbd-4e93-b493-8b3577004541"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of D1",
+                    "pos": {
+                        "x": 12.275,
+                        "y": 28.65
+                    },
+                    "uuid": "92e9ac38-cce8-44f9-9f5c-01dc187483c9"
+                },
+                {
+                    "description": "Segment of J2 on F.Silkscreen",
+                    "pos": {
+                        "x": 12.72,
+                        "y": 26.26
+                    },
+                    "uuid": "b7f0151c-c5fb-4e2e-a21b-13058ce8985d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of J10 on F.Silkscreen",
+                    "pos": {
+                        "x": 56.62,
+                        "y": 65.38
+                    },
+                    "uuid": "045c9a03-6078-4a6b-a9e1-9a9cfba5e90b"
+                },
+                {
+                    "description": "Reference field of J10",
+                    "pos": {
+                        "x": 55.62,
+                        "y": 64.0
+                    },
+                    "uuid": "6e8e4619-e13f-4d48-9cdb-2d96e6593cbf"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of R1",
+                    "pos": {
+                        "x": 47.81,
+                        "y": 41.63
+                    },
+                    "uuid": "29ad75f3-1c91-45f8-a9cd-9a49353dfe80"
+                },
+                {
+                    "description": "PCB text 'ROW-BOT=J1  ROW-TOP=J2' on F.Silkscreen",
+                    "pos": {
+                        "x": 45.0,
+                        "y": 40.8
+                    },
+                    "uuid": "8adb68b2-3fca-4609-8779-2cc8c922b801"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PCB text 'PWR' on F.Silkscreen",
+                    "pos": {
+                        "x": 76.0,
+                        "y": 59.0
+                    },
+                    "uuid": "18672db9-8a1d-4661-bbfb-c6a1aea544a0"
+                },
+                {
+                    "description": "Reference field of D2",
+                    "pos": {
+                        "x": 77.27,
+                        "y": 59.04
+                    },
+                    "uuid": "cabaa280-1487-47a4-85b3-313c77152139"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of D3",
+                    "pos": {
+                        "x": 77.27,
+                        "y": 53.04
+                    },
+                    "uuid": "a7548110-ad44-47cf-8c1b-0004bcd02fef"
+                },
+                {
+                    "description": "PCB text 'STAT' on F.Silkscreen",
+                    "pos": {
+                        "x": 76.0,
+                        "y": 53.0
+                    },
+                    "uuid": "aa400cdd-bc75-4c21-8dc3-9b94bdf63478"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "PCB text '5V IN' on F.Silkscreen",
+                    "pos": {
+                        "x": 8.0,
+                        "y": 66.5
+                    },
+                    "uuid": "38dce8fe-5aeb-40e5-87ff-5c5db8fffa49"
+                },
+                {
+                    "description": "NPTH pad of H3",
+                    "pos": {
+                        "x": 4.0,
+                        "y": 66.0
+                    },
+                    "uuid": "630fe8b5-f8f1-4b0b-8760-86e303ca996c"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of U1A",
+                    "pos": {
+                        "x": 19.76,
+                        "y": 51.16
+                    },
+                    "uuid": "5be4a118-2360-4293-ac11-c7b915d077d0"
+                },
+                {
+                    "description": "PTH pad 1 [+12V_IN] of F1",
+                    "pos": {
+                        "x": 17.0,
+                        "y": 50.0
+                    },
+                    "uuid": "764bd6ba-2523-45f3-9838-46951c80c1a0"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "PCB text 'F1 6A' on F.Silkscreen",
+                    "pos": {
+                        "x": 19.0,
+                        "y": 48.0
+                    },
+                    "uuid": "644eb9c4-a973-4e91-9984-b05ba7c8421c"
+                },
+                {
+                    "description": "PTH pad 1 [+12V_IN] of F1",
+                    "pos": {
+                        "x": 17.0,
+                        "y": 50.0
+                    },
+                    "uuid": "764bd6ba-2523-45f3-9838-46951c80c1a0"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "PCB text '12V IN' on F.Silkscreen",
+                    "pos": {
+                        "x": 8.0,
+                        "y": 48.5
+                    },
+                    "uuid": "4a36df89-788f-476a-a531-1e13efcfdb78"
+                },
+                {
+                    "description": "PTH pad 1 [+12V_IN] of J1",
+                    "pos": {
+                        "x": 8.0,
+                        "y": 48.0
+                    },
+                    "uuid": "589b0298-19f4-4c3e-8571-8f95cb077fae"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        }
+    ]
+}

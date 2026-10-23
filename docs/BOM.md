@@ -81,7 +81,7 @@ protocol library as the other four servos.
 |---|---|---|---|---|
 | 1 | 12 V / 8 A PSU, barrel out | $20 | $20 | One rail feeds **all** servos (HTD-45H: 9–12.6 V; STS3215-12V: 6–12.6 V ✓) |
 | 1 | Buck 12 V→5 V, ≥5 A | $8 | $8 | Logic + Pi + displays |
-| 1 | Servo bus hub/board (TTL daisy chain) | $8 | $8 | SO-101 motor-control board (~$11) works |
+| 1 | Servo bus hub/board (TTL daisy chain) | $8 | $8 | Replaced by `pcb/` carrier board (2-layer THT, ~$2/board at JLCPCB) |
 | 1 | Wiring kit: JST-XH, silicone wire, ferrules, in-arm 4-wire harness | $15 | $15 | |
 | 1 | Connectors/heatshrink/cable chain, fuse + switch | $10 | $10 | |
 

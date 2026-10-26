@@ -25,6 +25,7 @@ from lib.base import make_base
 from lib.wrist import make_wrist
 from lib.gripper import make_gripper
 from lib.geom import y_cyl
+from lib.case import make_case
 
 OUT = os.path.join(os.path.dirname(__file__), "export")
 os.makedirs(OUT, exist_ok=True)
@@ -50,11 +51,21 @@ def at(part, loc):
 def main():
     children = []
 
+    # ---- electronics plinth -------------------------------------------------
+    # The 150x160 carrier-PCB case the drum lands on. Case frame: front rim
+    # at y=0; seat centre (75,88) at lid top z=40. In the arm frame the drum
+    # axis is (0,0,0), and the case front faces +X (workspace side).
+    case = make_case()
+    save("case_tray", case.tray)
+    save("case_lid", case.lid)
+    M_case = Pos(88, -75, -40) * Rot(0, 0, 90)
+
     # ---- J1 base -----------------------------------------------------------
     base = make_base(SERVO_SM)
     save("j1_base_housing", base.housing)
     save("j1_turret", base.turret)
     save("j1_servo", base.servo)
+    children += [at(case.tray, M_case), at(case.lid, M_case)]
     children += [at(base.housing, Pos(0, 0, 0)), at(base.turret, Pos(0, 0, 0)),
                  at(base.servo, base.servo_loc)]
     turret_top = base.top_z

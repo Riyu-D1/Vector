@@ -3,8 +3,9 @@
 Target: full-functionality all-servo build with **verified sourcing** (prices from
 real listings — AliExpress/Waveshare/Hiwonder/Seeed/DFRobot, Oct 2025).
 
-Build cost: **~$440 with onboard brain**, **~$355 headless** — either way well
-under the Level 4 cap ($1000); headless also fits Level 3 ($400) after reserve.
+Build cost: **~$458 with onboard brain**, **~$375 headless** — either way well
+under the Level 4 cap ($1000); headless stays near the Level 3 line ($400)
+after reserve.
 
 ## What the research changed (vs. first draft)
 
@@ -79,11 +80,16 @@ protocol library as the other four servos.
 
 | Qty | Part | Unit | Sub | Notes |
 |---|---|---|---|---|
-| 1 | 12 V / 8 A PSU, barrel out | $20 | $20 | One rail feeds **all** servos (HTD-45H: 9–12.6 V; STS3215-12V: 6–12.6 V ✓) |
-| 1 | Buck 12 V→5 V, ≥5 A | $8 | $8 | Logic + Pi + displays |
-| 1 | Servo bus hub/board (TTL daisy chain) | $8 | $8 | Replaced by `pcb/` carrier board (2-layer THT, ~$2/board at JLCPCB) |
+| 1 | 12 V / 8 A PSU, **XT60 or barrel→XT60 lead** | $20 | $20 | One rail feeds **all** servos (HTD-45H: 9–12.6 V; STS3215-12V: 6–12.6 V ✓) |
+| 1 | Mini-360 buck module 12 V→5 V | $3 | $3 | Sockets onto carrier J3 |
+| 1 | Carrier board set (see `pcb/`) — JLCPCB 2-layer ~$2/bd, min 5 | $10 | $10 | Replaces the servo bus hub + all base wiring |
+| 1 | Carrier BOM: XT60-M plug, KK-254 housings, pin sockets, fuse, TVS, Schottky, 2N2222, buzzer, IR RX, DS18B20, caps/resistors/LEDs | — | $14 | Mostly < $1 parts; see pcb/README.md table |
+| 1 | SSD1306 0.96" OLED (I2C) | $2 | $2 | Base status display, sockets onto J11 |
+| 1 | GY-521 MPU6050 IMU | $2.5 | $2.5 | Tip-over/vibration detect, sockets onto J12 |
+| 1 | EC11 rotary encoder + knob | $1 | $1 | Jog dial, plugs into J13 |
+| 1 | WS2812 ring/strip (optional underglow) | $4 | $4 | J14 port; skip to save $4 |
 | 1 | Wiring kit: JST-XH, silicone wire, ferrules, in-arm 4-wire harness | $15 | $15 | |
-| 1 | Connectors/heatshrink/cable chain, fuse + switch | $10 | $10 | |
+| 1 | Connectors/heatshrink/cable chain | $8 | $8 | Fuse + switch now on the carrier board |
 
 ~~7.4 V buck~~ and ~~RS485 transceiver~~ deleted — not needed with the revised
 servo set. Total power budget: 6 servos ≈ 20–25 W typical, 70 W transient worst.
@@ -105,17 +111,17 @@ servo set. Total power budget: 6 servos ≈ 20–25 W typical, 70 W transient wo
 | Actuation | ~$149 |
 | Sensing | ~$44 |
 | Compute & interaction | ~$134 |
-| Power & interconnect | ~$61 |
+| Power & interconnect | ~$80 |
 | Mechanical | ~$51 |
-| **Subtotal** | **~$439** |
-| Reserve (spares, reprints, shipping) | ~$45 |
-| **Funded ask (with Orange Pi 5B)** | **~$485** |
-| **Funded ask (headless, no Pi)** | **~$400** |
+| **Subtotal** | **~$458** |
+| Reserve (spares, reprints, shipping) | ~$46 |
+| **Funded ask (with Orange Pi 5B)** | **~$504** |
+| **Funded ask (headless, no Pi)** | **~$421** |
 
 ## Variants
 
-- **Recommended (this BOM):** $485 ask — onboard NPU brain, works untethered.
-- **Headless:** drop Pi + microSD (−$83) → ~$400 ask, agent runs on your
+- **Recommended (this BOM):** ~$504 ask — onboard NPU brain, works untethered.
+- **Headless:** drop Pi + microSD (−$83) → ~$421 ask, agent runs on your
   computer over USB-C. Same sensing, same compliance, loses "untethered demo."
 - **Premium J2:** swap HTD-45H → SM60CL (+$50–135): aluminum case, real rated
   torque spec, RS485 (needs MAX3485 +$3). Do it only if bench tests show the

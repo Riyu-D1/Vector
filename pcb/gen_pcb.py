@@ -4,11 +4,16 @@
 Emit a KiCad .kicad_pcb directly — no schematic needed for a passive
 carrier board; pads get nets assigned here so DRC is meaningful.
 
-Board: 90 x 70 mm, 2-layer, 100% through-hole, zero ICs.
-Contents: ESP32-S3-DevKitC-1 socket rows, 12 V in -> fuse -> servo bus
-ports (KK-254), optional Mini-360 buck footprint + 5 V screw terminal,
-Schottky on ESP32 5 V feed, 2x I2C ports (SEA encoders), UART port to
-wrist node, estop pins, power + status LEDs, GND zone on B.Cu.
+Board: 100 x 85 mm, 2-layer, 100% through-hole, zero ICs.
+Contents: ESP32-S3-DevKitC-1 socket rows, 12 V in (XT60 or screw
+terminal) -> power-enable jumper -> fuse -> servo bus ports (KK-254),
+optional Mini-360 buck footprint + 5 V screw terminal, Schottky on
+ESP32 5 V feed, 2x I2C ports (SEA encoders), UART port to wrist node,
+estop pins, power + status LEDs. v1.1 adds: SSD1306 OLED socket,
+GY-521/MPU6050 IMU socket, KY-040 jog-encoder socket, 5V active buzzer
+(+2N2222 driver), VS1838B IR receiver, DS18B20 temp sensor, 12V rail
+voltage divider -> ADC, WS2812 port, spare-GPIO header, input TVS.
+GND zone on B.Cu.
 
 Run:  python3 pcb/gen_pcb.py
 Out:  pcb/soma-carrier.kicad_pcb  +  pcb/soma-carrier.kicad_pro
@@ -16,18 +21,22 @@ Out:  pcb/soma-carrier.kicad_pcb  +  pcb/soma-carrier.kicad_pro
 
 import math
 import re
+import time
 import uuid
 from pathlib import Path
 
 KICAD_LIB = Path("/Applications/KiCad/KiCad.app/Contents/SharedSupport/footprints")
 OUT = Path(__file__).resolve().parent
-BOARD_W, BOARD_H = 90.0, 70.0
+BOARD_W, BOARD_H = 135.0, 115.0
 
 NETS = [
-    "GND", "+12V_IN", "+12V", "+5V", "+5V_MCU", "+3V3",
+    "GND", "+12V_IN", "+12V_SW", "+12V", "+5V", "+5V_MCU", "+3V3",
     "BUSA_DATA", "BUSB_DATA", "RXA", "RXB",
     "SDA1", "SCL1", "SDA2", "SCL2",
     "WTX", "WRX", "ESTOP", "LEDGPIO", "LED1_A", "LED2_A",
+    "BUZ", "BZB", "BZC", "VSNS",
+    "ENC_A", "ENC_B", "ENC_SW", "IRIN", "TEMP", "NEO",
+    "SP1", "SP2", "SP3",
 ]
 NET_ID = {n: i + 1 for i, n in enumerate(NETS)}
 
@@ -117,7 +126,11 @@ class Placed:
         if pad_nets:
             src = inject(src, pad_nets)
         self.src = src
-        # KiCad y-axis points down: file rotation a == math rotation -a
+        # KiCad file convention: +y down, positive angle CCW on screen ==
+        # rot() with the NEGATED angle. Internal pads must match the file
+        # exactly or the router targets empty space (checked by
+        # check_pads.py — run after every rotation change).
+        self.pad_nets = pad_nets or {}
         self.pads, self.padinfo = {}, {}
         for n, (px, py, hx, hy, prr, layers) in pad_info(
                 load_footprint(libdir, fname)).items():
@@ -137,24 +150,43 @@ def place(ref, value, libdir, fname, x, y, rot_deg=0, pad_nets=None):
 
 
 # ---------------------------------------------------------------------------
-# Component placement  (x, y in mm; board 90x70)
+# Component placement  (x, y in mm; board 100x85)
 # ---------------------------------------------------------------------------
 
-# Power in — left edge, bottom half
+# Power in — left edge. Vertical XT60 plug OR screw terminal, in parallel.
+place("J16", "XT60", "Connector_AMASS.pretty",
+      "AMASS_XT60-M_1x02_P7.20mm_Vertical.kicad_mod",
+      7.0, 17.0, pad_nets={"1": "GND", "2": "+12V_IN"})
 place("J1", "12V_IN", "TerminalBlock_Phoenix.pretty",
       "TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal.kicad_mod",
       8.0, 48.0, rot_deg=90, pad_nets={"1": "+12V_IN", "2": "GND"})
+# JP1: jumper shunt = power switch (or wire a panel rocker here)
+place("JP1", "PWR-ON", "Connector_PinHeader_2.54mm.pretty",
+      "PinHeader_1x02_P2.54mm_Vertical.kicad_mod", 10.0, 58.0,
+      pad_nets={"1": "+12V_IN", "2": "+12V_SW"})
 place("J2", "5V_IN", "TerminalBlock_Phoenix.pretty",
       "TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal.kicad_mod",
-      8.0, 34.0, rot_deg=90, pad_nets={"1": "+5V", "2": "GND"})
+      8.0, 36.0, rot_deg=90, pad_nets={"1": "+5V", "2": "GND"})
+# D4: 15V bidirectional TVS across the input (P6KE15CA / 1.5KE15CA)
+place("D4", "TVS15", "Diode_THT.pretty",
+      "D_DO-201_P12.70mm_Horizontal.kicad_mod",
+      22.0, 58.0, rot_deg=0, pad_nets={"1": "+12V_IN", "2": "GND"})
 place("F1", "6A", "Fuse.pretty", "Fuse_Blade_Mini_directSolder.kicad_mod",
-      17.0, 50.0, rot_deg=90, pad_nets={"1": "+12V_IN", "2": "+12V"})
+      17.0, 50.0, rot_deg=90, pad_nets={"1": "+12V_SW", "2": "+12V"})
 place("C1", "1000uF", "Capacitor_THT.pretty", "CP_Radial_D10.0mm_P5.00mm.kicad_mod",
       40.0, 19.0, pad_nets={"1": "+12V", "2": "GND"})
 
+# 12V rail voltage monitor: 30k + 6.8k divider -> ADC pin (VSNS)
+place("R7", "30k", "Resistor_THT.pretty",
+      "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.kicad_mod",
+      27.0, 36.0, pad_nets={"1": "+12V", "2": "VSNS"})
+place("R8", "6.8k", "Resistor_THT.pretty",
+      "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.kicad_mod",
+      27.0, 40.0, pad_nets={"1": "GND", "2": "VSNS"})
+
 # Optional Mini-360 buck module — 4 edge pads, top-left
 place("J3", "MINI360", "Connector_PinHeader_2.54mm.pretty",
-      "PinHeader_1x04_P2.54mm_Vertical.kicad_mod", 10.0, 12.0,
+      "PinHeader_1x04_P2.54mm_Vertical.kicad_mod", 26.0, 14.0,
       pad_nets={"1": "+12V", "2": "GND", "3": "+5V", "4": "GND"})
 
 # Servo bus ports along top edge (pin1=GND pin2=+12V pin3=DATA)
@@ -166,24 +198,49 @@ place("J5", "BUS_A2", "Connector_Molex.pretty",
       45.0, 9.0, pad_nets={"1": "GND", "2": "+12V", "3": "BUSA_DATA"})
 place("J6", "BUS_B", "Connector_Molex.pretty",
       "Molex_KK-254_AE-6410-03A_1x03_P2.54mm_Vertical.kicad_mod",
-      70.0, 9.0, pad_nets={"1": "GND", "2": "+12V", "3": "BUSB_DATA"})
+      78.0, 9.0, pad_nets={"1": "GND", "2": "+12V", "3": "BUSB_DATA"})
 
-# DevKitC-1 socket: two 1x19 rows, 22.86 mm apart, USB ports -> left edge
-# ROW_BOT (y=51.16) = J1  |  ROW_TOP (y=28.44) = J2   (verify on assembly!)
-j1_nets = {}
-j1_map = {1: "+3V3", 3: "ESTOP", 7: "U2TX", 8: "U2RX", 9: "U1TX", 10: "U1RX",
-          11: "SDA1", 14: "SCL1", 15: "SCL2", 16: "SDA2"}
-net_name = {"U2TX": "BUSB_DATA", "U2RX": "RXB", "U1TX": "BUSA_DATA",
-            "U1RX": "RXA"}
-for pin, sig in j1_map.items():
-    j1_nets[str(pin)] = net_name.get(sig, sig)
-place("U1A", "DevKitC-J1", "Connector_PinHeader_2.54mm.pretty",
-      "PinHeader_1x19_P2.54mm_Vertical.kicad_mod",
-      22.14, 51.16, rot_deg=90, pad_nets=j1_nets)
-j2_map = {1: "+5V_MCU", 2: "GND", 3: "WTX", 4: "WRX", 18: "LEDGPIO"}
-place("U1B", "DevKitC-J2", "Connector_PinHeader_2.54mm.pretty",
-      "PinHeader_1x19_P2.54mm_Vertical.kicad_mod",
-      22.14, 28.30, rot_deg=90, pad_nets={str(k): v for k, v in j2_map.items()})
+# DevKitC-1 socket: two 1x22 rows, 22.86 mm apart, USB ports -> left edge.
+# The module is 2x22; socket pin N maps to module J-position (23-N) so
+# position 21/22 (5V, GND) land on pins 2/1 at the USB (west) end.
+# U1A (bottom row, y=51.16) = module J3 column;
+# U1B (top row, y=28.30)  = module J1 column.
+# GPIO per pad (real DevKitC-1 v1.1 pinout, verified against Espressif docs):
+#   U1B: 1=G 2=5V 3=IO14 4=IO13 5=IO12 6=IO11 7=IO10 8=IO9 9=IO46
+#        10=IO3 11=IO8 12=IO18 13=IO17 14=IO16 15=IO15 16=IO7 17=IO6
+#        18=IO5 19=IO4 20=RST 21=3V3 22=3V3
+#   U1A: 1=G 2=G 3=IO19(USB) 4=IO20(USB) 5=IO21 6=IO47 7=IO48 8=IO45
+#        9=IO0 10=IO35 11=IO36 12=IO37 13=IO38 14=IO39 15=IO40 16=IO41
+#        17=IO42 18=IO2 19=IO1 20=IO44 21=IO43 22=G
+# Strapping (IO0/3/45/46), USB (IO19/20), console (IO43/44) and N16R8
+# flash/PSRAM pins (IO26-37) stay unconnected. VSNS sits on IO10 (ADC1).
+# Free GPIOs are placed by destination: bottom-edge signals on U1A,
+# top/right-edge signals on U1B, west signals on the west-end pins.
+u1a_map = {1: "GND", 2: "GND", 22: "GND",
+           5: "ENC_A", 6: "ENC_B", 7: "ENC_SW",          # IO21/47/48 -> J13
+           13: "ESTOP",                                 # IO38 -> J9
+           14: "WRX", 15: "WTX",                        # IO39/40 -> J10
+           16: "SCL2", 17: "SDA2",                      # IO41/42 -> J8
+           18: "SP1", 19: "SP2"}                        # IO2/1 -> J15
+place("U1A", "DevKitC-J3", "Connector_PinHeader_2.54mm.pretty",
+      "PinHeader_1x22_P2.54mm_Vertical.kicad_mod",
+      22.14, 51.16, rot_deg=90,
+      pad_nets={str(k): v for k, v in u1a_map.items()})
+u1b_map = {1: "GND", 2: "+5V_MCU", 21: "+3V3", 22: "+3V3",
+           5: "RXB", 6: "RXA",                          # IO12/11 -> R2/R1
+           7: "VSNS",                                   # IO10 ADC1 -> R7/R8
+           11: "SDA1", 12: "SCL1",                      # IO8/18 -> J7/J11/J12
+           13: "BUSA_DATA",                             # IO17 -> J4/J5
+           14: "LEDGPIO",                               # IO16 -> R4
+           15: "BUSB_DATA",                             # IO15 -> J6
+           16: "BUZ",                                   # IO7 -> R5
+           17: "TEMP",                                  # IO6 -> DST
+           18: "IRIN",                                  # IO5 -> IR1
+           19: "NEO"}                                   # IO4 -> J14
+place("U1B", "DevKitC-J1", "Connector_PinHeader_2.54mm.pretty",
+      "PinHeader_1x22_P2.54mm_Vertical.kicad_mod",
+      22.14, 28.30, rot_deg=90,
+      pad_nets={str(k): v for k, v in u1b_map.items()})
 
 # Bus coupling resistors: RX <- DATA through 1k
 place("R1", "1k", "Resistor_THT.pretty",
@@ -196,7 +253,7 @@ place("R2", "1k", "Resistor_THT.pretty",
 # Schottky on the ESP32 5V feed
 place("D1", "1N5820", "Diode_THT.pretty",
       "D_DO-201_P12.70mm_Horizontal.kicad_mod",
-      16.0, 35.0, rot_deg=90, pad_nets={"1": "+5V_MCU", "2": "+5V"})
+      38.0, 58.0, rot_deg=0, pad_nets={"1": "+5V_MCU", "2": "+5V"})
 
 # 5V bulk + decoupling
 place("C3", "220uF", "Capacitor_THT.pretty", "CP_Radial_D8.0mm_P3.50mm.kicad_mod",
@@ -210,36 +267,89 @@ place("C4", "100nF", "Capacitor_THT.pretty", "C_Disc_D5.0mm_W2.5mm_P2.50mm.kicad
 # pad walls never line up into one long barrier (no sealed pockets).
 # Pin headers extend -y from origin, so rot=+90 puts pin1 leftmost.
 place("J7", "ENC_J2", "Connector_PinHeader_2.54mm.pretty",
-      "PinHeader_1x04_P2.54mm_Vertical.kicad_mod", 18.0, 60.0, rot_deg=90,
-      pad_nets={"1": "+3V3", "2": "GND", "3": "SDA1", "4": "SCL1"})
+      "PinHeader_1x04_P2.54mm_Vertical.kicad_mod", 30.0, 64.0,
+      # I2C on the END pads (open north/south faces); power+GND mids
+      # take east/west face entries — mid pads can't all share faces.
+      pad_nets={"1": "SDA1", "2": "+3V3", "3": "GND", "4": "SCL1"})
 place("J8", "ENC_J3", "Connector_PinHeader_2.54mm.pretty",
-      "PinHeader_1x04_P2.54mm_Vertical.kicad_mod", 30.0, 64.0, rot_deg=90,
+      "PinHeader_1x04_P2.54mm_Vertical.kicad_mod", 48.0, 64.0, rot_deg=90,
       pad_nets={"1": "+3V3", "2": "GND", "3": "SDA2", "4": "SCL2"})
 place("J9", "ESTOP", "Connector_PinHeader_2.54mm.pretty",
-      "PinHeader_1x02_P2.54mm_Vertical.kicad_mod", 44.0, 60.0, rot_deg=90,
+      "PinHeader_1x02_P2.54mm_Vertical.kicad_mod", 30.0, 95.0, rot_deg=90,
       pad_nets={"1": "ESTOP", "2": "GND"})
 place("J10", "WRIST", "Connector_PinHeader_2.54mm.pretty",
-      "PinHeader_1x04_P2.54mm_Vertical.kicad_mod", 58.0, 64.0, rot_deg=90,
-      pad_nets={"1": "+5V", "2": "GND", "3": "WTX", "4": "WRX"})
+      "PinHeader_1x04_P2.54mm_Vertical.kicad_mod", 86.0, 95.0, rot_deg=90,
+      pad_nets={"1": "GND", "2": "WTX", "3": "WRX", "4": "+5V"})
+
+# On-board peripherals — mid-right cluster + bottom-right corner
+place("BZ1", "BUZZ5V", "Buzzer_Beeper.pretty",
+      "Buzzer_12x9.5RM7.6.kicad_mod", 66.0, 95.0,
+      pad_nets={"1": "+5V", "2": "BZC"})
+# TO-92 parts go on 2.54mm-pitch pads — spread the leads, hand-solderable
+# (the true 1.27mm TO-92 inline pitch can't pass a track to pin 2).
+place("Q1", "2N2222A", "Connector_PinHeader_2.54mm.pretty",
+      "PinHeader_1x03_P2.54mm_Vertical.kicad_mod", 128.0, 62.0,
+      pad_nets={"1": "GND", "2": "BZB", "3": "BZC"})
+place("R5", "1k", "Resistor_THT.pretty",
+      "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.kicad_mod",
+      112.0, 95.0, rot_deg=90, pad_nets={"1": "BUZ", "2": "BZB"})
+place("IR1", "VS1838B", "Connector_PinHeader_2.54mm.pretty",
+      "PinHeader_1x03_P2.54mm_Vertical.kicad_mod", 128.0, 36.0,
+      pad_nets={"1": "IRIN", "2": "GND", "3": "+3V3"})
+# DS18B20 on three spread test pads: a 1x03's mid-pad keepout merges
+# with its neighbours and seals the pad entirely — spread pads keep
+# every face open. Leads bend to fit; same trick as Q1's TO-92.
+_DS = "TestPoint_THTPad_D1.5mm_Drill0.7mm.kicad_mod"
+place("DSG", "DS18B20-G", "TestPoint.pretty", _DS, 124.0, 76.0,
+      pad_nets={"1": "GND"})
+place("DST", "DS18B20-DQ", "TestPoint.pretty", _DS, 127.0, 78.5,
+      pad_nets={"1": "TEMP"})
+place("DSV", "DS18B20-V", "TestPoint.pretty", _DS, 130.0, 76.0,
+      pad_nets={"1": "+3V3"})
+place("R6", "4.7k", "Resistor_THT.pretty",
+      "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.kicad_mod",
+      112.0, 82.0, pad_nets={"1": "+3V3", "2": "TEMP"})
+
+# Plug-in module sockets — right edge column + bottom strip
+place("J11", "OLED", "Connector_PinHeader_2.54mm.pretty",
+      "PinHeader_1x04_P2.54mm_Vertical.kicad_mod", 64.0, 10.0, rot_deg=90,
+      pad_nets={"1": "GND", "2": "+3V3", "3": "SCL1", "4": "SDA1"})
+place("J12", "IMU", "Connector_PinHeader_2.54mm.pretty",
+      "PinHeader_1x08_P2.54mm_Vertical.kicad_mod", 93.0, 24.0,
+      pad_nets={"1": "+5V", "2": "GND", "3": "SCL1", "4": "SDA1",
+                "7": "GND"})
+place("J14", "NEOPIX", "Connector_PinHeader_2.54mm.pretty",
+      "PinHeader_1x03_P2.54mm_Vertical.kicad_mod", 128.0, 48.0,
+      pad_nets={"1": "GND", "2": "NEO", "3": "+5V"})
+place("J13", "JOG", "Connector_PinHeader_2.54mm.pretty",
+      "PinHeader_1x05_P2.54mm_Vertical.kicad_mod", 14.0, 95.0, rot_deg=90,
+      pad_nets={"1": "+3V3", "2": "GND", "3": "ENC_B", "4": "ENC_A",
+                "5": "ENC_SW"})
+# 1x05: under-row dive-lane capacity is ~2 tracks/side; two spare GPIO
+# is the most that fits cleanly next to the JOG header's five dives.
+place("J15", "SPARE", "Connector_PinHeader_2.54mm.pretty",
+      "PinHeader_1x05_P2.54mm_Vertical.kicad_mod", 64.0, 64.0, rot_deg=90,
+      pad_nets={"1": "+5V", "2": "GND", "3": "SP1",
+                "4": "SP2", "5": "+3V3"})
 
 # LEDs
 place("D2", "PWR", "LED_THT.pretty", "LED_D3.0mm.kicad_mod",
-      76.0, 62.0, pad_nets={"1": "GND", "2": "LED1_A"})
+      70.0, 68.0, pad_nets={"1": "GND", "2": "LED1_A"})
 place("R3", "330", "Resistor_THT.pretty",
       "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.kicad_mod",
-      62.0, 57.0, pad_nets={"1": "+5V", "2": "LED1_A"})
+      54.0, 56.0, pad_nets={"1": "+5V", "2": "LED1_A"})
 place("D3", "STAT", "LED_THT.pretty", "LED_D3.0mm.kicad_mod",
       76.0, 56.0, pad_nets={"1": "GND", "2": "LED2_A"})
 place("R4", "330", "Resistor_THT.pretty",
       "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.kicad_mod",
-      60.0, 46.0, pad_nets={"1": "LEDGPIO", "2": "LED2_A"})
+      60.0, 42.0, pad_nets={"1": "LEDGPIO", "2": "LED2_A"})
 
 # Test pads + mounting holes
 place("TP1", "GND", "TestPoint.pretty", "TestPoint_THTPad_D1.5mm_Drill0.7mm.kicad_mod",
       74.0, 44.0, pad_nets={"1": "GND"})
 place("TP2", "+12V", "TestPoint.pretty", "TestPoint_THTPad_D1.5mm_Drill0.7mm.kicad_mod",
       74.0, 40.0, pad_nets={"1": "+12V"})
-for i, (hx, hy) in enumerate([(4, 4), (86, 4), (4, 66), (86, 66)]):
+for i, (hx, hy) in enumerate([(4, 4), (131, 4), (4, 111), (131, 111)]):
     place(f"H{i+1}", "M3", "MountingHole.pretty",
           "MountingHole_3.2mm_M3_DIN965.kicad_mod", hx, hy)
 
@@ -296,62 +406,132 @@ def disc_cells(x, y, r):
     return out
 
 
+def rect_cells(x, y, hx, hy):
+    """Grid cells whose centres fall inside the axis-aligned box
+    (x±hx, y±hy). Exact keepout shape for rect/oval pads — the old
+    disc model covered pad corners but sealed diagonal corridors
+    around them (prr=hypot is 0.35mm fatter than the pad edge)."""
+    out = set()
+    for gx in range(int((x - hx) / GRID) - 1, int((x + hx) / GRID) + 2):
+        for gy in range(int((y - hy) / GRID) - 1, int((y + hy) / GRID) + 2):
+            cx, cy = gx * GRID, gy * GRID
+            if x - hx <= cx <= x + hx and y - hy <= cy <= y + hy:
+                out.add((gx, gy))
+    return out
+
+
+def stadium_cells(x, y, hx, hy, m):
+    """True clearance keepout for a rect pad: the Minkowski sum of the
+    pad box (x±hx,y±hy) with a disc of radius m — straight edges plus
+    quarter-disc corners at (±hx,±hy). A plain expanded box (hx+m)x(hy+m)
+    would also work but over-covers the corner overhang; corner discs at
+    the *expanded* corner (the earlier bug) poke m into inter-pin gaps
+    and seal pad approaches entirely."""
+    out = set()
+    X, Y = hx + m, hy + m
+    for gx in range(int((x - X) / GRID) - 1, int((x + X) / GRID) + 2):
+        for gy in range(int((y - Y) / GRID) - 1, int((y + Y) / GRID) + 2):
+            cx, cy = gx * GRID, gy * GRID
+            dx, dy = abs(cx - x), abs(cy - y)
+            if (dx <= hx and dy <= Y) or (dy <= hy and dx <= X) \
+                    or (dx - hx) ** 2 + (dy - hy) ** 2 <= m * m:
+                out.add((gx, gy))
+    return out
+
+
 def block_disc(layer, x, y, r, net):
-    obstacles[layer].update({c: net for c in disc_cells(x, y, r)})
+    # first-writer-wins: a later net's halo must not reassign cells that
+    # already belong to an earlier track (losing the owner un-protects it)
+    for c in disc_cells(x, y, r):
+        obstacles[layer].setdefault(c, net)
+
+
+OWNCU = {}   # net -> {"F.Cu": set, "B.Cu": set}: cells with real copper
+NETW2 = {}   # net -> largest copper half-width marked (via clearance lookup)
+
+
+def mark_copper(net, layer, x, y, r):
+    OWNCU.setdefault(net, {"F.Cu": set(), "B.Cu": set()})[layer].update(
+        disc_cells(x, y, r))
+    NETW2[net] = max(r, NETW2.get(net, 0.0))
 
 
 def collect_pads():
-    """Gather every pad + mounting hole: (x, y, keepout_radius, layers)."""
+    """Gather every pad + mounting hole:
+    (x, y, hx, hy, prr, kind, layers, net).
+    kind 'circle' -> disc keepout of radius prr; 'box' -> rect keepout of
+    half extents hx+m / hy+m (rect and oval pads; exact, unlike the old
+    circumscribed-disc which over-blocked pad diagonals)."""
     for ref, c in C.items():
         for num, (px, py, hx, hy, prr, layers) in c.padinfo.items():
-            PADS.append((px, py, prr, layers))
+            kind = "circle" if prr <= max(hx, hy) + 1e-9 else "box"
+            PADS.append((px, py, hx, hy, prr, kind, layers,
+                         c.pad_nets.get(num)))
     for ref in ("H1", "H2", "H3", "H4"):
         # M3 hole: 3.2 drill + margin; obstacle on both layers
-        PADS.append((C[ref].x, C[ref].y, 1.9, ("F.Cu", "B.Cu")))
+        PADS.append((C[ref].x, C[ref].y, 1.9, 1.9, 1.9, "circle",
+                     ("F.Cu", "B.Cu"), None))
 
 
-def mark_track(net, width, layer, pts):
-    # keep future track centers clear of this track's edge;
-    # 0.75 = half-width of the widest track in ROUTES (+12V @1.5mm)
-    r = width / 2 + CLR + 0.85
+def mark_track(net, width, layer, pts, reserve=None):
+    # keep future track centers clear of this track's edge; reserve =
+    # half-width of the widest track that may still route after this one
+    # (computed from ROUTES order — fat rails run first, so signals only
+    # need to defend against other thin signals).
+    # +0.15: the disc-union model under-covers the drawn segment polygon
+    # at bends/joins — KiCad measures true polygon distance and flags
+    # sub-0.2mm grazes without this headroom.
+    r = width / 2 + CLR + (0.85 if reserve is None else reserve) + 0.1
     for a, b in zip(pts, pts[1:]):
         steps = max(1, int(math.hypot(b[0] - a[0], b[1] - a[1]) / GRID) + 1)
         for t in range(steps + 1):
             x, y = a[0] + (b[0] - a[0]) * t / steps, a[1] + (b[1] - a[1]) * t / steps
             block_disc(layer, x, y, r, net)
+            mark_copper(net, layer, x, y, width / 2 + 0.02)
 
 
 LNAME = ("F.Cu", "B.Cu")
 VIA_COST = 8.0        # mm-equivalent cost; discourages gratuitous vias
-VIA_R = 1.1           # via keep-out radius vs pads/marks
+VIA_R = 0.65          # via keep-out radius vs pads/marks
+VIA_DIA = 0.7         # emitted via annulus diameter (0.3 drill)
+VIA_DRILL = 0.3
+VIA_PAD = VIA_DIA / 2  # via copper radius
 
 
-def astar(net, starts, goals, w=0.5, slack=18):
+def astar(net, starts, goals, w=0.5, slack=18, extra=()):
     """3D A* over (grid cell, layer); returns [(x, y, layer_idx), ...].
     starts/goals: terminal dicts {x, y, r, layers} — r is the pad's own
-    half-size so the search can end anywhere on its copper."""
+    half-size so the search can end anywhere on its copper.
+    extra: extra start states (cell, layer_idx) — used to seed a leg from
+    the net's existing drawn copper, not just terminal pads."""
     # per-layer pad obstacles with ownership: cell -> {pad idx}
     padown = [dict(), dict()]
-    for idx, (px, py, prr, layers) in enumerate(PADS):
+    for idx, (px, py, hx, hy, prr, kind, layers, pnet) in enumerate(PADS):
         for li, ln in enumerate(LNAME):
             if ln in layers:
-                # +0.12 headroom: grid quantization + KiCad's exact geometry.
-                # Kept small — on 2.54mm pitch, keepouts >~1.27+w/2 merge
-                # across a neighbour's pad and seal its copper entirely.
-                for c in disc_cells(px, py, prr + CLR + w / 2 + 0.12):
+                # +0.03 headroom: worst-case true clearance is still
+                # CLR+0.03. The old +0.12 made keepout>half-pitch (1.295 vs
+                # 1.27) and sealed every inter-pad gap on the 2.54mm rows —
+                # guide §3e requires one 0.25 track to fit between pins.
+                m = CLR + w / 2 + 0.03
+                cells = (disc_cells(px, py, prr + m) if kind == "circle"
+                         else stadium_cells(px, py, hx, hy, m))
+                for c in cells:
                     padown[li].setdefault(c, set()).add(idx)
     obs_l = (obstacles["F.Cu"], obstacles["B.Cu"])
 
     # identify which pads are this route's terminals
     tidx = set()
     for t in starts + goals:
-        for idx, (px, py, prr, layers) in enumerate(PADS):
+        for idx, (px, py, hx, hy, prr, kind, layers, pnet) \
+                in enumerate(PADS):
             if (px - t["x"]) ** 2 + (py - t["y"]) ** 2 < 0.16:
                 tidx.add(idx)
 
     def terminal_cells(t):
         out = []
-        for c in disc_cells(t["x"], t["y"], max(t["r"], GRID)):
+        tr = max(t["r"], t.get("goal_r", 0.0), GRID)
+        for c in disc_cells(t["x"], t["y"], tr):
             for li, ln in enumerate(LNAME):
                 if ln in t["layers"]:
                     out.append((c, li))
@@ -373,27 +553,75 @@ def astar(net, starts, goals, w=0.5, slack=18):
         owners = padown[li].get(c)
         return owners is not None and bool(owners - tidx)
 
+    owncu = OWNCU.get(net, {"F.Cu": set(), "B.Cu": set()})
+
+    def free(c, li):
+        """Cell enterable by this net? Marks of our own net only count if
+        they cover real drawn copper — the halo around our track is not
+        copper, and landing on it is how dangling stubs happen."""
+        if (c, li) in termcu:
+            return True
+        if blocked(c, li):
+            return False
+        o = obs_l[li].get(c)
+        if o is None:
+            return True
+        return o == net and c in owncu[LNAME[li]]
+
     # precomputed no-via region: pad keepouts on both layers (one set —
     # vias span both). Built once per route, not per search state.
+    # VIA_R = via pad (0.35) + CLR (0.2) + 0.1 margin off the pad edge.
     viabad = set()
-    for px, py, prr, _ in PADS:
-        viabad |= disc_cells(px, py, prr + 1.25)
+    for px, py, hx, hy, prr, kind, _, _pnet in PADS:
+        viabad |= (disc_cells(px, py, prr + VIA_R) if kind == "circle"
+                   else stadium_cells(px, py, hx, hy, VIA_R))
+
+    # via keep-out vs tracks: measure distance to *foreign copper cells*
+    # (OWNCU), not to the fat reserve halo in `obstacles` — that halo is
+    # w/2+CLR+reserve wide, which demanded a ~2-4mm clear circle and made
+    # vias nearly unplaceable. A 0.7mm via only needs CLR to real copper.
+    # fcu[layer]: cell -> owning net (the one with the widest copper).
+    fcu = (dict(), dict())
+    for other, layers in OWNCU.items():
+        if other == net:
+            continue
+        for li, ln in enumerate(LNAME):
+            f = fcu[li]
+            for c0 in layers[ln]:
+                p = f.get(c0)
+                if p is None or NETW2.get(other, 0.3) > NETW2.get(p, 0.3):
+                    f[c0] = other
+
+    # a foreign copper cell at distance d is a violation iff
+    # d < NETW2[owner] + VIA_PAD + CLR. Widest copper half-width is ~0.77
+    # (1.5mm rail), so the dangerous radius is <= ~1.33mm — scan a full
+    # r=13-cell disc (~1.65mm) sorted nearest-first for early exits.
+    _VIA_SCAN = sorted(
+        (math.hypot(dx, dy) * GRID, dx, dy)
+        for dx in range(-13, 14) for dy in range(-13, 14)
+        if dx * dx + dy * dy <= 169)
 
     def via_ok(cc):
         if cc in viabad:
             return False
-        for o in obs_l:            # ~0.38mm radius vs other-net mark cells
-            for dx in range(-3, 4):
-                for dy in range(-3, 4):
-                    if dx * dx + dy * dy > 9:
-                        continue
-                    owner = o.get((cc[0] + dx, cc[1] + dy))
-                    if owner is not None and owner != net:
-                        return False
+        cx, cy = cc
+        lim = VIA_PAD + CLR
+        for f in fcu:
+            get = f.get
+            for d, dx, dy in _VIA_SCAN:
+                o = get((cx + dx, cy + dy))
+                if o is not None and d < NETW2.get(o, 0.3) + lim:
+                    return False
         return True
 
     start_cells = [s for t in starts for s in terminal_cells(t)]
     goal = {g for t in goals for g in terminal_cells(t)}
+    # O(1) heuristic: Manhattan distance to the goal centroid. The goal set
+    # is one pad/waypoint disc per leg, so centroid distance tracks the true
+    # distance closely — and it replaces a min() over the whole set per push.
+    _gc = [g[0] for g in goal]
+    gx0 = sum(c[0] for c in _gc) / len(_gc)
+    gy0 = sum(c[1] for c in _gc) / len(_gc)
     W, H = int(BOARD_W / GRID) - 1, int(BOARD_H / GRID) - 1
     # search window: terminal bbox + slack (keeps local routes cheap)
     bx0 = int((min(t["x"] for t in starts + goals) - slack) / GRID)
@@ -402,6 +630,7 @@ def astar(net, starts, goals, w=0.5, slack=18):
     by1 = int((max(t["y"] for t in starts + goals) + slack) / GRID)
     inside = lambda c: (max(10, bx0) <= c[0] <= min(W - 10, bx1)
                         and max(10, by0) <= c[1] <= min(H - 10, by1))
+    start_cells += [s for s in extra if inside(s[0])]
     start_cells = [s for s in start_cells if inside(s[0])]
     openq = [(0, s) for s in start_cells]
     heapq.heapify(openq)
@@ -409,7 +638,16 @@ def astar(net, starts, goals, w=0.5, slack=18):
     dirs = [(1, 0, 1), (-1, 0, 1), (0, 1, 1), (0, -1, 1),
             (1, 1, 1.414), (1, -1, 1.414), (-1, 1, 1.414), (-1, -1, 1.414)]
     found = None
+    # Node cap: a legit leg explores well under ~400k states; beyond that the
+    # goal is sealed and grinding the whole board for 40min helps nobody —
+    # fail fast and let the caller retry/report. Whole-board slack retries
+    # are the worst offenders — a sealed goal burns a full capped search.
+    _CAP = 250000 if slack < 50 else 500000
+    _DEADLINE = time.time() + 60    # hard 60 s per leg (ROUTING_GUIDE §7.6)
     while openq:
+        if len(cost) > _CAP or time.time() > _DEADLINE:
+            found = None
+            break
         f, cur = heapq.heappop(openq)
         if cur in goal:
             found = cur
@@ -417,24 +655,17 @@ def astar(net, starts, goals, w=0.5, slack=18):
         c2, li = cur
         for dx, dy, d in dirs:
             n2 = (c2[0] + dx, c2[1] + dy)
-            if not inside(n2) or blocked(n2, li) \
-                    or obs_l[li].get(n2, net) != net:
+            if not inside(n2) or not free(n2, li):
                 continue
             if dx and dy:                      # no corner-cutting
-                if blocked((c2[0] + dx, c2[1]), li) \
-                        or blocked((c2[0], c2[1] + dy), li):
-                    continue
-                m1 = obs_l[li].get((c2[0] + dx, c2[1]))
-                m2 = obs_l[li].get((c2[0], c2[1] + dy))
-                if (m1 is not None and m1 != net) \
-                        or (m2 is not None and m2 != net):
+                if not free((c2[0] + dx, c2[1]), li) \
+                        or not free((c2[0], c2[1] + dy), li):
                     continue
             nxt = (n2, li)
             nc = cost[cur] + d
             if nxt not in cost or nc < cost[nxt]:
                 cost[nxt] = nc
-                h = min(abs(n2[0] - g[0][0]) + abs(n2[1] - g[0][1])
-                        for g in goal)
+                h = abs(n2[0] - gx0) + abs(n2[1] - gy0)
                 heapq.heappush(openq, (nc + h * 1.4, nxt))
                 came[nxt] = cur
         nxt = (c2, 1 - li)                      # layer hop = via
@@ -442,8 +673,7 @@ def astar(net, starts, goals, w=0.5, slack=18):
             nc = cost[cur] + VIA_COST
             if nxt not in cost or nc < cost[nxt]:
                 cost[nxt] = nc
-                h = min(abs(c2[0] - g[0][0]) + abs(c2[1] - g[0][1])
-                        for g in goal)
+                h = abs(c2[0] - gx0) + abs(c2[1] - gy0)
                 heapq.heappush(openq, (nc + h * 1.4, nxt))
                 came[nxt] = cur
     if found is None:
@@ -453,25 +683,99 @@ def astar(net, starts, goals, w=0.5, slack=18):
               f"y {min(gy)*GRID:.1f}..{max(gy)*GRID:.1f} | "
               f"starts {[(t['x'], t['y']) for t in starts]} "
               f"goals {[(t['x'], t['y']) for t in goals]}")
-        raise RuntimeError(f"no route for {net}")
+        # Debug: report WHO blocks the goal cells and the cells just
+        # outside them — pad keepouts vs another net's track marks.
+        own = {}
+        for g in goal:
+            for li in range(len(LNAME)):
+                p = padown[li].get(g[0])
+                o = obs_l[li].get(g[0])
+                if p:
+                    own[f"pad{sorted(p)}@{LNAME[li]}"] = \
+                        own.get(f"pad{sorted(p)}@{LNAME[li]}", 0) + 1
+                if o is not None:
+                    own[f"mark:{o}@{LNAME[li]}"] = \
+                        own.get(f"mark:{o}@{LNAME[li]}", 0) + 1
+        print(f"  [{net}] goal-cell owners: {own}")
+        err = RuntimeError(f"no route for {net}")
+        err.blockers = {o[5:o.index("@")] for o in own
+                        if o.startswith("mark:")}
+        raise err
     path = [found]
     while path[-1] in came:
         path.append(came[path[-1]])
     path.reverse()
     pts = [(gx * GRID, gy * GRID, li) for (gx, gy), li in path]
-    # simplify collinear runs within a single layer
-    simp = [pts[0]]
+    # simplify collinear runs within a single layer — index-based so the
+    # repair pass below can re-insert skipped cell points
+    keep = {0, len(pts) - 1}
+    ai = 0
     for i in range(1, len(pts) - 1):
-        a, b, cpt = simp[-1], pts[i], pts[i + 1]
+        a, b, cpt = pts[ai], pts[i], pts[i + 1]
         if a[2] != b[2] or b[2] != cpt[2]:
-            simp.append(b)
+            keep.add(i)
+            ai = i
             continue
         cross = ((b[0] - a[0]) * (cpt[1] - b[1])
                  - (b[1] - a[1]) * (cpt[0] - b[0]))
         if abs(cross) > 0.05:
-            simp.append(b)
-    simp.append(pts[-1])
-    return simp
+            keep.add(i)
+            ai = i
+    # chord-vs-pad repair: cell centres stay outside foreign pad
+    # keepouts, but a straightened chord between kept points can cut back
+    # inside — KiCad measures the emitted segment, not the cells. Where a
+    # chord violates the keepout distance, re-insert the skipped point
+    # nearest the pad and re-check. Same margin the search used.
+    need = CLR + w / 2 + 0.03
+    for _pass in range(40):
+        idxs = sorted(keep)
+        bad = None
+        for ia, ib in zip(idxs, idxs[1:]):
+            a, b = pts[ia], pts[ib]
+            if a[2] != b[2] or ib - ia < 2:
+                continue  # via hop or adjacent cells — chord == cell edge
+            pln = LNAME[a[2]]
+            seglen = math.hypot(b[0] - a[0], b[1] - a[1])
+            if seglen < 1e-6:
+                continue
+            for pidx, (px, py, hx, hy, prr, kind, plays, pnet) \
+                    in enumerate(PADS):
+                if pidx in tidx or pnet == net or pln not in plays:
+                    continue
+                m = (prr if kind == "circle" else max(hx, hy)) + need
+                if (max(a[0], b[0]) < px - m or min(a[0], b[0]) > px + m
+                        or max(a[1], b[1]) < py - m
+                        or min(a[1], b[1]) > py + m):
+                    continue
+                n = max(2, int(seglen / 0.1) + 1)
+                viol = False
+                for s in range(1, n):
+                    cxp = a[0] + (b[0] - a[0]) * s / n
+                    cyp = a[1] + (b[1] - a[1]) * s / n
+                    if kind == "circle":
+                        if (cxp - px) ** 2 + (cyp - py) ** 2 \
+                                < (prr + need) ** 2:
+                            viol = True
+                            break
+                    else:
+                        ddx, ddy = abs(cxp - px), abs(cyp - py)
+                        if (ddx <= hx and ddy <= hy + need) \
+                                or (ddy <= hy and ddx <= hx + need) \
+                                or (ddx - hx) ** 2 + (ddy - hy) ** 2 \
+                                < need * need:
+                            viol = True
+                            break
+                if viol:
+                    bad = min(range(ia + 1, ib),
+                              key=lambda k: (pts[k][0] - px) ** 2
+                              + (pts[k][1] - py) ** 2)
+                    break
+            if bad is not None:
+                break
+        if bad is None:
+            break
+        keep.add(bad)
+    return [pts[i] for i in sorted(keep)]
 
 
 def term(s):
@@ -480,20 +784,31 @@ def term(s):
         x, y, hx, hy, prr, layers = C[s[0]].padinfo[s[1]]
         # goal disc = pad's inscribed circle: every cell in it is on copper
         return {"x": x, "y": y, "r": min(hx, hy), "layers": layers}
-    return {"x": s[0], "y": s[1], "r": 0.0, "layers": ("F.Cu", "B.Cu")}
+    # coordinate waypoint: fuzzy goal disc — "near the corridor" counts,
+    # and it must NOT bypass pad keepouts (r stays 0 for keepout bypass)
+    return {"x": s[0], "y": s[1], "r": 0.0, "goal_r": 1.2,
+            "layers": ("F.Cu", "B.Cu")}
 
 
 def route(net, stops, layer="F.Cu", w=0.5):
     """stops: (ref, pad) tuples or (x, y) waypoints, connected serially.
-    The router picks layers itself; `layer` is ignored (kept for the table)."""
+    The router picks layers itself; `layer` is ignored (kept for the table).
+
+    Each leg is seeded from the net's real copper (OWNCU cells) plus all
+    real pad terminals — NOT from fuzzy waypoint discs. Seeding from a
+    waypoint disc lets a leg start on cells the previous leg never drew,
+    which produced floating stubs that DRC reports as unconnected."""
+    res = RESERVE.get(net, 0.85)
     done = [term(stops[0])]
     for s in stops[1:]:
         t = term(s)
         print(f"    {net}: -> ({t['x']:.1f},{t['y']:.1f})")
+        extra = [(c, li) for li, ln in enumerate(LNAME)
+                 for c in OWNCU.get(net, {}).get(ln, ())]
         try:
-            pts3 = astar(net, done, [t], w)
+            pts3 = astar(net, done, [t], w, extra=extra)
         except RuntimeError:
-            pts3 = astar(net, done, [t], w, slack=99)   # full board retry
+            pts3 = astar(net, done, [t], w, slack=99, extra=extra)
         # split into contiguous per-layer runs; emit a via at each hop
         run = [pts3[0][:2]]
         li = pts3[0][2]
@@ -501,18 +816,25 @@ def route(net, stops, layer="F.Cu", w=0.5):
             if p[2] != li:
                 if len(run) > 1:
                     SEG.append((net, w, LNAME[li], run))
-                    mark_track(net, w, LNAME[li], run)
+                    mark_track(net, w, LNAME[li], run, res)
                 vx, vy = p[0], p[1]
                 VIA.append((vx, vy, net))
                 for l in LNAME:
-                    block_disc(l, vx, vy, 0.75 + CLR + 0.85, net)
+                    block_disc(l, vx, vy, VIA_PAD + CLR + res + 0.1, net)
+                    mark_copper(net, l, vx, vy, VIA_PAD + 0.02)
                 run, li = [p[:2]], p[2]
             else:
                 run.append(p[:2])
         if len(run) > 1:
             SEG.append((net, w, LNAME[li], run))
-            mark_track(net, w, LNAME[li], run)
-        done.append(t)
+            mark_track(net, w, LNAME[li], run, res)
+        # next leg: real pad terminals + exact endpoint (on drawn copper)
+        ep = pts3[-1]
+        done = [d for d in done if d["r"] >= GRID]
+        if t["r"] > 0:
+            done.append(t)
+        done.append({"x": ep[0], "y": ep[1], "r": 0.3,
+                     "layers": (LNAME[ep[2]],)})
 
 
 # ---------------------------------------------------------------------------
@@ -523,39 +845,56 @@ def route(net, stops, layer="F.Cu", w=0.5):
 collect_pads()
 
 ROUTES = [
-    # net, stops, layer, width — bottom-port signals dive under the row and
-    # rise into their pads; retry pass handles whatever still pockets.
-    ("SDA2", [("U1A", "16"), ("J8", "3")], "B.Cu", 0.4),
-    ("SCL2", [("U1A", "15"), ("J8", "4")], "B.Cu", 0.4),
-    ("ESTOP", [("U1A", "3"), ("J9", "1")], "B.Cu", 0.4),
-    ("LED1_A", [("R3", "2"), ("D2", "2")], "B.Cu", 0.4),
-    ("LED2_A", [("R4", "2"), ("D3", "2")], "B.Cu", 0.4),
-    ("LEDGPIO", [("U1B", "18"), ("R4", "1")], "B.Cu", 0.4),
-    ("SDA1", [("U1A", "11"), ("J7", "3")], "F.Cu", 0.4),
-    ("SCL1", [("U1A", "14"), ("J7", "4")], "F.Cu", 0.4),
-    ("+3V3", [("U1A", "1"), ("J7", "1"), ("J8", "1")], "F.Cu", 0.5),
-    ("WTX", [("U1B", "3"), ("J10", "3")], "F.Cu", 0.4),
-    ("WRX", [("U1B", "4"), ("J10", "4")], "F.Cu", 0.4),
-    ("BUSA_DATA", [("J4", "3"), ("J5", "3"), ("U1A", "9"), ("R1", "1")],
-     "F.Cu", 0.6),
-    ("RXA", [("R1", "2"), ("U1A", "10")], "F.Cu", 0.5),
-    ("BUSB_DATA", [("J6", "3"), ("U1A", "7"), ("R2", "1")], "F.Cu", 0.6),
-    ("RXB", [("R2", "2"), ("U1A", "8")], "F.Cu", 0.5),
-    ("+12V_IN", [("J1", "1"), ("F1", "1")], "F.Cu", 1.2),
-    ("+12V", [("F1", "2"), ("J3", "1"), ("J4", "2"), ("J5", "2"),
-              ("C1", "1"), ("C2", "1"), ("J6", "2"), ("TP2", "1")],
+    # net, stops, layer(hint only), width — guide order: 12V trunk first,
+    # then 5V/3V3, then fixed-function (bus/I2C/UART), then GPIOs.
+    # Stops are pad refs; the A* fills the path between them.
+    ("+12V_IN", [("J16", "2"), ("J1", "1"), ("JP1", "1"), ("D4", "1")],
      "F.Cu", 1.5),
-    ("+5V", [("J2", "1"), ("J3", "3"), ("D1", "2"), ("C3", "1"),
-             ("C4", "1"), (72, 56), ("R3", "1"), ("J10", "1")],
-     "F.Cu", 1.2),
-    ("+5V_MCU", [("D1", "1"), ("U1B", "1")], "F.Cu", 0.8),
-    # GND backbone tree — the pour alone leaves islands where connector
-    # rows fence off copper; the tree guarantees connectivity.
-    ("GND", [("J3", "2"), ("J3", "4"), ("U1B", "2"), ("J4", "1"),
-             ("J5", "1"), ("C1", "2"), ("C2", "2"), ("J6", "1"),
-             ("C3", "2"), ("C4", "2"), ("TP1", "1"), ("D3", "1"),
-             ("D2", "1"), ("J10", "2"), ("J9", "2"), ("J8", "2"),
-             ("J7", "2"), ("J1", "2"), ("J2", "2")], "B.Cu", 0.9),
+    ("+12V_SW", [("JP1", "2"), ("F1", "1")], "F.Cu", 1.5),
+    ("+12V", [("F1", "2"), ("R7", "1"), ("J3", "1"), (28.0, 4.0),
+              (32.5, 5.0), ("J4", "2"), (47.5, 5.0), ("J5", "2"),
+              (80.5, 5.0), ("J6", "2"), ("C2", "1"), ("C1", "1"),
+              ("TP2", "1")], "F.Cu", 1.5),
+    ("+5V", [("J2", "1"), ("J3", "3"), ("C4", "1"), ("J12", "1"),
+             ("C3", "1"), ("J14", "3"), ("J10", "4"), ("BZ1", "1"),
+             ("J15", "1"), ("R3", "1"), ("D1", "2")], "F.Cu", 0.6),
+    ("+5V_MCU", [("D1", "1"), (16.0, 56.0), (1.6, 40.0), (1.6, 26.0),
+                 ("U1B", "2")], "F.Cu", 0.6),
+    ("+3V3", [("U1B", "22"), ("U1B", "21"), ("J11", "2"), ("IR1", "3"),
+              ("DSV", "1"), ("R6", "1"), ("J15", "5"), ("J8", "1"),
+              ("J7", "2"), ("J13", "1")], "F.Cu", 0.4),
+    # fixed-function: servo-bus UART, coupling R1/R2, I2C, wrist UART
+    ("BUSA_DATA", [("U1B", "13"), ("R1", "1"), ("J4", "3"),
+                   ("J5", "3")], "F.Cu", 0.25),
+    ("BUSB_DATA", [("J6", "3"), ("U1B", "15"), ("R2", "1")],
+     "F.Cu", 0.25),
+    ("RXA", [("U1B", "6"), ("R1", "2")], "F.Cu", 0.25),
+    ("RXB", [("U1B", "5"), ("R2", "2")], "F.Cu", 0.25),
+    ("SDA1", [("J7", "1"), ("U1B", "11"), ("J11", "4"),
+              ("J12", "4")], "F.Cu", 0.25),
+    ("SCL1", [("J7", "4"), ("U1B", "12"), ("J11", "3"),
+              ("J12", "3")], "F.Cu", 0.25),
+    ("SDA2", [("U1A", "17"), ("J8", "3")], "B.Cu", 0.25),
+    ("SCL2", [("U1A", "16"), ("J8", "4")], "B.Cu", 0.25),
+    ("WTX", [("U1A", "15"), ("J10", "2")], "B.Cu", 0.25),
+    ("WRX", [("U1A", "14"), ("J10", "3")], "B.Cu", 0.25),
+    ("VSNS", [("U1B", "7"), ("R7", "2"), ("R8", "2")], "F.Cu", 0.25),
+    # reassigned GPIOs
+    ("ENC_A", [("U1A", "5"), ("J13", "4")], "B.Cu", 0.25),
+    ("ENC_B", [("U1A", "6"), ("J13", "3")], "B.Cu", 0.25),
+    ("ENC_SW", [("U1A", "7"), ("J13", "5")], "B.Cu", 0.25),
+    ("ESTOP", [("U1A", "13"), ("J9", "1")], "B.Cu", 0.25),
+    ("SP1", [("U1A", "18"), ("J15", "3")], "B.Cu", 0.25),
+    ("SP2", [("U1A", "19"), ("J15", "4")], "B.Cu", 0.25),
+    ("NEO", [("U1B", "19"), ("J14", "2")], "B.Cu", 0.25),
+    ("IRIN", [("U1B", "18"), ("IR1", "1")], "B.Cu", 0.25),
+    ("TEMP", [("U1B", "17"), ("DST", "1"), ("R6", "2")], "B.Cu", 0.25),
+    ("BUZ", [("U1B", "16"), ("R5", "1")], "B.Cu", 0.25),
+    ("BZB", [("R5", "2"), ("Q1", "2")], "B.Cu", 0.25),
+    ("BZC", [("Q1", "3"), ("BZ1", "2")], "B.Cu", 0.25),
+    ("LEDGPIO", [("U1B", "14"), ("R4", "1")], "B.Cu", 0.25),
+    ("LED1_A", [("R3", "2"), ("D2", "2")], "B.Cu", 0.25),
+    ("LED2_A", [("R4", "2"), ("D3", "2")], "B.Cu", 0.25),
 ]
 
 def route_span(stops):
@@ -570,26 +909,221 @@ def route_span(stops):
 failed = []
 # Fat power nets first: they can't squeeze gaps, so they run while the
 # board is empty. GND is the backbone tree; then the 12V/5V rails.
-PWR = {"+12V": 0, "+12V_IN": 1, "+5V": 2, "+5V_MCU": 3, "GND": 4}
-order = sorted(ROUTES, key=lambda r: (PWR.get(r[0], 10),
+# Route groups (ROUTING_GUIDE 3g): 12V trunk, then 5V/3V3 rails, then
+# fixed-function (bus UART + I2C + wrist UART), then the free GPIOs.
+PWR = {"+12V_IN": 0, "+12V_SW": 0, "+12V": 0,
+       "+5V": 1, "+5V_MCU": 1, "+3V3": 1,
+       "BUSA_DATA": 2, "BUSB_DATA": 2, "RXA": 2, "RXB": 2,
+       "SDA1": 2, "SCL1": 2, "SDA2": 2, "SCL2": 2,
+       "WTX": 2, "WRX": 2, "VSNS": 2}
+# Signals sort by pinned-waypoint count (descending): the heavily
+# constrained corridors (WTX/WRX/I2C/+3V3/SP2) lay their lanes first so
+# short free-form nets wander around them, not vice-versa.
+def _pins(stops):
+    return sum(1 for w in stops if not isinstance(w[0], str))
+
+
+import os
+PLACE_ONLY = bool(os.environ.get("PLACE_ONLY"))
+
+order = sorted(ROUTES, key=lambda r: (PWR.get(r[0], 10), -_pins(r[1]),
                                       route_span(r[1])))
-for net, stops, layer, w in order:
-    try:
-        route(net, stops, layer, w)
-    except RuntimeError:
-        failed.append(net)
-        print(f"  deferred {net}")
-for net, stops, layer, w in order:          # second pass, later walls exist
-    if net not in failed:
-        continue
-    try:
-        route(net, stops, layer, w)
-        failed.remove(net)
-        print(f"  routed {net} on retry")
-    except RuntimeError:
-        pass
+# per-net mark reserve: half-width of the widest track still to come
+RESERVE = {}
+_ws = [r[3] for r in order]
+for i, (net, _, _, _w) in enumerate(order):
+    later = _ws[i + 1:]
+    RESERVE[net] = (max(later) / 2) if later else 0.2
+
+
+def _snap(net):
+    return (len(SEG), len(VIA),
+            {l: dict(o) for l, o in obstacles.items()},
+            {l: set(s) for l, s in OWNCU.get(net, {}).items()},
+            NETW2.get(net))
+
+
+def _undo(net, st):
+    n, nv, so, oc, nw = st
+    del SEG[n:]
+    del VIA[nv:]
+    obstacles.clear()
+    obstacles.update(so)
+    if oc:
+        OWNCU[net] = oc
+    else:
+        OWNCU.pop(net, None)
+    if nw is None:
+        NETW2.pop(net, None)
+    else:
+        NETW2[net] = nw
+
+
+def _rip(net):
+    """Rip up every mark/copper cell, segment and via owned by net."""
+    for ln in LNAME:
+        obs = obstacles[ln]
+        for c in [c for c, o in obs.items() if o == net]:
+            del obs[c]
+    NETW2.pop(net, None)
+    OWNCU.pop(net, None)
+    SEG[:] = [s for s in SEG if s[0] != net]
+    VIA[:] = [v for v in VIA if v[2] != net]
+
+
+failed = []          # indices into `order`
+if not PLACE_ONLY:
+    for i, (net, stops, layer, w) in enumerate(order):
+        st = _snap(net)
+        try:
+            route(net, stops, layer, w)
+        except RuntimeError:
+            _undo(net, st)  # leave no stray copper to wall later nets
+            failed.append(i)
+            print(f"  deferred {net}")
+
+if not PLACE_ONLY:
+    # Rip-up-and-reroute: a deferred net's owner report names the exact
+    # nets walling its goals. Rip those up, land the victim, then
+    # re-route the ripped nets — the classic autorouter escape.
+    for _pass in range(12):
+        if not failed:
+            break
+        progressed = False
+        for i in list(failed):
+            net, stops, layer, w = order[i]
+            st = _snap(net)
+            try:
+                route(net, stops, layer, w)
+                failed.remove(i)
+                progressed = True
+                print(f"  routed {net} on retry")
+                continue
+            except RuntimeError as ex:
+                _undo(net, st)
+                blockers = [b for b in getattr(ex, "blockers", ())
+                            if b != net]
+                ripped = []
+                for b in blockers:
+                    if OWNCU.get(b) or any(s[0] == b for s in SEG):
+                        _rip(b)
+                        ripped += [j for j, e in enumerate(order)
+                                   if e[0] == b and j not in failed]
+                failed += [j for j in ripped if j not in failed]
+                if not ripped:
+                    continue
+                st = _snap(net)
+                try:
+                    route(net, stops, layer, w)
+                    failed.remove(i)
+                    progressed = True
+                    print(f"  routed {net} after rip-up {blockers}")
+                except RuntimeError:
+                    _undo(net, st)
+        if not progressed:
+            break
 if failed:
-    raise RuntimeError(f"unrouted nets: {failed}")
+    raise RuntimeError(f"unrouted nets: {[order[i][0] for i in failed]}")
+
+
+def prune_stubs():
+    """Drop dead-end copper. Fuzzy waypoint legs leave spurs where a leg
+    overshoots the junction point — KiCad flags them as track_dangling.
+    Atoms are first split at interior via touches (a via landing mid-run
+    is an independent junction), then every atom must attach at BOTH ends
+    to a same-net pad, via, endpoint junction, or another segment's body.
+    Iterate to chase stub chains."""
+    VIA_R = 0.35  # emitted vias are 0.7 mm dia
+    atoms = []
+    for n, w, layer, pts in SEG:
+        atoms += [[n, w, layer, a, b] for a, b in zip(pts, pts[1:])]
+    via_pt = {}
+    for x, y, n in VIA:
+        via_pt.setdefault(n, []).append((x, y))
+
+    # split atoms where a same-net via touches the body
+    out = []
+    for n, w, l, a, b in atoms:
+        vx, vy = b[0] - a[0], b[1] - a[1]
+        L2 = vx * vx + vy * vy
+        ts = []
+        if L2:
+            for vxp, vyp in via_pt.get(n, ()):
+                t = ((vxp - a[0]) * vx + (vyp - a[1]) * vy) / L2
+                if 0.02 < t < 0.98:
+                    dx = a[0] + vx * t - vxp
+                    dy = a[1] + vy * t - vyp
+                    if dx * dx + dy * dy <= (VIA_R + w / 2 + 0.02) ** 2:
+                        ts.append(t)
+        pts_ = [a] + [(a[0] + vx * t, a[1] + vy * t)
+                      for t in sorted(ts)] + [b]
+        out += [[n, w, l, u, v] for u, v in zip(pts_, pts_[1:])]
+    atoms = out
+
+    def on_pad(n, p):
+        for (px, py, hx, hy, prr, kind, plays, pnet) in PADS:
+            if pnet != n:
+                continue
+            if kind == "circle":
+                if (p[0] - px) ** 2 + (p[1] - py) ** 2 <= (prr + 0.05) ** 2:
+                    return True
+            elif abs(p[0] - px) <= hx + 0.05 \
+                    and abs(p[1] - py) <= hy + 0.05:
+                return True
+        return False
+
+    while True:
+        ep = {}
+        for i, (n, w, l, a, b) in enumerate(atoms):
+            ep.setdefault((n, l, round(a[0], 2), round(a[1], 2)),
+                          []).append(i)
+            ep.setdefault((n, l, round(b[0], 2), round(b[1], 2)),
+                          []).append(i)
+        # spatial index for interior-touches (T junctions where a leg
+        # seeds off the middle of another net's drawn copper)
+        cov = {}
+        for i, (n, w, l, a, b) in enumerate(atoms):
+            for gx in range(int(min(a[0], b[0]) / 0.6) - 1,
+                            int(max(a[0], b[0]) / 0.6) + 2):
+                for gy in range(int(min(a[1], b[1]) / 0.6) - 1,
+                                int(max(a[1], b[1]) / 0.6) + 2):
+                    cov.setdefault((n, l, gx, gy), []).append(i)
+
+        def attached(i, p):
+            n, w, l = atoms[i][0], atoms[i][1], atoms[i][2]
+            if len(ep.get((n, l, round(p[0], 2), round(p[1], 2)), ())) > 1:
+                return True
+            if on_pad(n, p):
+                return True
+            r = VIA_R + w / 2 + 0.05
+            if any((p[0] - vx) ** 2 + (p[1] - vy) ** 2 <= r * r
+                   for vx, vy in via_pt.get(n, ())):
+                return True
+            for j in cov.get((n, l, int(p[0] / 0.6), int(p[1] / 0.6)), ()):
+                if j == i:
+                    continue
+                _, w2, _, a2, b2 = atoms[j]
+                vx2, vy2 = b2[0] - a2[0], b2[1] - a2[1]
+                L2 = vx2 * vx2 + vy2 * vy2
+                t = 0.0 if L2 == 0 else max(0.0, min(1.0,
+                    ((p[0] - a2[0]) * vx2 + (p[1] - a2[1]) * vy2) / L2))
+                dx = p[0] - (a2[0] + vx2 * t)
+                dy = p[1] - (a2[1] + vy2 * t)
+                if dx * dx + dy * dy <= (max(w, w2) / 2 + 0.05) ** 2:
+                    return True
+            return False
+
+        drop = {i for i, (n, w, l, a, b) in enumerate(atoms)
+                if not attached(i, a) or not attached(i, b)}
+        if not drop:
+            break
+        atoms = [a_ for i, a_ in enumerate(atoms) if i not in drop]
+        print(f"  pruned {len(drop)} dangling segment(s)")
+
+    SEG[:] = [(n, w, l, [a, b]) for n, w, l, a, b in atoms]
+
+
+prune_stubs()
 
 
 # ---------------------------------------------------------------------------
@@ -642,22 +1176,31 @@ def build_pcb():
         f'\n\t\t(uuid "{uuid.uuid4()}")\n\t)\n')
 
     for l in [
-        label("SOMA BASE CARRIER v1", 45, 4, 1.8),
-        label("12V IN", 8, 48.5), label("5V IN", 8, 66.5),
+        label("SOMA BASE CARRIER v1.1", 60, 4, 1.8),
+        label("12V IN", 8, 53.5), label("5V IN", 8, 41.5),
+        label("XT60 12V", 9, 26, 1.0),
+        label("PWR-ON SHUNT", 10, 64, 0.9),
+        label("TVS 15V", 24, 64, 0.9),
         label("BUS-A x2 (STS3215)", 37.5, 5.5, 1.1),
-        label("BUS-B (HTD45H)", 70, 5.5, 1.1),
-        label("G", 27.46, 12, 0.9), label("V", 30, 12, 0.9),
-        label("D", 32.54, 12, 0.9),
-        label("ENC-J2 SDA1/SCL1", 18, 67.5, 1.0),
-        label("ENC-J3 SDA2/SCL2", 30, 67.5, 1.0),
-        label("ESTOP", 44, 67.5, 1.0),
-        label("WRIST 5V G TX RX", 58, 67.5, 1.0),
-        label("MINI-360 (opt)", 14, 8.0, 1.0),
+        label("BUS-B (HTD45H)", 80, 5.5, 1.1),
+        label("G", 30, 12.5, 0.9), label("V", 32.54, 12.5, 0.9),
+        label("D", 35.08, 12.5, 0.9),
+        label("ENC-J2 SDA1/SCL1", 30, 59, 1.0),
+        label("ENC-J3 SDA2/SCL2", 48, 59, 1.0),
+        label("ESTOP", 30, 100, 0.9),
+        label("WRIST G TX RX 5V", 86, 100, 0.9),
+        label("MINI-360 (opt)", 26, 10.0, 1.0),
+        label("OLED", 64, 6.5, 1.0), label("IMU GY-521", 93, 44, 0.9),
+        label("NEO G-D-5V", 128, 44, 0.8),
+        label("JOG KY-040", 14, 100, 0.9),
+        label("SPARE 3V3 G 5V S1 S2", 64, 59, 0.9),
+        label("IR", 128, 32, 0.8), label("TEMP", 127, 72, 0.8),
+        label("BUZ", 70, 90, 0.8),
         label("ESP32-S3-DevKitC-1  USB->LEFT", 45, 39.5, 1.3),
-        label("ROW-BOT=J1  ROW-TOP=J2", 45, 40.8, 1.0),
-        label("PWR", 76, 59, 1.0), label("STAT", 76, 53, 1.0),
-        label("F1 6A", 19, 48, 1.0),
-        label("github.com/Riyu-D1/Vector", 45, 69, 0.8, "B.SilkS"),
+        label("ROW-BOT=J3  ROW-TOP=J1", 45, 40.8, 1.0),
+        label("PWR", 70, 66, 1.0), label("STAT", 76, 52, 1.0),
+        label("F1 6A", 20, 47, 1.0),
+        label("github.com/Riyu-D1/Vector", 60, 105, 0.8, "B.SilkS"),
     ]:
         parts.append(l + "\n")
 
@@ -665,27 +1208,58 @@ def build_pcb():
         parts.extend(s + "\n" for s in seg_sexp(net, w, layer, pts))
     for x, y, net in VIA:
         parts.append(
-            f'\t(via\n\t\t(at {x:.3f} {y:.3f})\n\t\t(size 1.5)\n\t\t(drill 0.8)'
+            f'\t(via\n\t\t(at {x:.3f} {y:.3f})\n\t\t(size {VIA_DIA})'
+            f'\n\t\t(drill {VIA_DRILL})'
             f'\n\t\t(layers "F.Cu" "B.Cu")\n\t\t(net {NET_ID[net]})'
             f'\n\t\t(uuid "{uuid.uuid4()}")\n\t)\n')
 
-    # GND zone on B.Cu — structure copied from KiCad template
-    parts.append(
-        f'\t(zone\n\t\t(net {NET_ID["GND"]})\n\t\t(net_name "GND")'
-        '\n\t\t(layer "B.Cu")'
-        f'\n\t\t(uuid "{uuid.uuid4()}")\n\t\t(name "GND")'
-        '\n\t\t(hatch full 0.508)\n\t\t(connect_pads\n\t\t\t(clearance 0.3)\n\t\t)'
-        '\n\t\t(min_thickness 0.254)\n\t\t(filled_areas_thickness no)'
-        '\n\t\t(keepout\n\t\t\t(tracks allowed)\n\t\t\t(vias allowed)'
-        '\n\t\t\t(pads allowed)\n\t\t\t(copperpour allowed)'
-        '\n\t\t\t(footprints allowed)\n\t\t)'
-        '\n\t\t(placement\n\t\t\t(enabled no)\n\t\t\t(sheetname "")\n\t\t)'
-        '\n\t\t(fill\n\t\t\t(thermal_gap 0.4)\n\t\t\t(thermal_bridge_width 0.4)'
-        '\n\t\t\t(smoothing chamfer)\n\t\t\t(radius 0.25)'
-        '\n\t\t\t(island_removal_mode 1)\n\t\t\t(island_area_min 10.0)\n\t\t)'
-        f'\n\t\t(polygon\n\t\t\t(pts\n\t\t\t\t(xy 0.5 0.5)'
-        f'\n\t\t\t\t(xy {BOARD_W-0.5} 0.5)\n\t\t\t\t(xy {BOARD_W-0.5} {BOARD_H-0.5})'
-        f'\n\t\t\t\t(xy 0.5 {BOARD_H-0.5})\n\t\t\t)\n\t\t)\n\t)\n')
+    # GND pours on BOTH layers — full board, 0.5mm clearance, 0.3 min
+    # width, solid pad connect (ROUTING_GUIDE 3a).  fill_zones.py emits
+    # the filled_polygon geometry; in the GUI, B re-fills.
+    for zlayer in ("B.Cu", "F.Cu"):
+        parts.append(
+            f'\t(zone\n\t\t(net {NET_ID["GND"]})\n\t\t(net_name "GND")'
+            f'\n\t\t(layer "{zlayer}")'
+            f'\n\t\t(uuid "{uuid.uuid4()}")\n\t\t(name "GND")'
+            '\n\t\t(hatch full 0.508)'
+            '\n\t\t(connect_pads yes\n\t\t\t(clearance 0.5)\n\t\t)'
+            '\n\t\t(min_thickness 0.3)'
+            '\n\t\t(placement\n\t\t\t(enabled no)\n\t\t\t(sheetname "")\n\t\t)'
+            '\n\t\t(fill yes\n\t\t\t(thermal_gap 0.5)\n\t\t\t(thermal_bridge_width 0.4)'
+            '\n\t\t\t(island_removal_mode 1)\n\t\t\t(island_area_min 10.0)\n\t\t)'
+            f'\n\t\t(polygon\n\t\t\t(pts\n\t\t\t\t(xy 0.5 0.5)'
+            f'\n\t\t\t\t(xy {BOARD_W-0.5} 0.5)'
+            f'\n\t\t\t\t(xy {BOARD_W-0.5} {BOARD_H-0.5})'
+            f'\n\t\t\t\t(xy 0.5 {BOARD_H-0.5})\n\t\t\t)\n\t\t)\n\t)\n')
+
+    # GND stitching vias every ~15 mm where free (0.6 via / 0.3 drill):
+    # skip cells within another net's mark halo or copper, and pads.
+    def _gnd_via_free(gx, gy):
+        for (px, py, hx, hy, prr, kind, _l, _n) in PADS:
+            if kind == "circle":
+                if (gx - px) ** 2 + (gy - py) ** 2 <= (prr + 1.6) ** 2:
+                    return False
+            elif abs(gx - px) <= hx + 1.6 and abs(gy - py) <= hy + 1.6:
+                return False
+        r = int(1.3 / GRID) + 1
+        cx, cy = cell((gx, gy))
+        for ln in LNAME:
+            for dx in range(-r, r + 1):
+                for dy in range(-r, r + 1):
+                    if obstacles[ln].get((cx + dx, cy + dy)) not in (
+                            None, "GND"):
+                        return False
+        return True
+
+    for gx in range(10, int(BOARD_W) - 5, 15):
+        for gy in range(10, int(BOARD_H) - 5, 15):
+            if _gnd_via_free(gx, gy):
+                parts.append(
+                    f'\t(via\n\t\t(at {gx} {gy})\n\t\t(size 0.6)'
+                    '\n\t\t(drill 0.3)'
+                    '\n\t\t(layers "F.Cu" "B.Cu")'
+                    f'\n\t\t(net {NET_ID["GND"]})'
+                    f'\n\t\t(uuid "{uuid.uuid4()}")\n\t)\n')
 
     parts.append('\t(embedded_fonts no)\n)\n')
     return "".join(parts)
@@ -716,8 +1290,16 @@ def build_pro():
 
 
 if __name__ == "__main__":
-    (OUT / "soma-carrier.kicad_pcb").write_text(build_pcb())
+    # PLACE_ONLY writes a side file so a placement check can never
+    # clobber a routed soma-carrier.kicad_pcb.
+    name = "soma-carrier.placeonly.kicad_pcb" if PLACE_ONLY \
+        else "soma-carrier.kicad_pcb"
+    (OUT / name).write_text(build_pcb())
     (OUT / "soma-carrier.kicad_pro").write_text(build_pro())
-    print(f"wrote {OUT/'soma-carrier.kicad_pcb'}")
+    print(f"wrote {OUT/name}")
     for ref, c in C.items():
         print(f"  {ref}: {len(c.pads)} pads at {c.x},{c.y}")
+        if os.environ.get("PAD_DUMP"):
+            for n, (px, py) in sorted(c.pads.items(),
+                                      key=lambda t: int(t[0])):
+                print(f"      {ref}.{n} = ({px:.2f},{py:.2f})")

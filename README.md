@@ -98,8 +98,9 @@ it for replay (leader-arm teaching built into one arm — no second arm needed).
 
 ## Images
 
-> TODO — required before design ship review:
-> - [ ] Render/screenshot of full assembled CAD model
+![SOMA v2 assembled — parametric CAD render](cad/export/preview.png)
+
+> Remaining before design ship review:
 > - [ ] Exploded view of shoulder SEA cartridge
 > - [ ] Exploded view of wrist/face/gripper module
 > - [ ] Wiring diagram (see docs/architecture.md for the netlist)
@@ -133,8 +134,16 @@ soma/
 │   ├── BOM.md                  # line-item bill of materials + alternates
 │   ├── architecture.md         # electrical/software architecture + netlist
 │   ├── torque-analysis.md      # worst-case joint torque budget
-│   └── submission-checklist.md # Fabricate design-ship requirements tracker
-├── cad/                        # (TODO) STEP files + STL exports
+│   ├── submission-checklist.md # Fabricate design-ship requirements tracker
+│   └── build-notes.md          # print settings + order of assembly
+├── cad/
+│   ├── assembly.py             # posed full build -> STEP/STL + preview.png
+│   ├── lib/                    # parametric parts (servo, joint, SEA, case…)
+│   └── export/                 # generated STLs + STEPs + render
+├── pcb/                        # soma-carrier: 2-layer hand-solder base PCB
+│   ├── gen_pcb.py              # board generator + grid A* router
+│   ├── soma-carrier.kicad_pcb  # generated board (open in KiCad)
+│   └── gerbers/                # fab outputs for JLCPCB/OSH Park
 ├── firmware/
 │   ├── base-node/              # (TODO) ESP32-S3: servo bus, encoders, watchdog
 │   └── wrist-node/             # (TODO) ESP32: eyes, tactile pads, tendon encoder

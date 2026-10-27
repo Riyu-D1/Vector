@@ -21,29 +21,33 @@ from dataclasses import dataclass, field
 
 
 # ---------------------------------------------------------------------------
-# Stream A actuator — PLACEHOLDER until cad/actuator/INTERFACE.md lands.
-# Everything derived from these numbers is parametric: update this block only.
+# Stream A actuator — cad/actuator/INTERFACE.md v0.2 (branch arm-actuator).
+# Bold/frozen numbers from the contract; a few mm may still move — this
+# block is the single point to update.
 # ---------------------------------------------------------------------------
 @dataclass(frozen=True)
 class ActuatorSpec:
-    name: str = "cycloidal-5010 (Stream A placeholder)"
-    body_d: float = 60.0        # [V3] "60 mm OD x 70 mm placeholder"
-    body_l: float = 70.0        # [V3]
-    mass_g: float = 380.0       # [ASSUME] 5010 motor ~130g + printed gearbox; UNVERIFIED
+    name: str = "cycloidal-5010 (Stream A, IFACE v0.2)"
+    body_d: float = 70.0        # [IFACE] FROZEN: cylindrical shell OD
+    body_l: float = 85.5        # [IFACE] FROZEN: rear cap face -> flange face
+    mass_g: float = 510.0       # [IFACE] ~0.51 kg all-in
     # Output (driven) face: bolt circle that carries the next link.
-    out_pcd: float = 36.0       # [ASSUME] 6xM4 on Ø36, ~Ø50 flange face
-    out_bolts: int = 6
-    out_bolt_d: float = 4.5     # M4 clearance
-    out_flange_d: float = 50.0  # [ASSUME] output flange OD
-    out_flange_proud: float = 1.5  # [ASSUME] flange face proud of body end
-    # Body (fixed) face: bolt circle that ties the body to its cradle.
-    fix_pcd: float = 52.0       # [ASSUME] 4xM3 on Ø52 back face
+    out_pcd: float = 44.0       # [IFACE] FROZEN: 8xM3 on 44 mm BCD
+    out_bolts: int = 8
+    out_bolt_d: float = 3.4     # M3 clearance (screws M3x8, depth 6)
+    out_flange_d: float = 50.0  # [IFACE] output flange OD
+    out_pilot_d: float = 45.0   # [IFACE] centre pilot boss OD (centring)
+    out_pilot_h: float = 1.0    # [IFACE] boss proud of flange face
+    out_face_clear_d: float = 51.0  # [IFACE] driven-link mating pocket >=51
+    # Body (fixed) face: rear cap 4xM3 on 64 BCD, or shell clamp (used).
+    fix_pcd: float = 64.0       # [IFACE] 4xM3 on Ø64 back face
     fix_bolts: int = 4
     fix_bolt_d: float = 3.4     # M3 clearance
-    cable_exit_w: float = 12.0  # slot for motor wires + CAN + encoder
-    cable_exit_h: float = 8.0
-    # torque capability (for the margin report; Stream A owns the real number)
-    rated_nm: float = 7.9       # [V3] "about 7.9 N.m available"
+    cable_exit_w: float = 8.0   # [IFACE] radial slot at shell rear rim
+    cable_exit_h: float = 6.0   #   8 mm wide x 6 mm tall, ~2.5 above rear face
+    cable_keepout: float = 10.0 # [IFACE] keep-out sector around the slot
+    # torque capability (for the margin report; Stream A owns the number)
+    rated_nm: float = 7.9       # [IFACE] ~7.9 N.m peak
     stall_nm: float = 12.0      # [ASSUME] UNVERIFIED
 
 
@@ -144,7 +148,8 @@ LINKS = LinkSpec()
 BEARINGS = {
     "608":  (8.0, 22.0, 7.0),    # idler pivots
     "6804": (20.0, 32.0, 7.0),   # joint back-side idler
-    "6808": (40.0, 52.0, 7.0),   # J1 turntable          [CASE guide]
+    "6812": (60.0, 78.0, 10.0),  # J1 turntable — bore must clear the
+                                # Ø50 output flange + PCD44 bolt circle
     "MF106": (6.0, 10.0, 3.0),   # gripper rods          [SO102]
 }
 

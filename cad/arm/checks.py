@@ -61,18 +61,19 @@ def meshes(d):
 # Hardware reference models (check-only, never exported)
 # ---------------------------------------------------------------------------
 def actuator_mesh(x, z):
-    """Ø60x70 placeholder body along Y + Ø50x4 output flange at +Y."""
+    """Stream A v0.2 envelope: Ø70x85.5 shell along Y (rear face -Y,
+    output flange face at +Y end) + Ø45x1 centre pilot boss."""
     body = trimesh.creation.cylinder(ACTUATOR.body_d / 2, ACTUATOR.body_l,
                                      sections=48)
     body.apply_transform(trimesh.transformations.rotation_matrix(
         math.pi / 2, [1, 0, 0]))
-    fl = trimesh.creation.cylinder(ACTUATOR.out_flange_d / 2,
-                                   ACTUATOR.out_flange_proud, sections=48)
-    fl.apply_transform(trimesh.transformations.rotation_matrix(
+    pilot = trimesh.creation.cylinder(ACTUATOR.out_pilot_d / 2,
+                                      ACTUATOR.out_pilot_h, sections=48)
+    pilot.apply_transform(trimesh.transformations.rotation_matrix(
         math.pi / 2, [1, 0, 0]))
-    fl.apply_translation([0, ACTUATOR.body_l / 2
-                          + ACTUATOR.out_flange_proud / 2, 0])
-    m = trimesh.util.concatenate([body, fl])
+    pilot.apply_translation([0, ACTUATOR.body_l / 2
+                             + ACTUATOR.out_pilot_h / 2, 0])
+    m = trimesh.util.concatenate([body, pilot])
     m.apply_translation([x, 0, z])
     return m
 
@@ -81,7 +82,11 @@ def j1_actuator_mesh():
     body = trimesh.creation.cylinder(ACTUATOR.body_d / 2, ACTUATOR.body_l,
                                      sections=48)
     body.apply_translation([0, 0, ACT_FLOOR + ACTUATOR.body_l / 2])
-    return body
+    pilot = trimesh.creation.cylinder(ACTUATOR.out_pilot_d / 2,
+                                      ACTUATOR.out_pilot_h, sections=48)
+    pilot.apply_translation([0, 0, ACT_FLOOR + ACTUATOR.body_l
+                             + ACTUATOR.out_pilot_h / 2])
+    return trimesh.util.concatenate([body, pilot])
 
 
 _REF_SERVO = os.path.join(HERE, "export", "ref_sts3215.stl")
@@ -203,7 +208,7 @@ ALLOWED_CONTACT = {
     frozenset(("horn_ext_j4", "forearm")),   # sits inside the cheek bore
     frozenset(("horn_ext_j5", "wrist")),
     frozenset(("horn_ext_j5", "nose")),      # spacer seats on plate face
-    # clamp caps seat on their saddle bores — the coincident Ø60.4
+    # clamp caps seat on their saddle bores — the coincident Ø70.4
     # bore faces report a sliver volume under boolean intersection
     frozenset(("turret", "turret_cap")),
     frozenset(("upper_link", "upper_link_cap")),
@@ -242,7 +247,7 @@ def c5_hardware_clearance():
             v = overlap_vol(stl(n), meshx)
             # intended contacts: cradle bore touches body, flange face
             # touches link cheek — allow bounded contact, flag deep embeds
-            if v > 1500.0:
+            if v > 3000.0:
                 ok = False
                 details.append(f"{tag}x{n}={v:.0f}mm3!")
             elif v > 0.5:
@@ -251,7 +256,7 @@ def c5_hardware_clearance():
 
 
 def c6_rom_sweeps():
-    static = ["base_housing", "bearing_cap"]
+    static = ["base_housing", "bearing_cap", "j1_clamp_ring"]
     fails = []
     steps = {"J1": range(-170, 171, 34),
              "J2": range(-15, 31, 15),
@@ -302,7 +307,7 @@ def c7_extremes_table():
             ja = {"J2": j2, "J3": j3, "J4": -60}
             ms = {n: posed_stl(n, ja) for n in P}
             for n, m in ms.items():
-                if n in ("base_housing", "bearing_cap"):
+                if n in ("base_housing", "bearing_cap", "j1_clamp_ring"):
                     continue
                 if m.bounds[0][2] < -0.5:
                     fails.append(f"{n} below table ({m.bounds[0][2]:.0f})")
@@ -336,7 +341,7 @@ def c9_mass():
         rows.append((n, g))
     hw = {"J1 act": ACTUATOR_MASS, "J2 act": ACTUATOR_MASS,
           "J3 act": ACTUATOR_MASS, "J4": SERVO_MASS, "J5": SERVO_MASS,
-          "J6": SERVO_MASS, "bearings": 45.0}
+          "J6": SERVO_MASS, "bearings": 110.0}   # 6812 ~110 g
     wrist_cluster = (rows_by(rows, "wrist") + rows_by(rows, "nose")
                      + rows_by(rows, "jaw_l") + rows_by(rows, "jaw_r")
                      + rows_by(rows, "horn_ext_j4")
@@ -371,8 +376,8 @@ def c10_torque(rows):
     def group_masses(axis_x):
         items = []
         for n, p in P.items():
-            if n in ("base_housing", "bearing_cap", "turret",
-                     "turret_cap"):
+            if n in ("base_housing", "bearing_cap", "j1_clamp_ring",
+                     "turret", "turret_cap"):
                 continue
             if CHAIN[n][-1] in ("J2",) and axis_x != 0:
                 pass
@@ -440,11 +445,12 @@ def c12_fasteners():
     table = [
         ("M4 csk self-tap", 5, "drum -> lid posts", "M4x16"),
         ("M4 insert + bolt", 4, "bearing_cap -> housing rim", "M4x10"),
-        ("M4 bolt", 6, "turret plug -> J1 flange (ASSUME PCD36)", "M4x20"),
+        ("M3 bolt", 8, "turret plate -> J1 flange (PCD44)", "M3x12"),
+        ("M3 bolt", 2, "j1_clamp_ring ear pinch", "M3x16"),
         ("M4 bolt", 4, "turret_cap clamp", "M4x10"),
         ("M4 bolt", 4, "upper_link_cap clamp", "M4x10"),
-        ("M4 bolt", 6, "J2 flange -> upper cheek (star)", "M4x10"),
-        ("M4 bolt", 6, "J3 flange -> forearm cheek (star)", "M4x10"),
+        ("M3 bolt", 8, "J2 flange -> upper cheek (PCD44)", "M3x10"),
+        ("M3 bolt", 8, "J3 flange -> forearm cheek (PCD44)", "M3x10"),
         ("M4 insert + bolt", 4, "J4 wrist idler stub socket", "M4x8"),
         ("M2 self-tap", 8, "J4 servo end faces (24.45x20.5)", "M2x8"),
         ("M2 self-tap", 8, "J5 servo end faces", "M2x8"),
@@ -472,7 +478,7 @@ def c13_cable_path():
         ok &= v < 30.0
     check("cable-riser-clear", ok, "; ".join(det))
     # link channels: probe through each centre-web cable bore
-    for n, x0, x1, py, pz in (("upper_link", 48, 76, -24, -6),
+    for n, x0, x1, py, pz in (("upper_link", 48, 72, -36, -6),
                              ("forearm", 160, 188, -24, -4),
                              ("forearm", 190, 206, -16, -4)):
         probe = trimesh.creation.box((x1 - x0, 6, 6))

@@ -22,28 +22,31 @@ from arm_params import (ACTUATOR, SERVO, JOINTS, LINKS, BEARINGS, CASE,
                         DRUM_POSTS, TOL, CABLE)
 
 # ---------------------------------------------------------------------------
-# Z layout
+# Z layout (Stream A IFACE v0.2: Ø70 x 85.5 actuator, flange face = top of
+# the 6812 inner race so the PCD44 bolt circle reaches the turret plate
+# through the bearing bore)
 # ---------------------------------------------------------------------------
 DRUM_H = 4.0
-ACT_FLOOR = 7.5                                  # actuator back face z
-ACT_TOP = ACT_FLOOR + ACTUATOR.body_l            # output face z = 77.5
-CAP_Z0, CAP_Z1 = 77.0, 86.0                      # bearing cap ring
-BRG_Z0, BRG_Z1 = 78.0, 85.0                      # 6808 race zone
-TURRET_PLATE_Z = 94.0                            # plate bottom (8 mm over cap)
-J2_Z = 144.0                                     # J2/J3/J4 axis height
+ACT_FLOOR = 5.0                                  # actuator rear cap face z
+ACT_TOP = ACT_FLOOR + ACTUATOR.body_l            # output flange face z = 90.5
+CAP_Z0, CAP_Z1 = 86.0, 92.0                      # bearing cap ring
+BRG_Z0, BRG_Z1 = 80.5, 90.5                      # 6812 race zone (W10)
+CLAMP_Z0, CLAMP_Z1 = 27.0, 34.0                  # J1 shell-clamp ring zone
+TURRET_PLATE_Z = 92.2                            # plate disc bottom
+J2_Z = 146.0                                     # J2/J3/J4 axis height
 
 HOUSING_OD = 110.0
 TURRET_D = 98.0
 
-# actuator cradle (J2 on turret, J3 on upper link): a split block clamps
-# the Ø60 body midsection; the 70 mm body ends protrude ±4.5.
+# actuator cradle (J2 on turret, J3 on upper link): a split half-pipe
+# clamps the Ø70 shell midsection (|y|<=30.5 of the 85.5 mm body).
 CRADLE_IN = 25.5          # cradle block inner faces
 CRADLE_T = 5.0            # -> outer +-30.5
-# driven-link cheeks: -Y cheek inner rests on the body end face (-35);
-# +Y cheek inner meets the output flange face (+36.5, 1.5 proud).
-LINK_NEG_IN = -35.1       # -Y cheek inner face (body face -0.1)
-LINK_POS_IN = 36.7        # +Y cheek inner face (flange face +0.2)
-CHEEK_T = 5.0             # -> outers -40.5 / +41.7
+# driven-link cheeks sit just outside the shell ends (+-42.75); the +Y
+# cheek's recess floor lands on the output flange face.
+LINK_NEG_IN = -44.75      # -Y cheek inner face (2 mm clear of rear face)
+LINK_POS_IN = 42.75       # +Y cheek inner face = output flange face plane
+CHEEK_T = 5.0             # -> outers -49.75 / +47.75
 
 # servo fork stack: case end faces at ~+-17.85, ear tabs reach ~20.85,
 # output wheel face ~21.65 — carrier cheek inner faces at +-21.2 clear
@@ -129,12 +132,30 @@ def _servo_grid_holes(axis, center, t):
 
 
 def _flange_iface(part, x, z):
-    """+Y link cheek: slotted M4 star through to the output flange face
-    (flange face = cheek inner face, 0.2 mm clearance). UNVERIFIED
-    pattern — slots tolerate PCD error."""
+    """+Y link cheek interface to the output flange (IFACE v0.2):
+    cheek inner face lands flat on the flange face (y=42.75 — the >=Ø51
+    mating zone); Ø45.5 counterbore receives the Ø45x1 pilot boss;
+    8xØ3.4 through-holes on PCD44 for M3 screws into the flange."""
+    part -= Pos(x, LINK_POS_IN + 0.75, z) \
+        * _bore(ACTUATOR.out_pilot_d + 0.5, 3.5, "Y")    # pilot counterbore
     part -= Pos(x, LINK_POS_IN + CHEEK_T / 2, z) \
-        * _star(ACTUATOR.out_pcd, ACTUATOR.out_bolts, ACTUATOR.out_bolt_d,
-                CHEEK_T + 2, "Y")
+        * _bolt_circle(ACTUATOR.out_pcd, ACTUATOR.out_bolts,
+                       ACTUATOR.out_bolt_d, CHEEK_T + 2, "Y")
+    return part
+
+
+def _flange_iface_plate(part, z_face, z_top):
+    """Same interface for the turret plate bolting onto the J1 flange
+    (screws pass through the 6812 bore from the plate top): flat landing
+    on the flange face at z_face + Ø45.8 pilot counterbore + Ø6.6 head
+    pockets in the plate top."""
+    part -= Pos(0, 0, z_face + 1.0) \
+        * Cylinder(ACTUATOR.out_pilot_d / 2 + 0.4, 2.2)
+    part -= Pos(0, 0, (z_face + z_top) / 2) \
+        * _bolt_circle(ACTUATOR.out_pcd, ACTUATOR.out_bolts,
+                       ACTUATOR.out_bolt_d, z_top - z_face + 2)
+    part -= Pos(0, 0, z_top - 1.5) \
+        * _bolt_circle(ACTUATOR.out_pcd, ACTUATOR.out_bolts, 6.6, 3.2)
     return part
 
 
@@ -142,20 +163,35 @@ def _flange_iface(part, x, z):
 # BASE HOUSING
 # ===========================================================================
 def base_housing() -> Part:
-    """Fixed housing, split at z=78 so the J1 actuator drops in from the
-    top; the separate `bearing_cap` ring closes it and seats the 6808."""
+    """Fixed housing, open at CAP_Z0 so the J1 actuator drops in from the
+    top; a circumferential recess at CLAMP_Z holds the j1_clamp_ring that
+    grips the Ø70 shell mid-body; the separate `bearing_cap` ring closes
+    the top and seats the 6812 outer race."""
     p = Pos(0, 0, DRUM_H / 2) * Cylinder(CASE.drum_d / 2, DRUM_H)
     # shell, closed at CAP_Z0 (the cap carries the bearing seat)
     p += Pos(0, 0, (DRUM_H + CAP_Z0) / 2) * Cylinder(HOUSING_OD / 2,
                                                    CAP_Z0 - DRUM_H)
     # light annular cavity around the actuator pocket
-    p -= Pos(0, 0, (24 + 70) / 2) * Cylinder(38.0, 46)
-    # actuator pocket Ø60.4, floor at 4..7.5, open at the top (insertion)
+    p -= Pos(0, 0, (26 + 74) / 2) * Cylinder(44.0, 48)
+    # actuator pocket Ø70.4, floor at 4..5, open at the top (insertion)
     p -= Pos(0, 0, (ACT_FLOOR + CAP_Z0) / 2) \
         * Cylinder(ACTUATOR.body_d / 2 + TOL.loose, CAP_Z0 - ACT_FLOOR + 0.5)
+    # circumferential recess for the clamp ring (recess into pocket wall)
+    p -= Pos(0, 0, (CLAMP_Z0 + CLAMP_Z1) / 2) * Cylinder(46.0,
+                                                       CLAMP_Z1 - CLAMP_Z0)
+    # recess extension on -X for the ring's pinch ears
+    p -= Pos(-50, 0, (CLAMP_Z0 + CLAMP_Z1) / 2) \
+        * Box(12, 26, CLAMP_Z1 - CLAMP_Z0)
+    # 6812 outer-race seat in the housing top (race zone 80.5..90.5;
+    # lower 5.5 mm held here, top edge pressed by the cap lip)
+    p -= Pos(0, 0, (BRG_Z0 + CAP_Z0) / 2) \
+        * Cylinder(BEARINGS["6812"][1] / 2 - TOL.press, CAP_Z0 - BRG_Z0)
     # cable gallery beside the actuator (-Y wall) to the top face
     p -= Pos(0, -(ACTUATOR.body_d / 2 + 4), (10 + CAP_Z0) / 2) \
         * Box(CABLE.channel_w + 2, 10, CAP_Z0 - 10)
+    # notch joining the actuator's rear-rim cable slot to the gallery
+    # (rear face ~z5, slot ~z8.5; keep-out sector on the -Y side)
+    p -= Pos(0, -(ACTUATOR.body_d / 2 + 3), 9.0) * Box(14, 14, 14)
     # rear cable entry (case rear channel side, +Y rim, low)
     p -= Pos(0, HOUSING_OD / 2 - 6, 13) * Box(CABLE.channel_w + 4, 16, 12)
     # cap bolts: 4x M4 inserts in the top rim at r=48
@@ -170,19 +206,39 @@ def base_housing() -> Part:
     return p
 
 
+def j1_clamp_ring() -> Part:
+    """Slit ring gripped by the CLAMP_Z recess: pinches the Ø70 shell for
+    axial retention + torque reaction (the 6812 race shades the shell's
+    top shoulder, so the shoulder can't be clamped from above)."""
+    r_out, r_in = 45.6, ACTUATOR.body_d / 2 + 0.15
+    c = Pos(0, 0, (CLAMP_Z0 + CLAMP_Z1 - 1) / 2) \
+        * Cylinder(r_out, CLAMP_Z1 - CLAMP_Z0 - 2)
+    c -= Pos(0, 0, (CLAMP_Z0 + CLAMP_Z1) / 2) * Cylinder(r_in,
+                                                       CLAMP_Z1 - CLAMP_Z0 + 4)
+    # slit through the -X wall + pinch lugs + M4 pinch bolt
+    c -= Pos(-r_out / 2, 0, (CLAMP_Z0 + CLAMP_Z1 - 1) / 2) \
+        * Box(1.6, 16, CLAMP_Z1 - CLAMP_Z0 - 1)
+    c += Pos(-r_out - 2, -7, (CLAMP_Z0 + CLAMP_Z1 - 1) / 2) * Box(8, 9, 6)
+    c += Pos(-r_out - 2, +7, (CLAMP_Z0 + CLAMP_Z1 - 1) / 2) * Box(8, 9, 6)
+    c -= Pos(-r_out - 2, 0, (CLAMP_Z0 + CLAMP_Z1 - 1) / 2) \
+        * _bore(4.4, 22, "Y")
+    c -= Pos(-r_out - 2, 8.5, (CLAMP_Z0 + CLAMP_Z1 - 1) / 2) \
+        * _bore(TOL.insert_m4_d, 5, "Y")
+    return c
+
+
 def bearing_cap() -> Part:
-    """Ring cap (z77..86) bolted over the housing top: seats the 6808
-    outer race, clamps the actuator's top shoulder, carries the cable
-    riser slot."""
+    """Ring cap (z86..92) bolted over the housing top: seats the 6812
+    outer race (race zone 80.5..90.5, top face flush with the output
+    flange face) and carries the cable riser slot."""
     c = Pos(0, 0, (CAP_Z0 + CAP_Z1) / 2) * Cylinder(HOUSING_OD / 2,
                                                   CAP_Z1 - CAP_Z0)
-    c -= Pos(0, 0, (CAP_Z0 + CAP_Z1) / 2) * Cylinder(24.0, CAP_Z1 - CAP_Z0 + 4)
-    # 6808 outer-race seat (race zone 78..85; seat floor ring 77..78)
-    c -= Pos(0, 0, (BRG_Z0 + BRG_Z1) / 2) \
-        * Cylinder(BEARINGS["6808"][1] / 2 + TOL.press,
-                   BRG_Z1 - BRG_Z0 + 0.3)
-    # clamp lip: shallow Ø60.6 relief over the actuator top shoulder
-    c -= Pos(0, 0, CAP_Z0 + 1.0) * Cylinder(30.3, 2.0)
+    # 6812 outer-race bore + lip pressing the race's top edge
+    c -= Pos(0, 0, (CAP_Z0 + BRG_Z1) / 2) \
+        * Cylinder(BEARINGS["6812"][1] / 2 - TOL.press,
+                   BRG_Z1 - CAP_Z0 + 0.3)
+    c -= Pos(0, 0, (BRG_Z1 + CAP_Z1) / 2) * Cylinder(36.7,
+                                                   CAP_Z1 - BRG_Z1 + 0.3)
     # cap bolts: M4 clearance into the rim inserts
     for i in range(4):
         a = math.radians(i * 90 + 45)
@@ -190,7 +246,7 @@ def bearing_cap() -> Part:
             * _bore(4.4, CAP_Z1 - CAP_Z0 + 2)
         c -= Pos(48 * math.cos(a), 48 * math.sin(a), CAP_Z1 - 1.4) \
             * Cylinder(7.2, 2.8)                        # head pockets
-    # cable riser slot over the housing gallery (-Y, r~34)
+    # cable riser slot over the housing gallery (-Y, r~39)
     c -= Pos(0, -(ACTUATOR.body_d / 2 + 4), (CAP_Z0 + CAP_Z1) / 2) \
         * Box(CABLE.channel_w + 2, 10, CAP_Z1 - CAP_Z0 + 2)
     return c
@@ -200,40 +256,41 @@ def bearing_cap() -> Part:
 # TURRET (on 6808 inner race; carries J2 actuator cradle)
 # ===========================================================================
 def turret() -> Part:
-    """Hub plate + inner-race plug. Cables rise through the cap slot at
-    r~34 (-Y), cross the 8 mm air gap under the plate edge, and enter the
-    turret core through the plate hole (service loop twists in the gap)."""
+    """Hub plate on the 6812 inner race; carries the J2 actuator cradle.
+    Plate stack: main disc + boss ring resting on the race top AND on the
+    output flange face (both at z=90.5); annular plug spigot inside the
+    Ø60 bore.  Cables rise through the cap slot at r~39 (-Y), cross the
+    air gap under the plate edge, enter through the plate hole."""
     plate = Pos(0, 0, TURRET_PLATE_Z + 2) * Cylinder(TURRET_D / 2, 4)
-    # plug in the inner race, bottom face just over the output flange
-    plug = Pos(0, 0, (ACT_TOP + 0.3 + TURRET_PLATE_Z) / 2) \
-        * Cylinder(BEARINGS["6808"][0] / 2 - 0.1,
-                   TURRET_PLATE_Z - ACT_TOP - 0.3)
+    plate += Pos(0, 0, (BRG_Z1 + TURRET_PLATE_Z) / 2) \
+        * Cylinder(36.0, TURRET_PLATE_Z - BRG_Z1)
+    plug = Pos(0, 0, (82.0 + TURRET_PLATE_Z) / 2) \
+        * Cylinder(29.5, TURRET_PLATE_Z - 82.0)
+    plug -= Pos(0, 0, (82.0 + TURRET_PLATE_Z + 4) / 2) \
+        * Cylinder(26.0, TURRET_PLATE_Z - 82.0 + 4)
     t = plate + plug
-    # 6xM4 through-bolts into the J1 output flange face (assumed PCD36)
-    t -= Pos(0, 0, (ACT_TOP + TURRET_PLATE_Z + 4) / 2) \
-        * _bolt_circle(ACTUATOR.out_pcd, ACTUATOR.out_bolts,
-                       ACTUATOR.out_bolt_d,
-                       TURRET_PLATE_Z + 4 - ACT_TOP)
-    # cable hole in the plate over the housing riser slot (-Y, r~34)
+    # 8xM3 on PCD44 into the J1 output flange (through the bore)
+    t = _flange_iface_plate(t, BRG_Z1, TURRET_PLATE_Z + 4)
+    # cable hole in the plate over the housing riser slot (-Y, r~39)
     t -= Pos(0, -(ACTUATOR.body_d / 2 + 4), TURRET_PLATE_Z + 2) \
         * Box(CABLE.channel_w + 2, 10, 6)
-    # J2 cradle: lower half-pipe shell (OD68, ID60.4) + split cap above;
-    # silhouette stays r~35 so the driven link's rails sweep clear.
+    # J2 cradle: lower half-pipe shell (OD79, ID70.4) + split cap above;
+    # silhouette stays r~39.5 so the driven link's plates sweep clear.
     t += Pos(0, 0, J2_Z) * Rot(-90, 0, 0) \
-        * Cylinder(ACTUATOR.body_d / 2 + 4, 2 * (CRADLE_IN + CRADLE_T))
-    t -= Pos(0, 0, J2_Z + 17.2) * Box(80, 80, 34.4)       # keep lower half
+        * Cylinder(ACTUATOR.body_d / 2 + 4.5, 2 * (CRADLE_IN + CRADLE_T))
+    t -= Pos(0, 0, J2_Z + 19.75) * Box(90, 90, 39.5)      # keep lower half
     t -= Pos(0, 0, J2_Z) * _bore(ACTUATOR.body_d + 2 * TOL.loose,
                                  2 * (CRADLE_IN + CRADLE_T) + 4, "Y")
     # shell support: two end webs bridging plate -> shell end walls at
-    # |y|~30; the driven link's plates (|y|>=35.1) sweep over them and
+    # |y|~26.5; the driven link's plates (|y|>=44.75) sweep over them and
     # its beam edges pass through the centre corridor
     for sy in (-1, 1):
-        t += Pos(0, sy * 26.5, 105) * Box(32, 5, 17)
-    # split-plane bolt lugs (inner edge r~31.5, clear of Ø60.6)
+        t += Pos(0, sy * 26.5, 102.5) * Box(32, 5, 12)
+    # split-plane bolt lugs (inner edge x36.5, clear of Ø70.6)
     for sx in (-1, 1):
         for sy in (-1, 1):
-            t += Pos(sx * 36.5, sy * 25, J2_Z - 2.5) * Box(10, 10, 5)
-            t -= Pos(sx * 36.5, sy * 25, J2_Z - 4) \
+            t += Pos(sx * 41.5, sy * 27, J2_Z - 2.5) * Box(10, 10, 5)
+            t -= Pos(sx * 41.5, sy * 27, J2_Z - 4) \
                 * _bore(TOL.insert_m4_d, 8)
     # cable passage through the plate into the cradle zone (-X back)
     t -= Pos(-34, 0, TURRET_PLATE_Z + 2) * Box(14, CABLE.channel_w + 2, 8)
@@ -243,14 +300,14 @@ def turret() -> Part:
 def _cradle_cap(x):
     """Upper half-shell clamping the actuator (bolts onto the lands)."""
     cap = Pos(x, 0, J2_Z) * Rot(-90, 0, 0) \
-        * Cylinder(ACTUATOR.body_d / 2 + 4, 2 * (CRADLE_IN + CRADLE_T))
-    cap -= Pos(x, 0, J2_Z - 17.2) * Box(80, 80, 34.4)     # keep upper half
+        * Cylinder(ACTUATOR.body_d / 2 + 4.5, 2 * (CRADLE_IN + CRADLE_T))
+    cap -= Pos(x, 0, J2_Z - 19.75) * Box(90, 90, 39.5)    # keep upper half
     cap -= Pos(x, 0, J2_Z) * _bore(ACTUATOR.body_d + 2 * TOL.loose,
                                    2 * (CRADLE_IN + CRADLE_T) + 4, "Y")
     for sx in (-1, 1):
         for sy in (-1, 1):
-            cap += Pos(x + sx * 36.5, sy * 25, J2_Z + 2.5) * Box(10, 10, 5)
-            cap -= Pos(x + sx * 36.5, sy * 25, J2_Z) * _bore(4.4, 12)
+            cap += Pos(x + sx * 41.5, sy * 27, J2_Z + 2.5) * Box(10, 10, 5)
+            cap -= Pos(x + sx * 41.5, sy * 27, J2_Z) * _bore(4.4, 12)
     return cap
 
 
@@ -263,17 +320,16 @@ def turret_cap() -> Part:
 # ===========================================================================
 def _link_end(x, plate_h):
     """Driven-link end: two side plates, disc at the joint axis.
-    -Y plate lands on the actuator body end face (shallow nest);
-    +Y plate bolts to the output flange (star)."""
+    -Y plate sits just clear of the actuator rear face (its cable slot
+    exits radially at the rear rim); +Y plate bolts to the output flange."""
     cn, cp = LINK_NEG_IN - CHEEK_T / 2, LINK_POS_IN + CHEEK_T / 2
     f = None
     for cy in (cn, cp):
-        d = Pos(x, cy, J2_Z) * Rot(-90, 0, 0) * Cylinder(37, CHEEK_T)
+        d = Pos(x, cy, J2_Z) * Rot(-90, 0, 0) * Cylinder(41, CHEEK_T)
         f = d if f is None else f + d
-    # -Y plate: shallow nest for the body end face (radial location)
-    f -= Pos(x, LINK_NEG_IN - 0.4, J2_Z) * _bore(
-        ACTUATOR.body_d + 0.6, 0.8, "Y")
-    # +Y plate: flange bolt star
+    # -Y plate: keep-out notch over the rear-rim cable slot sector (top)
+    f -= Pos(x, LINK_NEG_IN + 1.0, J2_Z + 31) * Box(18, 6, 14)
+    # +Y plate: flange pocket + pilot counterbore + 8xM3 PCD44
     f = _flange_iface(f, x, J2_Z)
     return f
 
@@ -296,26 +352,30 @@ def upper_link() -> Part:
         u += Pos(11, cy, J2_Z + 5) * Box(38, CHEEK_T, 70)
         u += Pos(54.5, cy, J2_Z + 12.5) * Box(49, CHEEK_T, 55)
     # top rail joins the plates over the full span; no bottom rail --
-    # anything under the beams sweeps into the plate/webs at J2 +30
-    u += Pos(35.5, 0.8, J2_Z + 38) * Box(87, 81.8, 4)
-    # centre web joins the plates and carries the J3 saddle; starts
-    # clear of the J2 cradle-lug silhouette (r>42); cable bore beside -Y
-    u += Pos(62, 0.8, J2_Z) * Box(36, 76, 20)
-    u -= Pos(62, -24, J2_Z - 6) * Box(36, 10, 10)
+    # anything under the beams sweeps into the plate/webs at J2 +30.
+    # Sits above the J2 cap shell top (rel +39.5); the r41 cheek discs
+    # reach it (top rel +41). Ends at x72: the forearm's top rail sweeps
+    # to x~77.5 when J3 folds to -90.
+    u += Pos(32, 0.8, J2_Z + 42.5) * Box(80, 98, 4)
+    # centre web joins the plates and carries the J3 saddle via the
+    # strut; ends clear of the J3 lug silhouette (x<73.5) and of the
+    # forearm cheek discs (x>=79); cable bore under the -Y lug
+    u += Pos(60, 0.8, J2_Z) * Box(24, 92, 20)
+    u -= Pos(60, -36, J2_Z - 6) * Box(24, 10, 10)
     # J3 saddle: lower half-pipe shell (same as the turret cradle)
     u += Pos(J3_X, 0, J2_Z) * Rot(-90, 0, 0) \
-        * Cylinder(ACTUATOR.body_d / 2 + 4, 2 * (CRADLE_IN + CRADLE_T))
-    u -= Pos(J3_X, 0, J2_Z + 17.2) * Box(80, 80, 34.4)
+        * Cylinder(ACTUATOR.body_d / 2 + 4.5, 2 * (CRADLE_IN + CRADLE_T))
+    u -= Pos(J3_X, 0, J2_Z + 19.75) * Box(90, 90, 39.5)
     u -= Pos(J3_X, 0, J2_Z) * _bore(ACTUATOR.body_d + 2 * TOL.loose,
                                     2 * (CRADLE_IN + CRADLE_T) + 4, "Y")
     for sx in (-1, 1):
         for sy in (-1, 1):
-            u += Pos(J3_X + sx * 36.5, sy * 25, J2_Z - 2.5) * Box(10, 10, 5)
-            u -= Pos(J3_X + sx * 36.5, sy * 25, J2_Z - 4) \
+            u += Pos(J3_X + sx * 41.5, sy * 27, J2_Z - 2.5) * Box(10, 10, 5)
+            u -= Pos(J3_X + sx * 41.5, sy * 27, J2_Z - 4) \
                 * _bore(TOL.insert_m4_d, 8)
-    # saddle strut from the web to the shell (-X face); stays below the
-    # split plane so it can't touch the cap
-    u += Pos(J3_X - 37, 0.8, J2_Z - 6) * Box(14, 34, 12)
+    # saddle strut from the web (ends x72) to the shell (-X face at
+    # x80.5); stays below the split plane so it can't touch the cap
+    u += Pos(J3_X - 40, 0.8, J2_Z - 6) * Box(20, 34, 12)
     return _cable_slot(u, 0, cn)
 
 
@@ -336,14 +396,16 @@ def forearm() -> Part:
         f += Pos((J3_X + 4 + x1) / 2, cy, J2_Z + 5) \
             * Box(x1 - (J3_X + 4), CHEEK_T, 70)
     # top + bottom edge rails (start past the J3 shell silhouette); the
-    # top rail stops at x196 to clear the wrist rail's J4=-95 sweep
-    f += Pos((J3_X + 42 + 196) / 2, 0.8, J2_Z + 38) \
-        * Box(196 - J3_X - 42, 81.8, 4)
+    # top rail sits above the cap shell top and stops at x196 to clear
+    # the wrist rail's J4=-95 sweep
+    f += Pos((J3_X + 42 + 196) / 2, 0.8, J2_Z + 42.5) \
+        * Box(196 - J3_X - 42, 98, 4)
     f += Pos((J3_X + 42 + J4_X - 14) / 2, 0.8, J2_Z - 28) \
-        * Box(J4_X - 14 - J3_X - 42, 81.8, 4)
-    # centre web joins the plates; a narrower spine continues to the J4
-    # tip block, staying inside the wrist's plate band (|y|<=24)
-    f += Pos((J3_X + 42 + 190) / 2, 0.8, J2_Z) * Box(190 - J3_X - 42, 76, 16)
+        * Box(J4_X - 14 - J3_X - 42, 98, 4)
+    # centre web joins the plates (starts past the J3 lug silhouette
+    # x>166.5); a narrower spine continues to the J4 tip block, staying
+    # inside the wrist's plate band (|y|<=24)
+    f += Pos((168 + 190) / 2, 0.8, J2_Z) * Box(190 - 168, 92, 16)
     f += Pos(198, 0.8, J2_Z) * Box(24, 48, 16)
     f -= Pos(175, -24, J2_Z - 4) * Box(32, 10, 8)
     f -= Pos(198, -16, J2_Z - 4) * Box(24, 8, 8)
@@ -480,6 +542,7 @@ def all_parts():
     return {
         "base_housing":   base_housing(),
         "bearing_cap":    bearing_cap(),
+        "j1_clamp_ring":  j1_clamp_ring(),
         "turret":         turret(),
         "turret_cap":     turret_cap(),
         "upper_link":     upper_link(),
@@ -495,7 +558,7 @@ def all_parts():
 
 
 CHAIN = {
-    "base_housing": [], "bearing_cap": [],
+    "base_housing": [], "bearing_cap": [], "j1_clamp_ring": [],
     "turret": ["J1"], "turret_cap": ["J1"],
     "upper_link": ["J1", "J2"], "upper_link_cap": ["J1", "J2"],
     "forearm": ["J1", "J2", "J3"], "horn_ext_j4": ["J1", "J2", "J3"],

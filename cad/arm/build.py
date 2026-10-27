@@ -17,6 +17,7 @@ RENDERS = os.path.join(HERE, "renders")
 PRINT_ROT = {
     "base_housing":   (0, 0),
     "bearing_cap":    (0, 0),
+    "j1_clamp_ring":  (0, 0),
     "turret":         (0, 0),
     "turret_cap":     (0, 0),
     "upper_link":     (0, -90),     # on its back face

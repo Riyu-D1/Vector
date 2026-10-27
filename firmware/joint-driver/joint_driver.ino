@@ -60,6 +60,7 @@ typedef struct {
     uint32_t calibrated;     /* nonzero once calibrate ran              */
     float    kp, kd;
     float    pos_lo, pos_hi;
+    float    pos_zero;       /* user zero offset (ZERO_HERE)            */
 } params_t;
 static params_t P;
 
@@ -104,6 +105,7 @@ void params_load(void) {
         P.kd            = 0.2f;
         P.pos_lo        = -3.14f;
         P.pos_hi        =  3.14f;
+        P.pos_zero      = 0.0f;
     }
 }
 void params_save(void) { EEPROM.put(EEPROM_ADDR, P); }
@@ -164,7 +166,10 @@ static void do_estop(void) {
 
 static void do_enable(void) {
     if (P.calibrated == 0) {
-        send_emcy(0x01, 0x10);        /* not calibrated yet */
+        /* refuse: FOC has no electrical zero — would mis-commutate.
+         * run NMT CALIBRATE first (rotor free), then ENABLE. */
+        send_emcy(0x02, 0x10);
+        return;
     }
     estop = false;
     armed = true;
@@ -204,6 +209,7 @@ static void sdo_write(uint16_t addr, const uint8_t val4[4]) {
         if (get_u32(val4)) {
             /* make the CURRENT output position read as zero */
             pos_zero = motor.shaft_angle / P.gear_ratio;
+            P.pos_zero = pos_zero;
             cmd_pos = 0;
             motor.target = motor.shaft_angle;   /* hold still */
         }
@@ -357,6 +363,7 @@ void setup() {
     /* else: stays un-FOC'd until NMT_CALIBRATE runs on the bench */
 
     last_cmd_ms = last_fb_ms = last_rx_any_ms = millis();
+    pos_zero = P.pos_zero;
 }
 
 void loop() {

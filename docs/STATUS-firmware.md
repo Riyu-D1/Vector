@@ -36,7 +36,8 @@ Deadline 31 Oct 2026. Updated every push.
 
 ## In progress
 
-- [ ] docs/firmware-verification.md — being finalized this push.
+- [ ] Nothing in progress — Stream C scope complete pending Stream B
+      geometry confirmations (BASE_Z, joint limits) and hardware bring-up.
 
 ## Blocked / waiting
 

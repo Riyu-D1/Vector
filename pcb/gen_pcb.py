@@ -123,6 +123,21 @@ class Placed:
                      f'(property "Reference" "{ref}"', src, count=1)
         src = re.sub(r'\(property "Value" "[^"]*"',
                      f'(property "Value" "{value}"', src, count=1)
+        if ref in REF_FIX:
+            # move the silk reference to a clear spot next to the body
+            dx, dy = REF_FIX[ref]                      # wanted, in world
+            lx, ly = rot((dx, dy), rot_deg)            # world -> local
+            src = re.sub(
+                r'(\(property "Reference" "[^"]*"\s*\n'
+                r'\s*\(at\s+)[-\d.]+\s+[-\d.]+',
+                lambda m: f'{m.group(1)}{lx:.2f} {ly:.2f}', src, count=1)
+        if ref in VAL_FIX:
+            dx, dy = VAL_FIX[ref]
+            lx, ly = rot((dx, dy), rot_deg)
+            src = re.sub(
+                r'(\(property "Value" "[^"]*"\s*\n'
+                r'\s*\(at\s+)[-\d.]+\s+[-\d.]+',
+                lambda m: f'{m.group(1)}{lx:.2f} {ly:.2f}', src, count=1)
         if pad_nets:
             src = inject(src, pad_nets)
         self.src = src
@@ -143,6 +158,26 @@ class Placed:
 
 
 C = {}
+
+
+# Silk reference overrides — desired offset in *world* coords from the
+# footprint origin (converted back to footprint-local at emit).
+REF_FIX = {
+    "U1A": (26.67, 2.5), "U1B": (26.67, -2.5),
+    "J4": (-3.5, 0), "J5": (-3.5, 0), "J6": (-3.5, 0),
+    "J9": (0, 2.6), "J10": (0, 2.6), "J11": (0, 2.6),
+    "J13": (0, 2.6), "J15": (0, 2.6),
+    "D2": (2.6, 3.4), "D3": (-2.5, 0),
+    "R7": (-3.8, 0), "R8": (-3.8, 0),
+    "H1": (0, 3.75), "H2": (0, 3.75),
+    "H3": (0, -3.75), "H4": (0, -3.75),
+}
+
+# Value-text overrides (same world-coord convention) — only where the
+# default value lands on copper/silk it shouldn't.
+VAL_FIX = {
+    "D2": (-2.4, 3.4),
+}
 
 
 def place(ref, value, libdir, fname, x, y, rot_deg=0, pad_nets=None):
@@ -171,8 +206,11 @@ place("J2", "5V_IN", "TerminalBlock_Phoenix.pretty",
 place("D4", "TVS15", "Diode_THT.pretty",
       "D_DO-201_P12.70mm_Horizontal.kicad_mod",
       22.0, 58.0, rot_deg=0, pad_nets={"1": "+12V_IN", "2": "GND"})
+# South-west pocket: the mini blade fuse is ~11 mm tall and the DevKitC
+# module overhangs ~4.7-8 mm past each header end at ~8.5 mm socket
+# clearance — it must sit fully below the module's south edge (y>=53).
 place("F1", "6A", "Fuse.pretty", "Fuse_Blade_Mini_directSolder.kicad_mod",
-      17.0, 50.0, rot_deg=90, pad_nets={"1": "+12V_SW", "2": "+12V"})
+      17.0, 64.0, rot_deg=90, pad_nets={"1": "+12V_SW", "2": "+12V"})
 place("C1", "1000uF", "Capacitor_THT.pretty", "CP_Radial_D10.0mm_P5.00mm.kicad_mod",
       40.0, 19.0, pad_nets={"1": "+12V", "2": "GND"})
 
@@ -312,7 +350,7 @@ place("R6", "4.7k", "Resistor_THT.pretty",
 
 # Plug-in module sockets — right edge column + bottom strip
 place("J11", "OLED", "Connector_PinHeader_2.54mm.pretty",
-      "PinHeader_1x04_P2.54mm_Vertical.kicad_mod", 64.0, 10.0, rot_deg=90,
+      "PinHeader_1x04_P2.54mm_Vertical.kicad_mod", 44.0, 95.0, rot_deg=90,
       pad_nets={"1": "GND", "2": "+3V3", "3": "SCL1", "4": "SDA1"})
 place("J12", "IMU", "Connector_PinHeader_2.54mm.pretty",
       "PinHeader_1x08_P2.54mm_Vertical.kicad_mod", 93.0, 24.0,
@@ -348,7 +386,7 @@ place("R4", "330", "Resistor_THT.pretty",
 place("TP1", "GND", "TestPoint.pretty", "TestPoint_THTPad_D1.5mm_Drill0.7mm.kicad_mod",
       74.0, 44.0, pad_nets={"1": "GND"})
 place("TP2", "+12V", "TestPoint.pretty", "TestPoint_THTPad_D1.5mm_Drill0.7mm.kicad_mod",
-      74.0, 40.0, pad_nets={"1": "+12V"})
+      30.0, 17.0, pad_nets={"1": "+12V"})
 for i, (hx, hy) in enumerate([(4, 4), (131, 4), (4, 111), (131, 111)]):
     place(f"H{i+1}", "M3", "MountingHole.pretty",
           "MountingHole_3.2mm_M3_DIN965.kicad_mod", hx, hy)
@@ -563,6 +601,8 @@ def astar(net, starts, goals, w=0.5, slack=18, extra=()):
             return True
         if blocked(c, li):
             return False
+        if c in cuobs[li]:
+            return False
         o = obs_l[li].get(c)
         if o is None:
             return True
@@ -600,6 +640,37 @@ def astar(net, starts, goals, w=0.5, slack=18, extra=()):
         (math.hypot(dx, dy) * GRID, dx, dy)
         for dx in range(-13, 14) for dy in range(-13, 14)
         if dx * dx + dy * dy <= 169)
+
+    # hard floor: foreign copper + vias expanded by THIS net's real
+    # half-width. Track marks only reserve for nets still to come in
+    # `order` — a fat rail re-routed late by rip-up can otherwise squeeze
+    # through a signal's thin halo and lay overlapping copper (the
+    # +5V/SDA1 short-class DRC failures).
+    _cneed = w / 2 + CLR + 0.03
+    cuobs = (dict(), dict())
+    _offs = {}
+    for other, layers in OWNCU.items():
+        if other == net:
+            continue
+        r2 = NETW2.get(other, 0.3) + _cneed
+        offs = _offs.get(r2)
+        if offs is None:
+            offs = _offs[r2] = disc_cells(0.0, 0.0, r2)
+        for li, ln in enumerate(LNAME):
+            d = cuobs[li]
+            for c0 in layers.get(ln, ()):
+                for dx, dy in offs:
+                    d[(c0[0] + dx, c0[1] + dy)] = other
+    _r_via = VIA_PAD + _cneed
+    _voffs = disc_cells(0.0, 0.0, _r_via)
+    for vx, vy, vnet in VIA:
+        if vnet == net:
+            continue
+        vc = (int(round(vx / GRID)), int(round(vy / GRID)))
+        for dx, dy in _voffs:
+            cc = (vc[0] + dx, vc[1] + dy)
+            cuobs[0][cc] = vnet
+            cuobs[1][cc] = vnet
 
     def via_ok(cc):
         if cc in viabad:
@@ -738,6 +809,7 @@ def astar(net, starts, goals, w=0.5, slack=18, extra=()):
             seglen = math.hypot(b[0] - a[0], b[1] - a[1])
             if seglen < 1e-6:
                 continue
+            n = max(2, int(seglen / 0.1) + 1)
             for pidx, (px, py, hx, hy, prr, kind, plays, pnet) \
                     in enumerate(PADS):
                 if pidx in tidx or pnet == net or pln not in plays:
@@ -747,7 +819,6 @@ def astar(net, starts, goals, w=0.5, slack=18, extra=()):
                         or max(a[1], b[1]) < py - m
                         or min(a[1], b[1]) > py + m):
                     continue
-                n = max(2, int(seglen / 0.1) + 1)
                 viol = False
                 for s in range(1, n):
                     cxp = a[0] + (b[0] - a[0]) * s / n
@@ -770,6 +841,27 @@ def astar(net, starts, goals, w=0.5, slack=18, extra=()):
                               key=lambda k: (pts[k][0] - px) ** 2
                               + (pts[k][1] - py) ** 2)
                     break
+            # chord-vs-copper: same repair against cuobs — a chord may
+            # cut inside foreign copper the cell path legally dodged.
+            if bad is None:
+                cob = cuobs[a[2]]
+                for s in range(1, n):
+                    cxp = a[0] + (b[0] - a[0]) * s / n
+                    cyp = a[1] + (b[1] - a[1]) * s / n
+                    ccx, ccy = round(cxp / GRID), round(cyp / GRID)
+                    hit = False
+                    for ddx in (-1, 0, 1):
+                        for ddy in (-1, 0, 1):
+                            if (ccx + ddx, ccy + ddy) in cob:
+                                hit = True
+                                break
+                        if hit:
+                            break
+                    if hit:
+                        bad = min(range(ia + 1, ib),
+                                  key=lambda k: (pts[k][0] - cxp) ** 2
+                                  + (pts[k][1] - cyp) ** 2)
+                        break
             if bad is not None:
                 break
         if bad is None:
@@ -848,21 +940,50 @@ ROUTES = [
     # net, stops, layer(hint only), width — guide order: 12V trunk first,
     # then 5V/3V3, then fixed-function (bus/I2C/UART), then GPIOs.
     # Stops are pad refs; the A* fills the path between them.
+    # 6 A path (fuse): 2.5 mm trunk — ~5-6 A at 20-30 degC rise on 1 oz
+    # (IPC-2221). Dives to each KK-254 pin stay 2.5 mm too: they fit
+    # between pads (need 1.45 mm, have 1.69 mm).
     ("+12V_IN", [("J16", "2"), ("J1", "1"), ("JP1", "1"), ("D4", "1")],
-     "F.Cu", 1.5),
-    ("+12V_SW", [("JP1", "2"), ("F1", "1")], "F.Cu", 1.5),
-    ("+12V", [("F1", "2"), ("R7", "1"), ("J3", "1"), (28.0, 4.0),
+     "F.Cu", 2.5),
+    ("+12V_SW", [("JP1", "2"), ("F1", "1")], "F.Cu", 2.5),
+    # F1.2->R7.1 enters the inter-row pocket through the west door
+    # (x<19.4 between the two socket rows). The (19,34)/(18.5,22)/(19,14)
+    # waypoints then force the fat rail back OUT the door and up the west
+    # side — without them A* hugs U1B's north row edge at y~25 and its
+    # ~2.4 mm halo seals +5V_MCU's dive channel at (24.7,25.4).
+    ("+12V", [("F1", "2"), (18.0, 44.0), (20.0, 44.0), ("R7", "1"),
+              (19.0, 34.0), (18.5, 22.0), (19.0, 14.0), ("J3", "1"),
+              ("TP2", "1"), (28.0, 4.0),
               (32.5, 5.0), ("J4", "2"), (47.5, 5.0), ("J5", "2"),
-              (80.5, 5.0), ("J6", "2"), ("C2", "1"), ("C1", "1"),
-              ("TP2", "1")], "F.Cu", 1.5),
-    ("+5V", [("J2", "1"), ("J3", "3"), ("C4", "1"), ("J12", "1"),
-             ("C3", "1"), ("J14", "3"), ("J10", "4"), ("BZ1", "1"),
-             ("J15", "1"), ("R3", "1"), ("D1", "2")], "F.Cu", 0.6),
-    ("+5V_MCU", [("D1", "1"), (16.0, 56.0), (1.6, 40.0), (1.6, 26.0),
-                 ("U1B", "2")], "F.Cu", 0.6),
-    ("+3V3", [("U1B", "22"), ("U1B", "21"), ("J11", "2"), ("IR1", "3"),
-              ("DSV", "1"), ("R6", "1"), ("J15", "5"), ("J8", "1"),
-              ("J7", "2"), ("J13", "1")], "F.Cu", 0.4),
+              (80.5, 5.0), ("J6", "2"), ("C2", "1"), ("C1", "1")],
+     "F.Cu", 2.5),
+    # +5V feeds the buck output + NeoPixel: 1.5 mm ~ 3.2 A @10 degC.
+    # C4/J12 sit east of the U1B pad wall — at w=1.5 the gap east of
+    # U1B.22 is too tight once signals re-route, so come over the top:
+    # the y~20 lane between the bus headers and the socket row is open.
+    ("+5V", [("J2", "1"), ("J3", "3"), (82.0, 21.0), ("C4", "1"),
+             ("J12", "1"),
+             ("C3", "1"), (125.5, 44.0), (126.0, 52.2), ("J14", "3"),
+             ("J10", "4"),
+             ("BZ1", "1"), (64.5, 67.5), ("J15", "1"), ("R3", "1"),
+             ("D1", "2")], "F.Cu", 1.5),
+    # +5V_MCU: east lane to U1B.2's north dive. The descent must stay
+    # EAST of C4 (x87.5 lane between C4's keepout ~86 and J12's ~91.2)
+    # — the old x81.3 column sits inside C4.1's keepout and only ever
+    # worked via goal-annulus leniency; once re-routed signal marks pile
+    # on, it seals. The west-side fix on +12V keeps the dive channel at
+    # (24.7,25.4) free of the fat rail's halo on first pass.
+    ("+5V_MCU", [("D1", "1"), (80.0, 60.0), (81.3, 45.0), (87.5, 34.0),
+                 (87.5, 26.0), (79.0, 25.0), (24.7, 25.4),
+                 ("U1B", "2")], "F.Cu", 1.0),
+    # +3V3: the U1A pad wall seals the inter-row pocket for w>=0.35 — exit
+    # east at x~79, run the east lane south, then west along the bottom
+    # to reach J11.2 on the front edge.
+    ("+3V3", [("U1B", "22"), ("U1B", "21"), (79.0, 44.0), (79.0, 104.0),
+              (46.5, 97.6), ("J11", "2"), ("IR1", "3"),
+              ("DSV", "1"), (115.0, 84.8), ("R6", "1"), (74.2, 67.5),
+              ("J15", "5"), ("J8", "1"),
+              ("J7", "2"), ("J13", "1")], "F.Cu", 0.6),
     # fixed-function: servo-bus UART, coupling R1/R2, I2C, wrist UART
     ("BUSA_DATA", [("U1B", "13"), ("R1", "1"), ("J4", "3"),
                    ("J5", "3")], "F.Cu", 0.25),
@@ -870,26 +991,43 @@ ROUTES = [
      "F.Cu", 0.25),
     ("RXA", [("U1B", "6"), ("R1", "2")], "F.Cu", 0.25),
     ("RXB", [("U1B", "5"), ("R2", "2")], "F.Cu", 0.25),
-    ("SDA1", [("J7", "1"), ("U1B", "11"), ("J11", "4"),
+    # Same west-door crossing as SCL1, one lane further west — the two
+    # share the x~21.5-22 corridor between F1/+12V copper and U1A.1.
+    ("SDA1", [("J7", "1"), (21.5, 60.0), (21.5, 48.0), (21.5, 26.5),
+              (34.0, 26.0), ("U1B", "11"), ("J11", "4"),
               ("J12", "4")], "F.Cu", 0.25),
-    ("SCL1", [("J7", "4"), ("U1B", "12"), ("J11", "3"),
+    # J7.4 sits south of the U1A pad wall; the only crossing is the
+    # west door between F1's keepout (~x19.3) and U1A.1 (~x23). Anchor
+    # the crossing before congestion makes it non-deterministic.
+    ("SCL1", [("J7", "4"), (22.0, 68.0), (22.0, 48.0), (22.0, 26.5),
+              (35.0, 26.0), ("U1B", "12"), ("J11", "3"),
               ("J12", "3")], "F.Cu", 0.25),
     ("SDA2", [("U1A", "17"), ("J8", "3")], "B.Cu", 0.25),
     ("SCL2", [("U1A", "16"), ("J8", "4")], "B.Cu", 0.25),
     ("WTX", [("U1A", "15"), ("J10", "2")], "B.Cu", 0.25),
     ("WRX", [("U1A", "14"), ("J10", "3")], "B.Cu", 0.25),
     ("VSNS", [("U1B", "7"), ("R7", "2"), ("R8", "2")], "F.Cu", 0.25),
-    # reassigned GPIOs
-    ("ENC_A", [("U1A", "5"), ("J13", "4")], "B.Cu", 0.25),
-    ("ENC_B", [("U1A", "6"), ("J13", "3")], "B.Cu", 0.25),
-    ("ENC_SW", [("U1A", "7"), ("J13", "5")], "B.Cu", 0.25),
-    ("ESTOP", [("U1A", "13"), ("J9", "1")], "B.Cu", 0.25),
+    # reassigned GPIOs — encoder/ESTOP approach their y95 front-row
+    # pads end-on from the south lane (y~97.3): running along the row
+    # grazes neighbouring pad edges (DRC clearance 0.15-0.19)
+    ("ENC_A", [("U1A", "5"), (30.0, 97.4), (21.6, 97.2),
+               ("J13", "4")], "B.Cu", 0.25),
+    ("ENC_B", [("U1A", "6"), (30.0, 97.4), (19.1, 97.2),
+               ("J13", "3")], "B.Cu", 0.25),
+    ("ENC_SW", [("U1A", "7"), (30.0, 97.4), (25.5, 97.2),
+                ("J13", "5")], "B.Cu", 0.25),
+    ("ESTOP", [("U1A", "13"), (22.0, 56.0), (30.0, 97.4),
+               ("J9", "1")], "B.Cu", 0.25),
     ("SP1", [("U1A", "18"), ("J15", "3")], "B.Cu", 0.25),
     ("SP2", [("U1A", "19"), ("J15", "4")], "B.Cu", 0.25),
     ("NEO", [("U1B", "19"), ("J14", "2")], "B.Cu", 0.25),
     ("IRIN", [("U1B", "18"), ("IR1", "1")], "B.Cu", 0.25),
-    ("TEMP", [("U1B", "17"), ("DST", "1"), ("R6", "2")], "B.Cu", 0.25),
-    ("BUZ", [("U1B", "16"), ("R5", "1")], "B.Cu", 0.25),
+    ("TEMP", [("U1B", "17"), (124.0, 60.0), (124.0, 70.0),
+              ("DST", "1"), ("R6", "2")], "B.Cu", 0.25),
+    # BUZ's R5.1 dive also comes up the south lane — the old along-row
+    # path grazed J10's pad edges (0.17-0.18mm actual)
+    ("BUZ", [("U1B", "16"), (100.0, 97.4), (112.0, 97.2),
+             ("R5", "1")], "B.Cu", 0.25),
     ("BZB", [("R5", "2"), ("Q1", "2")], "B.Cu", 0.25),
     ("BZC", [("Q1", "3"), ("BZ1", "2")], "B.Cu", 0.25),
     ("LEDGPIO", [("U1B", "14"), ("R4", "1")], "B.Cu", 0.25),
@@ -928,6 +1066,10 @@ PLACE_ONLY = bool(os.environ.get("PLACE_ONLY"))
 
 order = sorted(ROUTES, key=lambda r: (PWR.get(r[0], 10), -_pins(r[1]),
                                       route_span(r[1])))
+ONLY = os.environ.get("ONLY")
+if ONLY:
+    _sel = set(ONLY.split(","))
+    order = [r for r in order if r[0] in _sel]
 # per-net mark reserve: half-width of the widest track still to come
 RESERVE = {}
 _ws = [r[3] for r in order]
@@ -1123,6 +1265,29 @@ def prune_stubs():
     SEG[:] = [(n, w, l, [a, b]) for n, w, l, a, b in atoms]
 
 
+def merge_close_vias():
+    """Two same-net vias < ~0.9mm apart share drill space (hole_to_hole).
+    A* layer hops can land 2-3 cells apart in tight doors. Snap the later
+    via onto the earlier one's centre and retarget nearby segment ends."""
+    for i in range(len(VIA)):
+        x1, y1, n = VIA[i]
+        for j in range(i + 1, len(VIA)):
+            x2, y2, n2 = VIA[j]
+            if n2 != n or (x1 - x2) ** 2 + (y1 - y2) ** 2 >= 0.81:
+                continue
+            VIA[j] = (x1, y1, n)
+            for si, (sn, w, l, pts) in enumerate(SEG):
+                if sn != n:
+                    continue
+                SEG[si] = (sn, w, l, [
+                    (x1, y1) if (px - x2) ** 2 + (py - y2) ** 2 <= 0.36
+                    else (px, py) for px, py in pts])
+    # drop now-identical via tuples
+    seen = set()
+    VIA[:] = [v for v in VIA if not (v in seen or seen.add(v))]
+
+
+merge_close_vias()
 prune_stubs()
 
 
@@ -1176,30 +1341,36 @@ def build_pcb():
         f'\n\t\t(uuid "{uuid.uuid4()}")\n\t)\n')
 
     for l in [
-        label("SOMA BASE CARRIER v1.1", 60, 4, 1.8),
-        label("12V IN", 8, 53.5), label("5V IN", 8, 41.5),
-        label("XT60 12V", 9, 26, 1.0),
-        label("PWR-ON SHUNT", 10, 64, 0.9),
-        label("TVS 15V", 24, 64, 0.9),
-        label("BUS-A x2 (STS3215)", 37.5, 5.5, 1.1),
-        label("BUS-B (HTD45H)", 80, 5.5, 1.1),
-        label("G", 30, 12.5, 0.9), label("V", 32.54, 12.5, 0.9),
-        label("D", 35.08, 12.5, 0.9),
-        label("ENC-J2 SDA1/SCL1", 30, 59, 1.0),
-        label("ENC-J3 SDA2/SCL2", 48, 59, 1.0),
-        label("ESTOP", 30, 100, 0.9),
-        label("WRIST G TX RX 5V", 86, 100, 0.9),
-        label("MINI-360 (opt)", 26, 10.0, 1.0),
-        label("OLED", 64, 6.5, 1.0), label("IMU GY-521", 93, 44, 0.9),
+        label("SOMA BASE CARRIER v1.1", 60, 108, 1.8),
+        label("12V IN", 16, 45), label("5V IN", 16, 33.5),
+        label("XT60", 10.5, 10.5, 1.0),
+        label("PWR-ON", 8, 66, 0.9),
+        label("TVS", 24, 63, 0.9),
+        label("BUS-A x2 (STS3215)", 38, 4.6, 1.0),
+        label("BUS-B (HTD45H)", 81, 15.5, 1.0),
+        label("G", 30, 13.8, 0.9), label("V", 32.54, 13.8, 0.9),
+        label("D", 35.08, 13.8, 0.9),
+        label("G", 45, 13.8, 0.9), label("V", 47.54, 13.8, 0.9),
+        label("D", 50.08, 13.8, 0.9),
+        label("G", 78, 13.8, 0.9), label("V", 80.54, 13.8, 0.9),
+        label("D", 83.08, 13.8, 0.9),
+        label("ENC-J2", 24, 64, 0.8),
+        label("ENC-J3", 50.0, 67.0, 0.8),
+        label("ESTOP", 31.3, 100, 0.9),
+        label("WRIST G TX RX 5V", 89.8, 100, 0.9),
+        label("MINI-360", 26, 25.2, 0.9),
+        label("OLED G-3V3-SCL-SDA", 47.8, 99.5, 0.8),
+        label("IMU GY-521", 93, 44, 0.9),
         label("NEO G-D-5V", 128, 44, 0.8),
-        label("JOG KY-040", 14, 100, 0.9),
-        label("SPARE 3V3 G 5V S1 S2", 64, 59, 0.9),
+        label("JOG 3V-G-B-A-SW", 19, 99.5, 0.8),
+        label("SPARE 5V-G-S1-S2-3V3", 69, 74.5, 0.8),
         label("IR", 128, 32, 0.8), label("TEMP", 127, 72, 0.8),
+        label("Q1 EBC", 128, 70.5, 0.8),
         label("BUZ", 70, 90, 0.8),
-        label("ESP32-S3-DevKitC-1  USB->LEFT", 45, 39.5, 1.3),
-        label("ROW-BOT=J3  ROW-TOP=J1", 45, 40.8, 1.0),
-        label("PWR", 70, 66, 1.0), label("STAT", 76, 52, 1.0),
-        label("F1 6A", 20, 47, 1.0),
+        label("DevKitC-1 USB->W", 103, 50, 1.0),
+        label("TOP=J1 BOT=J3", 103, 52.6, 0.9),
+        label("PWR", 75.4, 68, 0.8), label("STAT", 82, 56.5, 0.8),
+        label("6A", 17, 70.5, 0.9),
         label("github.com/Riyu-D1/Vector", 60, 105, 0.8, "B.SilkS"),
     ]:
         parts.append(l + "\n")
@@ -1222,10 +1393,10 @@ def build_pcb():
             f'\n\t\t(layer "{zlayer}")'
             f'\n\t\t(uuid "{uuid.uuid4()}")\n\t\t(name "GND")'
             '\n\t\t(hatch full 0.508)'
-            '\n\t\t(connect_pads yes\n\t\t\t(clearance 0.5)\n\t\t)'
+            '\n\t\t(connect_pads thru_hole_only\n\t\t\t(clearance 0.5)\n\t\t)'
             '\n\t\t(min_thickness 0.3)'
             '\n\t\t(placement\n\t\t\t(enabled no)\n\t\t\t(sheetname "")\n\t\t)'
-            '\n\t\t(fill yes\n\t\t\t(thermal_gap 0.5)\n\t\t\t(thermal_bridge_width 0.4)'
+            '\n\t\t(fill yes\n\t\t\t(thermal_gap 0.5)\n\t\t\t(thermal_bridge_width 0.65)'
             '\n\t\t\t(island_removal_mode 1)\n\t\t\t(island_area_min 10.0)\n\t\t)'
             f'\n\t\t(polygon\n\t\t\t(pts\n\t\t\t\t(xy 0.5 0.5)'
             f'\n\t\t\t\t(xy {BOARD_W-0.5} 0.5)'
@@ -1290,9 +1461,9 @@ def build_pro():
 
 
 if __name__ == "__main__":
-    # PLACE_ONLY writes a side file so a placement check can never
-    # clobber a routed soma-carrier.kicad_pcb.
-    name = "soma-carrier.placeonly.kicad_pcb" if PLACE_ONLY \
+    # PLACE_ONLY/ONLY write a side file so a placement or probe run can
+    # never clobber a routed soma-carrier.kicad_pcb.
+    name = "soma-carrier.placeonly.kicad_pcb" if (PLACE_ONLY or ONLY) \
         else "soma-carrier.kicad_pcb"
     (OUT / name).write_text(build_pcb())
     (OUT / "soma-carrier.kicad_pro").write_text(build_pro())

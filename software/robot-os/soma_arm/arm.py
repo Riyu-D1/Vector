@@ -114,7 +114,7 @@ class Arm:
     # ------------------------------------------------------------ motion
     def stream_joints(self, q, blocking=False, dt=config.STREAM_DT_S):
         """Send one joint setpoint. q = 6 rad."""
-        self.kin.clamp_limits(q)
+        q = self.kin.clamp_limits(q)
         self.planner.check_in_limits(q)
         self._send(link.T.SET_JOINT_POS, link.p_set_joint_pos(q))
         self.q = list(q)

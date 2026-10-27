@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include "../../shared/can_proto.h"
+#include "config.h"        /* CAN_N_JOINTS */
 
 typedef struct {
     float    pos;        /* last TPDO2 feedback, rad (output shaft)   */

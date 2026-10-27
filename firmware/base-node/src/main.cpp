@@ -85,6 +85,15 @@ static void estop_pin_poll(void) {
 
 static void joint_update(void) {
     if (g_arm.estop || !g_arm.armed) return;
+    /* integrate jog velocities into the commanded setpoint */
+    const float dt = 1.0f / JOINT_LOOP_HZ;
+    for (int i = 0; i < 6; i++) {
+        if (g_arm.dq_cmd[i] != 0.0f) {
+            g_arm.q_cmd[i] += g_arm.dq_cmd[i] * dt;
+            if (g_arm.q_cmd[i] < Q_MIN[i]) { g_arm.q_cmd[i] = Q_MIN[i]; g_arm.dq_cmd[i] = 0; }
+            if (g_arm.q_cmd[i] > Q_MAX[i]) { g_arm.q_cmd[i] = Q_MAX[i]; g_arm.dq_cmd[i] = 0; }
+        }
+    }
     for (int i = 0; i < CAN_N_JOINTS; i++) {
         can_send_pdo2(can_ids[i], g_arm.q_cmd[i], g_arm.dq_cmd[i]);
         if (g_arm.tau_ff[i] != 0.0f)

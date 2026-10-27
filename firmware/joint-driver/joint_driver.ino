@@ -71,9 +71,14 @@ static bool   estop = false;
 static bool   armed = false;
 static float  cmd_pos = 0.0f, cmd_vel_ff = 0.0f;
 static float  cmd_iq  = 0.0f;          /* torque-mode q-current setpoint */
+static float  pos_zero = 0.0f;         /* user offset (ZERO_HERE)       */
 static uint32_t last_cmd_ms = 0, last_fb_ms = 0, last_rx_any_ms = 0;
 
 /* ------------------------------------------------------------ motor  */
+#ifndef A_VBUS
+#define A_VBUS PA0                  /* VBUS divider (NuttX board doc)   */
+#endif
+
 BLDCMotor motor = BLDCMotor(POLE_PAIRS);
 BLDCDriver6PWM driver = BLDCDriver6PWM(A_PHASE_UH, A_PHASE_UL,
                                      A_PHASE_VH, A_PHASE_VL,
@@ -104,7 +109,8 @@ void params_load(void) {
 void params_save(void) { EEPROM.put(EEPROM_ADDR, P); }
 
 /* ------------------------------------------------------------ helpers */
-static float output_pos(void)  { return motor.shaft_angle / P.gear_ratio; }
+static float output_pos(void)  { return motor.shaft_angle / P.gear_ratio
+                                        - pos_zero; }
 static float output_vel(void)  { return motor.shaft_velocity / P.gear_ratio; }
 
 static void send_pdo2(void) {
@@ -195,11 +201,12 @@ static void sdo_write(uint16_t addr, const uint8_t val4[4]) {
     case SDO_POS_LIMIT_HI:   P.pos_hi = get_f32(val4); break;
     case SDO_CALIBRATE:      if (get_u32(val4)) do_calibrate(); break;
     case SDO_ZERO_HERE:
-        if (get_u32(val4)) { motor.target = 0; sensor.offset = 0;
-                             cmd_pos = 0;
-                             /* rotate frame so current = 0 rad */
-                             sensor.full_rotations = 0;
-                             sensor.direction = sensor.direction; }
+        if (get_u32(val4)) {
+            /* make the CURRENT output position read as zero */
+            pos_zero = motor.shaft_angle / P.gear_ratio;
+            cmd_pos = 0;
+            motor.target = motor.shaft_angle;   /* hold still */
+        }
         break;
     case SDO_SAVE_FLASH:
         if (get_u32(val4) == 0x53515645) params_save();
@@ -279,7 +286,8 @@ static void handle_frame(uint16_t id, const uint8_t *d, uint8_t dlc) {
             float p = pos;
             if (p < P.pos_lo) p = P.pos_lo;
             if (p > P.pos_hi) p = P.pos_hi;
-            motor.target = p * P.gear_ratio;
+            /* command frame is in user coordinates (pos_zero applied) */
+            motor.target = (p + pos_zero) * P.gear_ratio;
             motor.feed_forward_velocity = vel * P.gear_ratio * VEL_FF_GAIN;
         }
         break;

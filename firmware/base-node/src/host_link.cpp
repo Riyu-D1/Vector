@@ -74,6 +74,9 @@ static void dispatch(uint8_t seq, uint8_t type,
             for (int i = 0; i < 6; i++) q[i] = lp_get_f32(p + 4 * i);
             arm_clamp_q(q);
             memcpy(g_arm.q_cmd, q, sizeof(q));
+            /* position stream owns the joints — clear any stale jog
+             * velocity so no constant feedforward lingers */
+            memset(g_arm.dq_cmd, 0, sizeof(g_arm.dq_cmd));
         } else nack(type, 1);
         break;
     case LK_SET_JOINT_VEL:

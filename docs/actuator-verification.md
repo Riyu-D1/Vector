@@ -8,10 +8,10 @@ params: ratio 15.0:1, Rp 29.0, e 1.5, pins 16x6.0mm, discs 2, OD 70.0 x 85.0 mm
 |---|---|---|---|
 | cycloidal_disc_x2.stl | 24252 | True | 5.1 |
 | end_cap.stl | 8576 | True | 11.7 |
-| housing.stl | 8544 | True | 38.4 |
+| housing.stl | 9140 | True | 39.6 |
 | input_shaft.stl | 5108 | True | 3.6 |
 | motor_shaft.stl | 4392 | True | 4.6 |
-| motor_shell.stl | 4522 | True | 41.7 |
+| motor_shell.stl | 5778 | True | 41.7 |
 | output_shaft.stl | 19244 | True | 22.8 |
 
 ## 2. Rotation interference sweep
@@ -62,7 +62,7 @@ BREP boolean spot-check (disc x 16 pins) at 4 angles:
 
 | item | qty | mass g |
 |---|---|---|
-| housing | 1 | 47.6 |
+| housing | 1 | 49.1 |
 | cycloidal_disc_x2 | 2 | 12.7 |
 | input_shaft | 1 | 4.4 |
 | output_shaft | 1 | 28.3 |
@@ -79,7 +79,7 @@ BREP boolean spot-check (disc x 16 pins) at 4 angles:
 | magnet 6x3 | 1 | 0.7 |
 | screws+inserts | 1 | 25.0 |
 | M4x12 standoff | 1 | 1.5 |
-| **total** | | **509** |
+| **total** | | **510** |
 
 ## 5. Generated profile vs Onshape `5010_profile.dxf`
 

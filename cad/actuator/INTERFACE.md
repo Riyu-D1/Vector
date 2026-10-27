@@ -38,9 +38,10 @@ toward **-Z** (motor + driver at the back).
 
 ## Cable exit
 
-- **Radial slot at the shell rear rim**: 8 mm wide x 12 mm, centred 6 mm
-  from the rear face. Carries motor phase wires (16 AWG x3), CAN (30 AWG x2),
-  encoder I2C (30 AWG x4) — bundle ~8 mm.
+- **Radial slot at the shell rear rim**: 8 mm wide x 6 mm tall, centred
+  ~2.5 mm above the rear face (through end-cap + motor-shell walls).
+  Carries motor phase wires (16 AWG x3), CAN (30 AWG x2), encoder I2C
+  (30 AWG x4) — bundle ~7 mm.
 - Keep a 10 mm keep-out sector around the slot on the fixed link side.
 
 ## Internals (for reference, driven by `cad/actuator/params.py`)

@@ -65,6 +65,20 @@ end_cap, motor_shaft — all exported in `export/`; all print without supports
 - FDM clearance is parametric: `P.gear.clearance` (mesh flank, 0.15 mm) and
   `P.fd_clearance` (seats/grooves, 0.2 mm).
 
+## Assembly order (verified against the model)
+
+1. Seat the 16 ring pins in the housing grooves.
+2. Drop the input shaft in from the top (tip through the housing floor hole);
+   press 6701 + disc1 onto journal 1, then 6701 + disc2 (180 deg opposed).
+3. Drop the 6809 pair into their seat pockets from the top.
+4. Slide the output shaft in from the top — pins thread through both disc
+   holes; the Ø50 flange stops flush at the top rim ring (it cannot pass
+   the Ø47 rim opening, which is exactly Z_MAX).
+5. Motor from below: stator bolts to the shell floor lands, puck onto the
+   rotor bolts, square drive mates the shaft.
+6. ESC + encoder boards onto end-cap posts; end cap closes the rear; 4x
+   M3x55 through-bolts clamp cap -> shell pillars -> housing wall.
+
 ## UNVERIFIED (measure on arrival)
 
 - Output-pin BCD 33 mm / roller stack (arithmetic + thumbnail only).

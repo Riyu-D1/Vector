@@ -125,6 +125,10 @@ def housing(p: P = P) -> Part:
     for (a0, a1) in (Z_BRG1, Z_BRG2):
         part += (cz(id_r, a1 - a0, a0) -
                  cz(B6809.od / 2 + CLR, a1 - a0 + 0.2, a0 - 0.1))
+    # seat land under the pair: holds the lower race axially and caps the
+    # ring-pin tops (pins end exactly at Z_PIN0+16 = Z_BRG1[0]-1)
+    part += (cz(id_r, 1.0, Z_BRG1[0] - 1.0) -
+             cz(25.5, 1.4, Z_BRG1[0] - 1.2))
 
     # top rim ring above the upper bearing (retains it)
     part += (cz(od / 2, Z_MAX + 0.5 - Z_BRG2[1], Z_BRG2[1]) -
@@ -137,8 +141,6 @@ def housing(p: P = P) -> Part:
         a = math.radians(90 * i + 45)
         part -= Pos(rb * math.cos(a), rb * math.sin(a), z0 + (z1 - z0) / 2) * \
             Cylinder(1.7, z1 - z0 + 2)
-    # cable exit slot at rear rim
-    part -= Pos(od / 2 - 4.0, 0, z0 + 2.5) * Box(8, 8, 6)
     return part
 
 
@@ -234,7 +236,11 @@ def motor_shell(p: P = P) -> Part:
         part += Pos(rm * math.cos(a), rm * math.sin(a),
                     (Z_FLOOR1 + z1) / 2) * Rot(0, 0, math.degrees(a)) * \
             Box(od / 2 - r_in, 15.0, z1 - Z_FLOOR1)
-        part -= Pos(rm * math.cos(a), rm * math.sin(a), 0) * \
+        # M3x55 bolt path on the 64 BCD: Ø3.4 through pillar + Ø4.6 pocket
+        rb = p.shell_bolt_bcd / 2
+        part -= Pos(rb * math.cos(a), rb * math.sin(a), 0) * \
+            cz(1.7, z1 - Z_FLOOR1 + 0.4, Z_FLOOR1 - 0.2)
+        part -= Pos(rb * math.cos(a), rb * math.sin(a), 0) * \
             cz(2.3, 4.4, z1 - 4.4)
     # skin between pillars over the motor
     part += (cz(od / 2, z1 - Z_FLOOR1, Z_FLOOR1) -

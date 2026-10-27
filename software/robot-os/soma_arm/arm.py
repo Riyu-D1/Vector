@@ -29,6 +29,7 @@ class Arm:
         self.planner = planner or TrajectoryPlanner()
         self._parser = link.FrameParser()
         self._seq = 0
+        self._param_resp = None
         self.state = None            # last parsed STATE dict
         self.events = []
         self._state_timeout = state_timeout
@@ -57,6 +58,8 @@ class Arm:
                     self._estopped = False
         elif ftype == link.T.PONG:
             self.pong = payload
+        elif ftype == link.T.PARAM:
+            self._param_resp = payload[4:8] if len(payload) >= 8 else payload
         elif ftype == link.T.NACK:
             self.events.append(("nack", list(payload)))
 
@@ -110,6 +113,18 @@ class Arm:
     def set_servo_reg(self, servo_id, addr, data):
         self._send(link.T.SET_SERVO_REG, link.p_set_servo_reg(
             servo_id, addr, data))
+
+    def read_param(self, bus, node, addr, timeout=1.0):
+        """READ_PARAM -> PARAM response payload (last 4 bytes) or None."""
+        self._param_resp = None
+        self._send(link.T.READ_PARAM, link.p_read_param(bus, node, addr))
+        t0 = time.monotonic()
+        while time.monotonic() - t0 < timeout:
+            self._pump()
+            if self._param_resp is not None:
+                return self._param_resp
+            time.sleep(0.005)
+        return None
 
     # ------------------------------------------------------------ motion
     def stream_joints(self, q, blocking=False, dt=config.STREAM_DT_S):

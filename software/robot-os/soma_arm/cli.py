@@ -17,7 +17,7 @@ import sys
 from . import config
 from .arm import Arm, ArmError
 from .kinematics import Pose
-from .link import SerialTransport, SimTransport
+from .link import SerialTransport, SimTransport, T as LT, p_set_mode
 from .sim import SimBaseNode
 
 
@@ -77,6 +77,16 @@ def main(argv=None):
     p.add_argument("joint", type=int, choices=[1, 2, 3])
     p.add_argument("amps", type=float)
 
+    p = sub.add_parser("mode", help="NMT mode: joint(0=all) cmd(0=dis,"
+                                    "1=en,2=cal,127=estop)")
+    p.add_argument("joint", type=int, choices=[0, 1, 2, 3])
+    p.add_argument("cmd", type=int)
+
+    p = sub.add_parser("param", help="read a CAN SDO or Feetech register")
+    p.add_argument("bus", type=int, choices=[0, 1], help="0=CAN,1=Feetech")
+    p.add_argument("node", type=int)
+    p.add_argument("addr", type=lambda s: int(s, 0))
+
     sub.add_parser("demo", help="small dry-run motion sequence")
 
     args = ap.parse_args(argv)
@@ -135,6 +145,13 @@ def main(argv=None):
         elif args.cmd == "limit":
             arm.set_current_limit(args.joint, args.amps)
             print(f"J{args.joint} current limit -> {args.amps} A")
+        elif args.cmd == "mode":
+            arm._send(LT.SET_MODE, p_set_mode(args.joint, args.cmd))
+            print(f"mode cmd {args.cmd} -> joint {args.joint or 'all'}")
+        elif args.cmd == "param":
+            v = arm.read_param(args.bus, args.node, args.addr)
+            print(f"param bus={args.bus} node={args.node} "
+                  f"addr=0x{args.addr:04X}: {v.hex() if v else 'no resp'}")
         elif args.cmd == "demo":
             print("[demo] ping:", arm.ping())
             arm.enable()

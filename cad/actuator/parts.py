@@ -27,7 +27,7 @@ import math
 import numpy as np
 from build123d import (
     Plane, Mode, Part, Compound, Pos, Rot, Location,
-    Cylinder, Box, Polygon, extrude,
+    Cylinder, Box, Polyline, extrude, make_face,
 )
 
 from params import P, GearSpec, MR106, B6701, B6809
@@ -61,17 +61,23 @@ def cz(r, h, z):
 # ---------------------------------------------------------------------------
 
 def cycloidal_disc(gear: GearSpec = P.gear) -> Part:
-    xs, ys = disc_profile(720, gear)
+    xs, ys = disc_profile(4000, gear)
     pin_hole_d = MR106.od + 2 * gear.eccentricity + 2 * 0.15      # ~13.3
     bore = B6701.od - PRESS                                       # 17.95
-    pts = [(float(x), float(y)) for x, y in zip(xs, ys)]
-    disc = extrude(Polygon(*pts), gear.disc_thickness)
+    pts = [(float(x), float(y), 0.0) for x, y in zip(xs, ys)]
+    # Polyline (straight segments) not Polygon: Polygon interpolates a
+    # smooth wire that bulges ~0.4 mm past the vertices at the lobe tips
+    # and eats the 0.15 mm flank clearance -> pin interference.
+    # extrude(face) runs +Z -> part already spans z = 0..thickness.
+    disc = extrude(
+        make_face(Plane.XY * Polyline(*pts, close=True)),
+        gear.disc_thickness)
     disc -= cz(bore / 2, gear.disc_thickness + 2, -1)
     r = P.out_pin_bcd / 2
     for i in range(P.n_out_pins):
         a = math.radians(60 * i)
-        disc -= Pos(r * math.cos(a), r * math.sin(a), -1) * \
-            Cylinder(pin_hole_d / 2, gear.disc_thickness + 2)
+        disc -= Pos(r * math.cos(a), r * math.sin(a), 0) * \
+            cz(pin_hole_d / 2, gear.disc_thickness + 2, -1)
     return disc
 
 
@@ -149,14 +155,14 @@ def input_shaft(p: P = P) -> Part:
                                                    Z_PUCK1 - Z_PUCK0)
     # rise through housing floor to cam1
     part += cz(4.0, Z_DISC1 - Z_PUCK1, Z_PUCK1)
-    # cam 1: concentric support boss + eccentric journal (OD 12 for 6701)
-    part += cz(8.6, 1.5, Z_DISC1 - 1.0)                       # boss
+    # cam 1: concentric collar -> eccentric journal OD12 (6701) -> retainer
+    part += cz(5.2, 1.7, Z_DISC1 - 1.7)                       # collar
     part += Pos(e, 0, 0) * cz(6.0, 4.6, Z_DISC1 + 0.2)        # journal +e
     part += Pos(e, 0, 0) * cz(7.0, 0.8, Z_DISC1 + 4.6)        # retainer lip
     # shaft between cams
     part += cz(4.0, Z_DISC2 - (Z_DISC1 + 5), Z_DISC1 + 5)
     # cam 2 (offset -e)
-    part += cz(8.6, 1.5, Z_DISC2 - 1.0)
+    part += cz(5.2, 1.7, Z_DISC2 - 1.7)
     part += Pos(-e, 0, 0) * cz(6.0, 4.6, Z_DISC2 + 0.2)
     part += Pos(-e, 0, 0) * cz(7.0, 0.8, Z_DISC2 + 4.6)
     # top pilot (MR106 in output hub) z=66..75.5
@@ -194,7 +200,7 @@ def output_shaft(p: P = P) -> Part:
             cz(1.25, 6.0, Z_FL1 - 6.0)
     # MR106 pilot seat + pilot through-hole in the hub/plate centre
     part -= cz((MR106.od + CLR) / 2, 5.0, Z_PLATE1 + 1.0)
-    part -= cz(3.1, Z_PLATE1 - Z_PLATE0 + 0.4, Z_PLATE0 - 0.2)
+    part -= cz(3.1, Z_PLATE1 + 1.0 - Z_PLATE0 + 0.4, Z_PLATE0 - 0.2)
     # lighten hub: annular pocket keeping an OD16 core for the pilot seat
     part -= (cz(18.0, Z_FL0 - Z_PLATE1 - 0.8, Z_PLATE1 + 0.8) -
              cz(8.0, Z_FL0 - Z_PLATE1 - 0.6, Z_PLATE1 + 0.8))

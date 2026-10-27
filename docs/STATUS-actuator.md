@@ -18,15 +18,34 @@ Branch `arm-actuator`, worktree `~/Vector-wt/actuator`. Deadline 31 Oct 2026.
     motor shell, end cap (ESC tray), hex standoff.
   - Motor datasheet: MAD 5010 EEE V2.0 = OD 56 x 32.7 mm, stator mount M3 on
     25 + 30 mm BCD, rotor mount M3 on 12 + 18 mm BCD, 14 pole pairs, 162 g.
-  - Licence: CC BY-SA 4.0 (credits will be in README).
-- `cad/actuator/params.py` — parametric spec written.
-- `cad/actuator/INTERFACE.md` — published for Stream B (OD 70, len ~74,
-  8xM3 @44 BCD output, 4xM3 @64 BCD rear, cable slot).
+  - Licence: CC BY-SA 4.0 (credited in `cad/actuator/README.md`).
+- `cad/actuator/` complete: params.py, cycloid.py, parts.py, assembly.py,
+  check.py, INTERFACE.md, README.md (BOM + M3 table + UNVERIFIED).
+- `cad/actuator/INTERFACE.md` v0.2 — OD 70, length 85.5, 8xM3 @44 BCD output,
+  4xM3 @64 BCD rear, cable slot. Stream B can consume.
+- All 7 printed parts + bearings/pins/boards in assembly; STL per part +
+  assembly STEP exported to `cad/actuator/export/`.
+- **Verification green** (`docs/actuator-verification.md`, auto-generated):
+  - 7/7 STLs watertight.
+  - Interference sweep 48 samples/rev: 0.0000 mm3 on every pair
+    (ring-pins, output pins, housing, eccentric shaft, pilot).
+    BREP boolean spot-check agrees: 0.000 mm3.
+  - Disc profile: 15 lobes, star-shaped (no undercut), flank contact = touch
+    (design), manufactured profile keeps +0.15 mm pin clearance.
+  - Mass estimate 509 g all-in.
+  - Profile vs Onshape DXF: 0.0070 mm RMS / 0.014 mm max.
+- Bugs found & fixed during verification:
+  - second cycloidal disc now phased 180 deg (odd lobe count needs it);
+  - `Polygon` -> `Polyline`: build123d Polygon interpolates a smooth wire
+    that bulged ~0.4 mm at lobe tips into the pins;
+  - naive curve offset -> shapely buffer (true envelope, no spikes);
+  - disc pin-holes cut at wrong z (Pos*Cylinder centre vs cz());
+  - input-shaft cam stack reworked (collars + retainer lips inside disc bore).
 - CAN GPIO confirmed from pcb/gen_pcb.py: J15 pin3 SP1=IO2, pin4 SP2=IO1
   (TWAI TX/RX for Stream C).
 
 ## In progress
-- build123d module: gear profile, parts, assembly.
+- Sanity render of final assembly; minor cosmetics.
 
 ## Blocked
 - Onshape STEP export needs an account -> parametric re-implementation per
@@ -37,4 +56,4 @@ Branch `arm-actuator`, worktree `~/Vector-wt/actuator`. Deadline 31 Oct 2026.
 - Output-pin BCD / roller choice (BOM arithmetic gives 6 pins + MR106
   rollers, BCD ~33; thumbnail confirms 6 pins).
 - ESC mounting hole pattern (~33 mm square), encoder module footprint.
-- Exact overall length (~74 mm est; BHL value not published).
+- Motor shaft stub OD (6 mm assumed).

@@ -26,34 +26,36 @@ def base_curve(t, Rp, e, Np):
     return x, y
 
 
+def _offset_in(x, y, rr):
+    """True inward offset of a closed curve by rr (polygon buffer).
+
+    A naive per-point normal offset self-intersects where the base curve's
+    radius of curvature < rr (the lobe tips), creating spikes the BREP
+    boolean treats as material that bites into the ring pins.  The shapely
+    buffer computes the real offset envelope and drops those loops.
+    """
+    from shapely.geometry import Polygon
+    poly = Polygon(np.column_stack([x, y]))
+    off = poly.buffer(-rr, join_style="round", quad_segs=64)
+    if off.geom_type == "MultiPolygon":
+        off = max(off.geoms, key=lambda p: p.area)
+    xy = np.asarray(off.exterior.coords)
+    return xy[:-1, 0], xy[:-1, 1]      # drop the duplicated closing point
+
+
 def disc_profile(n=2000, gear: GearSpec = P.gear):
     """Disc outline as (x, y) arrays, centred on the disc centre."""
     t = np.linspace(0.0, 2.0 * np.pi, n, endpoint=False)
     x, y = base_curve(t, gear.pin_pitch_r, gear.eccentricity, gear.ring_pins)
-    dx = np.gradient(x, t)
-    dy = np.gradient(y, t)
-    L = np.hypot(dx, dy)
-    nx, ny = -dy / L, dx / L            # normal candidates
-    # choose the inward direction (toward curve centroid)
-    cx, cy = x.mean(), y.mean()
-    s = np.sign((cx - x) * nx + (cy - y) * ny)
-    rr = gear.pin_radius + gear.clearance  # FDM clearance added on the flank
-    xo = x + s * rr * nx
-    yo = y + s * rr * ny
-    return xo, yo
+    # FDM clearance is added on the flank (bigger pin-radius equivalent)
+    return _offset_in(x, y, gear.pin_radius + gear.clearance)
 
 
 def disc_profile_design(n=2000, gear: GearSpec = P.gear):
     """Disc outline WITHOUT the FDM flank clearance (theoretical)."""
     t = np.linspace(0.0, 2.0 * np.pi, n, endpoint=False)
     x, y = base_curve(t, gear.pin_pitch_r, gear.eccentricity, gear.ring_pins)
-    dx = np.gradient(x, t)
-    dy = np.gradient(y, t)
-    L = np.hypot(dx, dy)
-    nx, ny = -dy / L, dx / L
-    cx, cy = x.mean(), y.mean()
-    s = np.sign((cx - x) * nx + (cy - y) * ny)
-    return x + s * gear.pin_radius * nx, y + s * gear.pin_radius * ny
+    return _offset_in(x, y, gear.pin_radius)
 
 
 def pin_centres(gear: GearSpec = P.gear):

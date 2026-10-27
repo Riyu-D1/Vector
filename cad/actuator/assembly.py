@@ -32,7 +32,8 @@ def build(input_deg: float = 0.0) -> Compound:
     d1 = pt.cycloidal_disc()
     comp += [Pos(ex, ey, pt.Z_DISC1) * Rot(0, 0, math.degrees(phi)) * d1]
     d2 = pt.cycloidal_disc()
-    comp += [Pos(-ex, -ey, pt.Z_DISC2) * Rot(0, 0, math.degrees(phi)) * d2]
+    comp += [Pos(-ex, -ey, pt.Z_DISC2) *
+             Rot(0, 0, math.degrees(phi) + 180.0) * d2]
     # 16 ring pins
     for i in range(g.ring_pins):
         b = math.radians(360 * i / g.ring_pins)
@@ -70,8 +71,8 @@ def gear_demo(input_deg: float):
             Rot(0, 0, out_deg) * pt.output_shaft(),
             Pos(ex, ey, pt.Z_DISC1) * Rot(0, 0, math.degrees(phi)) *
             pt.cycloidal_disc(),
-            Pos(-ex, -ey, pt.Z_DISC2) * Rot(0, 0, math.degrees(phi)) *
-            pt.cycloidal_disc()]
+            Pos(-ex, -ey, pt.Z_DISC2) *
+            Rot(0, 0, math.degrees(phi) + 180.0) * pt.cycloidal_disc()]
     for i in range(g.ring_pins):
         b = math.radians(360 * i / g.ring_pins)
         comp.append(Pos(g.pin_pitch_r * math.cos(b),

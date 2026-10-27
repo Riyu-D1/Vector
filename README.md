@@ -145,10 +145,14 @@ soma/
 │   ├── soma-carrier.kicad_pcb  # generated board (open in KiCad)
 │   └── gerbers/                # fab outputs for JLCPCB/OSH Park
 ├── firmware/
-│   ├── base-node/              # (TODO) ESP32-S3: servo bus, encoders, watchdog
+│   ├── shared/                 # pure-C wire-protocol codecs (CAN/Feetech/link)
+│   ├── base-node/              # ESP32-S3: CAN+Feetech buses, host link, watchdog
+│   │                           #   (PlatformIO, v3 — see docs/bringup.md)
+│   ├── joint-driver/           # B-G431B-ESC1 SimpleFOC joint drive (CAN)
 │   └── wrist-node/             # (TODO) ESP32: eyes, tactile pads, tendon encoder
 └── software/
-    ├── robot-os/               # (TODO) Pi: IK, vision, face, API server
+    ├── robot-os/               # Pi: IK, planner, CLI, link client, simulator
+    │                           #   (soma_arm package + tests — v3 Stream C)
     └── mcp-server/             # (TODO) agent tool interface
 ```
 

@@ -31,10 +31,11 @@ class ActuatorSpec:
     body_l: float = 70.0        # [V3]
     mass_g: float = 380.0       # [ASSUME] 5010 motor ~130g + printed gearbox; UNVERIFIED
     # Output (driven) face: bolt circle that carries the next link.
-    out_pcd: float = 44.0       # [ASSUME] 6xM4 on Ø44, matches ~Ø50 flange
+    out_pcd: float = 36.0       # [ASSUME] 6xM4 on Ø36, ~Ø50 flange face
     out_bolts: int = 6
     out_bolt_d: float = 4.5     # M4 clearance
     out_flange_d: float = 50.0  # [ASSUME] output flange OD
+    out_flange_proud: float = 1.5  # [ASSUME] flange face proud of body end
     # Body (fixed) face: bolt circle that ties the body to its cradle.
     fix_pcd: float = 52.0       # [ASSUME] 4xM3 on Ø52 back face
     fix_bolts: int = 4
@@ -102,11 +103,13 @@ class JointSpec:
 JOINTS = {
     # J1 yaw: actuator vertical, +Z.  [SO102] base rotation +-176 deg.
     "J1": JointSpec("waist yaw",  "actuator", (-170.0, 170.0), (0, 0, 1)),
-    # J2 shoulder: actuator horizontal, axis +Y.  [SO102] -133..+91 deg;
-    # conservative +-120 for the cycloidal.
-    "J2": JointSpec("shoulder",   "actuator", (-120.0, 120.0), (0, 1, 0)),
-    # J3 elbow: axis +Y.  [SO102] -90..+153 deg; conservative +-120.
-    "J3": JointSpec("elbow",      "actuator", (-120.0, 120.0), (0, 1, 0)),
+    # J2 shoulder: axis +Y.  Negative limit: link webs vs the cradle
+    # web (~-15); positive: distal plates sweeping over the Ø132 drum
+    # (~+30).  Raising either needs a taller turret or larger J2_Z.
+    "J2": JointSpec("shoulder",   "actuator", (-15.0, 30.0), (0, 1, 0)),
+    # J3 elbow: axis +Y.  Limited by the forearm webs sweeping into the
+    # upper-link saddle web beyond ~+-100; verified +-90.
+    "J3": JointSpec("elbow",      "actuator", (-90.0, 90.0), (0, 1, 0)),
     # J4 wrist pitch: axis +Y.  [SO102] -99..+97 deg.
     "J4": JointSpec("wrist pitch", "servo",   (-95.0, 95.0),   (0, 1, 0)),
     # J5 wrist roll: axis +X.  [SO102] -165..+163 deg.

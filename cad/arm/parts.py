@@ -19,7 +19,7 @@ import math
 from build123d import Axis, Box, Cylinder, Pos, Rot, Part, Compound, fillet
 
 from arm_params import (ACTUATOR, SERVO, JOINTS, LINKS, BEARINGS, CASE,
-                        DRUM_POSTS, TOL, CABLE)
+                        DRUM_POSTS, TOL, CABLE, KIN)
 
 # ---------------------------------------------------------------------------
 # Z layout (Stream A IFACE v0.2: Ø70 x 85.5 actuator, flange face = top of
@@ -33,7 +33,7 @@ CAP_Z0, CAP_Z1 = 86.0, 92.0                      # bearing cap ring
 BRG_Z0, BRG_Z1 = 80.5, 90.5                      # 6812 race zone (W10)
 CLAMP_Z0, CLAMP_Z1 = 27.0, 34.0                  # J1 shell-clamp ring zone
 TURRET_PLATE_Z = 92.2                            # plate disc bottom
-J2_Z = 146.0                                     # J2/J3/J4 axis height
+J2_Z = KIN.j2_z                                  # J2/J3/J4 axis height
 
 HOUSING_OD = 110.0
 TURRET_D = 98.0
@@ -57,10 +57,10 @@ WR_IN = 26.7              # distal cheek inner faces (0.5 clear of carrier)
 WR_T = 5.0                # -> outer +-31.7
 WHEEL_FACE = 21.65        # output wheel face, rel servo centre
 
-J3_X = LINKS.l_upper                    # 120
-J4_X = J3_X + LINKS.l_fore              # 220
-J5_X = J4_X + 51.0                      # J5 axis (pod back clears J4 block sweep)
-TIP_X = J4_X + LINKS.l_tool             # gripper tip ~275
+J3_X = KIN.l_upper                      # 120
+J4_X = J3_X + KIN.l_fore                # 220
+J5_X = J4_X + KIN.j5_dx                 # J5 axis (pod back clears J4 block sweep)
+TIP_X = J4_X + KIN.tip_dx               # gripper tip ~348
 
 GRIP_JAW_L = 40.0
 
@@ -282,10 +282,12 @@ def turret() -> Part:
     t -= Pos(0, 0, J2_Z) * _bore(ACTUATOR.body_d + 2 * TOL.loose,
                                  2 * (CRADLE_IN + CRADLE_T) + 4, "Y")
     # shell support: two end webs bridging plate -> shell end walls at
-    # |y|~26.5; the driven link's plates (|y|>=44.75) sweep over them and
-    # its beam edges pass through the centre corridor
+    # |y|~26.5 (2 mm embedded into the cradle shell for a fused seat);
+    # the driven link's plates (|y|>=44.75) sweep over them and its beam
+    # edges pass through the centre corridor
     for sy in (-1, 1):
-        t += Pos(0, sy * 26.5, 102.5) * Box(32, 5, 12)
+        t += Pos(0, sy * 26.5, (TURRET_PLATE_Z + 4 + J2_Z - 37.5) / 2) \
+            * Box(32, 5, J2_Z - 37.5 - TURRET_PLATE_Z - 4)
     # split-plane bolt lugs (inner edge x36.5, clear of Ø70.6)
     for sx in (-1, 1):
         for sy in (-1, 1):

@@ -37,6 +37,11 @@ class TrajectoryPlanner:
                 raise PlanError(
                     f"joint {i+1} target {q[i]:.4f} outside limits "
                     f"[{self.jmin[i]:.3f}, {self.jmax[i]:.3f}]")
+        if not config.within_guard(q):
+            raise PlanError(
+                f"(q2, q3) = ({q[1]:.3f}, {q[2]:.3f}) violates the "
+                f"table guard: need q3 >= "
+                f"{config.guard_q3_min(q[1]):.3f}")
 
     def move_time(self, q0, q1, speed_scale=1.0):
         """Min duration for a synchronized min-jerk move.

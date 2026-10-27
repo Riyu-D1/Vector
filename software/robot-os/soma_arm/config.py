@@ -1,45 +1,74 @@
 """Robot configuration — SOMA v3 hybrid arm.
 
+Geometry, joint limits, home pose and the table/case guard come from
+`soma_arm.arm_geometry`, which is GENERATED from the single source of
+truth `cad/arm/arm_params.py` by `cad/arm/gen_params.py`.  Do not edit
+the numbers here — change the CAD params and rerun the generator.
+
 Anything marked UNVERIFIED could not be sourced yet and MUST be confirmed
 before driving real hardware (see docs/STATUS-firmware.md).
 """
 
 import math
 
+from . import arm_geometry as _g
+
 # ---------------------------------------------------------------- geometry
-# Link lengths from ARM_HYBRID_V3.md (verified spec):
-L1 = 0.120          # shoulder -> elbow, m
-L2 = 0.100          # elbow -> wrist (J4 axis), m
-L3 = 0.040          # wrist -> tool point, m
+# Real CAD geometry (cad/arm/arm_params.py KIN): shoulder axis height and
+# link lengths.  Note the wrist/gripper stack makes J4->tip ~128 mm, so
+# the tip reach is ~348 mm, not the 260 mm in the v3 brief.
+L1 = _g.L1            # shoulder -> elbow, m
+L2 = _g.L2            # elbow -> wrist (J4 axis), m
+L3 = _g.L3            # wrist -> gripper tip, m
 
 # Height of the J2 (shoulder) axis above the base/J1 mounting plane.
-# UNVERIFIED — comes from Stream B CAD (base + J1 actuator stack height).
-# Placeholder consistent with a ~60 mm OD x ~70 mm actuator on a turntable.
-BASE_Z = 0.070
+BASE_Z = _g.BASE_Z    # 0.146 m — verified from cad/arm/parts.py J2_Z
 
 # Zero convention: q = 0 -> arm fully extended horizontally along +X,
-# tool pointing forward (+X), roll 0. Joint pitch angles are elevation
-# from horizontal (positive = tip up).
+# tool pointing forward (+X), roll 0 — identical to the CAD build/home
+# pose.  Joint pitch angles are elevation from horizontal (positive =
+# tip up); the CAD frame uses the opposite sign on J2/J3/J4 (positive =
+# down), the generator flips it.
+HOME_Q = list(_g.HOME_Q)
 
 # ------------------------------------------------------------------ limits
-# Mechanical joint limits (rad). UNVERIFIED until Stream B publishes
-# interference/ROM numbers; current values are conservative placeholders.
-JOINT_MIN = [
-    math.radians(-170),   # J1 base yaw
-    math.radians(-150),   # J2 shoulder
-    math.radians(-150),   # J3 elbow
-    math.radians(-150),   # J4 wrist pitch
-    math.radians(-180),   # J5 wrist roll
-    0.0,                  # J6 gripper jaw (0 = open)
-]
-JOINT_MAX = [
-    math.radians(170),
-    math.radians(150),
-    math.radians(150),
-    math.radians(150),
-    math.radians(180),
-    1.4,                  # ~80 deg jaw travel
-]
+# Mechanical joint limits (rad) — from cad/arm/arm_params.py JOINTS via
+# the generator (CAD frame: J1 +-170, J2 -70..+35, J3 +-90, J4 +-95,
+# J5 +-160, J6 +-90; pitch joints flipped to elevation-positive here).
+JOINT_MIN = list(_g.JOINT_MIN)
+JOINT_MAX = list(_g.JOINT_MAX)
+
+# Table/case guard (required behaviour — checks.py c7 measured the
+# boundary): the wrist stays above the table/lid only while
+#     q3 >= GUARD_Q3_A + GUARD_Q3_B * q2      (host frame, rad)
+# i.e. CAD frame J3 <= 45 - 2*J2.  Enforced in kinematics/planner here
+# and in the base node (arm_clamp_q) — see firmware/base-node/src/main.cpp.
+GUARD_Q3_A = _g.GUARD_Q3_A
+GUARD_Q3_B = _g.GUARD_Q3_B
+
+
+def guard_q3_min(q2):
+    """Lowest allowed q3 (rad) for a given q2 under the table guard."""
+    return GUARD_Q3_A + GUARD_Q3_B * q2
+
+
+def guard_clamp(q):
+    """Clamp q3 up onto the guard boundary if (q2, q3) violates it.
+
+    Only q3 is raised (elbow folds back up); q2 is left alone — moving
+    the shoulder could swing the upper link into the base. Returns a new
+    list.
+    """
+    q = list(q)
+    lo = guard_q3_min(q[1])
+    if q[2] < lo:
+        q[2] = lo
+    return q
+
+
+def within_guard(q):
+    return q[2] >= guard_q3_min(q[1]) - 1e-9
+
 
 # Velocity limits (rad/s) — conservative defaults for a 250 g payload arm.
 # J1-J3 limited by chosen driver current caps; J4-J6 by STS3215 speed.

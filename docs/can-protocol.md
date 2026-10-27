@@ -12,6 +12,15 @@ CAN ID = (function_code << 7) | node_id        function: 4 bits, node: 7 bits
 Node IDs: J1 = 1, J2 = 2, J3 = 3. Payloads little-endian; all floats fp32.
 Units are at the **output shaft** (post 15:1 gearbox): rad, rad/s, N·m, A, °C.
 
+Joint limits come from `cad/arm/arm_params.py` via the generated
+`firmware/shared/arm_params_gen.h` — the same numbers the host uses.
+The base node pushes them to each driver as `POS_LIMIT_LO/HI` at boot;
+drivers also clamp RPDO2 targets to their stored limits. Defaults
+(host frame, output shaft): J1 ±170°, J2 −35..+70°, J3 ±90°. The
+table/case guard (J3 ≤ 45 − 2·J2 in the CAD frame, i.e. q3 ≥ −45 − 2·q2
+host-side) is enforced one level up in the base node, not in the
+drivers — see `firmware/base-node/src/main.cpp` `arm_clamp_q`.
+
 ## Frame table
 
 | Dir | CAN ID | Name | Payload | Meaning |

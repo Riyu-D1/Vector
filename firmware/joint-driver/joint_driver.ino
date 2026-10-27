@@ -31,6 +31,7 @@
 extern "C" {
 #include "../../shared/can_proto.h"
 }
+#include "../../shared/arm_params_gen.h"   /* generated joint limits */
 #include "bus_can.h"
 
 /* ------------------------------------------------------------ config */
@@ -103,8 +104,12 @@ void params_load(void) {
         P.gear_ratio    = GEAR_RATIO;
         P.kp            = POS_P_GAIN;
         P.kd            = 0.2f;
-        P.pos_lo        = -3.14f;
-        P.pos_hi        =  3.14f;
+        /* soft limits from the generated table (cad/arm/arm_params.py),
+         * indexed by this unit's CAN id — J1=1, J2=2, J3=3 */
+        uint8_t ji = (DEVICE_CAN_ID >= 1 && DEVICE_CAN_ID <= 3)
+                     ? DEVICE_CAN_ID - 1 : 0;
+        P.pos_lo        = ARM_JOINT_MIN_RAD[ji];
+        P.pos_hi        = ARM_JOINT_MAX_RAD[ji];
         P.pos_zero      = 0.0f;
     }
 }

@@ -1,6 +1,10 @@
-/* config.h — SOMA v3 base-node constants. Mirror of
- * software/robot-os/soma_arm/config.py — keep in sync. */
+/* config.h — SOMA v3 base-node constants.
+ * Joint limits + table guard come from firmware/shared/arm_params_gen.h
+ * (GENERATED from cad/arm/arm_params.py — the single source of truth,
+ * same file the robot-os kinematics consumes). */
 #pragma once
+
+#include "../../shared/arm_params_gen.h"
 
 /* CAN bus: classical CAN 2.0B, 1 Mbit/s (spec), SN65HVD230 on J15 */
 #define CAN_JOINT_NODES   { 1, 2, 3 }     /* J1, J2, J3 */
@@ -14,12 +18,13 @@
 #define FT_CMD_SPEED      600             /* counts/s goal speed (~88 deg/s) */
 #define FT_READ_TIMEOUT_MS 8
 
-/* joint limits (rad) — UNVERIFIED placeholders matching config.py until
- * Stream B publishes ROM numbers */
-static const float Q_MIN[6] = { -2.9671f, -2.6180f, -2.6180f,
-                                -2.6180f, -3.1416f, 0.0f };
-static const float Q_MAX[6] = {  2.9671f,  2.6180f,  2.6180f,
-                                 2.6180f,  3.1416f, 1.4f };
+/* joint limits (rad, output shaft, host frame) — verified CAD ranges:
+ * J1 +-170, J2 -35..+70, J3 +-90, J4 +-95, J5 +-160, J6 +-90 deg
+ * (CAD frame J2 is -70..+35, down-positive; generator flips the sign).
+ * Table/case guard: q3 >= ARM_GUARD_A + ARM_GUARD_B * q2  (see
+ * arm_clamp_q in main.cpp). */
+#define Q_MIN ARM_JOINT_MIN_RAD
+#define Q_MAX ARM_JOINT_MAX_RAD
 
 /* driver phase-current caps (A): spec ~5 A max, lower for J1 */
 static const float PHASE_CURRENT_LIMIT_A[3] = { 3.0f, 5.0f, 5.0f };

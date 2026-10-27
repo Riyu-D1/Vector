@@ -20,7 +20,7 @@ interface (`cad/actuator/INTERFACE.md` v0.2: Ø70 x 85.5, 8xM3 PCD44,
 | servo-mount-grids | PASS — M2 24.45x20.5 grids probe-clear at J4/J5/J6 |
 | home-pairwise-interference | PASS — only documented seats (cap saddles, horn spacers) |
 | actuator-clearance | PASS — Ø70x85.5+pilot vs housing/cap/links: intended contacts only |
-| rom-sweeps | PASS — J1 ±170, J2 −15..+30, J3 ±90, J4 ±95, J5 ±160 |
+| rom-sweeps | PASS — J1 ±170, J2 −70..+35, J3 ±90, J4 ±95, J5 ±160 |
 | extremes-table-case | PASS under guard `J3 <= 45 − 2·J2` |
 | reach | PASS — tip x=348 mm (V3 target 260; see note) |
 | mass-total | printed 574 g + hw 1805 g = 2379 g |
@@ -37,9 +37,20 @@ interface (`cad/actuator/INTERFACE.md` v0.2: Ø70 x 85.5, 8xM3 PCD44,
 
 - STL exports in `export/` are canonical assembly-frame; print
   orientations live in `export/print/`.
-- The guard envelope is required firmware behaviour: raw J2+J3 > ~+45°
-  folds the wrist below the table.
+- The guard envelope is required firmware behaviour: raw folds past
+  J3 <= 45 − 2·J2 pitch the wrist below the table. It is enforced in
+  the base node (`arm_clamp_q`) and the host (`config.guard_clamp`).
+- J2 range was widened on `arm-integrated` (2026-10): measured clean
+  sweep −72..+36 vs the documented −15..+30; adopted −70..+35 with
+  margin. +90 down is architecturally impossible — the J3 actuator
+  folds into the Ø110 housing; clearing it needs J2_Z ≈ +110 mm. See
+  `docs/INTEGRATION-REPORT.md`.
+- c7 samples poses inside the guard envelope plus its boundary; fixed
+  folds are clipped to `J3 <= 45 − 2·J2` first (a firmware-reachable
+  sample must be legal). Wrist-down J4 poses near the boundary can
+  still touch the table — documented limitation, not a guard bug.
 - Reach overshoot (348 vs 260) is driven by the real wrist/gripper
-  stack (~95 mm J4->tip); links stay at the planned 120/100 mm.
+  stack (J4->tip = 128 mm measured); links stay at the planned
+  120/100 mm.
 - Actuator contact volumes (~0.6–1.7 cm3) are intended: cradle bore
   clamp surface + flange-face landing. Deep embeds (>3 cm3) would fail.

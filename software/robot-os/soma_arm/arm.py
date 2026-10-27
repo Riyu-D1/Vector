@@ -9,6 +9,7 @@ Typical use (dry run):
     arm.move_tcp(0.20, 0.0, 0.12, pitch=0.0)
 """
 
+import math
 import struct
 import time
 
@@ -160,11 +161,17 @@ class Arm:
                                 realtime=realtime)
 
     def set_gripper(self, v):
-        """v in [0,1]: 0 open, 1 closed -> J6 setpoint."""
+        """v in [0,1]: 0 open, 1 closed -> J6 setpoint.
+
+        J6 commands the gripper servo shaft (rad; limits +-90 deg from
+        cad/arm JOINTS).  The CAD home pose models the jaws essentially
+        closed, so closed = 0 rad and open drives +80 deg (max travel
+        inside the envelope).  UNVERIFIED: if the shaft opens the jaws
+        the other way, flip the sign on the bench.
+        """
         v = max(0.0, min(1.0, v))
         q = list(self.q)
-        q[5] = config.JOINT_MIN[5] + v * (config.JOINT_MAX[5]
-                                        - config.JOINT_MIN[5])
+        q[5] = math.radians(80.0) * (1.0 - v)
         self.stream_joints(q)
 
     def tcp_pose(self):

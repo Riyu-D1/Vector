@@ -107,10 +107,12 @@ class JointSpec:
 JOINTS = {
     # J1 yaw: actuator vertical, +Z.  [SO102] base rotation +-176 deg.
     "J1": JointSpec("waist yaw",  "actuator", (-170.0, 170.0), (0, 0, 1)),
-    # J2 shoulder: axis +Y.  Negative limit: link webs vs the cradle
-    # web (~-15); positive: distal plates sweeping over the Ø132 drum
-    # (~+30).  Raising either needs a taller turret or larger J2_Z.
-    "J2": JointSpec("shoulder",   "actuator", (-15.0, 30.0), (0, 1, 0)),
+    # J2 shoulder: axis +Y.  Measured clean sweep -72..+36 (2026-10-27,
+    # checks.py c6 method): up end -75 hits turret cap, down end +37
+    # clips bearing_cap/housing.  Adopted -70..+35 with margin.
+    # Deeper down-travel is impossible: at +90 the J3 actuator folds
+    # into the Ø110 housing — needs J2_Z ~+110 mm taller.
+    "J2": JointSpec("shoulder",   "actuator", (-70.0, 35.0), (0, 1, 0)),
     # J3 elbow: axis +Y.  Limited by the forearm webs sweeping into the
     # upper-link saddle web beyond ~+-100; verified +-90.
     "J3": JointSpec("elbow",      "actuator", (-90.0, 90.0), (0, 1, 0)),
@@ -140,6 +142,41 @@ class LinkSpec:
 
 
 LINKS = LinkSpec()
+
+
+# ---------------------------------------------------------------------------
+# Kinematics chain — SINGLE SOURCE OF TRUTH for the numbers the Orange Pi
+# software and the firmware must share (cad/arm/gen_params.py turns this
+# block + JOINTS into soma_arm/arm_geometry.py and
+# firmware/shared/arm_params_gen.h).
+#
+# Frames: arm frame = origin at drum centre, Z up, +X = reach direction.
+# CAD joint sign convention: pitch joints (J2/J3/J4) rotate about +Y —
+# a POSITIVE angle pitches the link DOWN toward the table (matches
+# parts.py/checks.py).  The host/firmware convention is the opposite
+# (positive = elevation up); gen_params.py does the sign flip.
+# ---------------------------------------------------------------------------
+@dataclass(frozen=True)
+class KinSpec:
+    j2_z: float = 146.0        # J2 (and J3/J4) pitch-axis height  [parts.py]
+    l_upper: float = 120.0     # J2 axis -> J3 axis  (keep == LINKS.l_upper)
+    l_fore: float = 100.0      # J3 axis -> J4 axis  (keep == LINKS.l_fore)
+    j5_dx: float = 51.0        # J4 axis -> J5 roll axis along link X
+    tip_dx: float = 127.7      # J4 axis -> gripper tip (rail end; = J5_X +
+                             # WR_IN + 4 + RAIL_L - J4_X, measures ~348 mm
+                             # tip x from the J1 axis at home)
+    home_deg: tuple = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+                             # home = all joints zero: arm extended
+                             # horizontally along +X (the CAD build pose)
+    # table/case guard, CAD frame (deg): the wrist stays above the
+    # table/lid while   J3 <= GUARD_A_DEG - GUARD_B * J2.
+    # Measured boundary in checks.py c7 (raw ranges would fold the
+    # wrist below the table near J2+J3 ~ +45).
+    guard_a_deg: float = 45.0
+    guard_b: float = 2.0
+
+
+KIN = KinSpec()
 
 
 # ---------------------------------------------------------------------------

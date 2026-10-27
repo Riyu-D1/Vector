@@ -8,7 +8,14 @@ Binary framed protocol on the DevKit USB-UART console, **115200 8N1**.
 
 CRC16-CCITT/FALSE (poly 0x1021, init 0xFFFF) over `seq..payload`.
 Max payload 200 B. fp32 little-endian. Joint order always J1..J6;
-positions in radians at the output shaft (J6 = gripper jaw).
+positions in radians at the output shaft (J6 = gripper servo shaft,
+±90° envelope — the jaw maps 1:1 onto it).
+
+Command envelope (clamped by `arm_clamp_q` on `SET_JOINT_POS`, and by
+the jog integrator): J1 ±170°, J2 −35..+70°, J3 ±90°, J4 ±95°,
+J5 ±160°, J6 ±90° — generated from `cad/arm/arm_params.py`. On top of
+the per-joint ranges the table/case guard applies: q3 ≥ −45 − 2·q2
+(degrees); violating commands get q3 raised onto the boundary.
 
 **Watchdog**: every valid frame counts as a heartbeat. If no frame
 arrives for 500 ms, the base node latches ESTOP (CAN NMT-ESTOP broadcast

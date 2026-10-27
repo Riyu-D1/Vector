@@ -60,11 +60,11 @@ def test_sim_ping():
 def test_sim_state():
     arm, node = _sim_arm()
     arm.enable()
-    arm.stream_joints([0, 0.4, 0.6, 0, 0, 0.2])
+    arm.stream_joints([0, -0.3, 0.6, 0, 0, 0.2])
     for _ in range(80):
         node.step(0.02)
     s = arm.sense()
-    assert s["pos"][1] == pytest.approx(0.4, abs=0.05)
+    assert s["pos"][1] == pytest.approx(-0.3, abs=0.05)
     assert s["flags"] & link.FLAG_ARMED
 
 
@@ -92,7 +92,7 @@ def test_sim_move_tcp():
     from soma_arm.kinematics import Pose
     arm, node = _sim_arm()
     arm.enable()
-    target = Pose(0.18, 0.0, 0.12, 0.0, 0.0)
+    target = Pose(0.33, 0.0, 0.11, 0.0, 0.0)
     T = arm.move_tcp(target.x, target.y, target.z, realtime=False)
     assert T > 0
     for _ in range(80):

@@ -36,6 +36,11 @@ void arm_clamp_q(float q[6]) {
         if (q[i] < Q_MIN[i]) q[i] = Q_MIN[i];
         if (q[i] > Q_MAX[i]) q[i] = Q_MAX[i];
     }
+    /* table/case guard (cad/arm checks.py c7, generated header):
+     * q3 >= ARM_GUARD_A + ARM_GUARD_B*q2 — raise only the elbow, never
+     * move the shoulder (that could swing the link into the base). */
+    float q3_lo = ARM_GUARD_A + ARM_GUARD_B * q[1];
+    if (q[2] < q3_lo) q[2] = q3_lo;
 }
 
 void arm_estop(const char *why) {
@@ -93,6 +98,13 @@ static void joint_update(void) {
             if (g_arm.q_cmd[i] < Q_MIN[i]) { g_arm.q_cmd[i] = Q_MIN[i]; g_arm.dq_cmd[i] = 0; }
             if (g_arm.q_cmd[i] > Q_MAX[i]) { g_arm.q_cmd[i] = Q_MAX[i]; g_arm.dq_cmd[i] = 0; }
         }
+    }
+    /* joint clamps above may leave (q2,q3) past the table guard —
+     * arm_clamp_q lifts q3 onto the boundary (and zeros its jog). */
+    float q3_lo = ARM_GUARD_A + ARM_GUARD_B * g_arm.q_cmd[1];
+    if (g_arm.q_cmd[2] < q3_lo) {
+        g_arm.q_cmd[2] = q3_lo;
+        if (g_arm.dq_cmd[2] < 0.0f) g_arm.dq_cmd[2] = 0.0f;
     }
     for (int i = 0; i < CAN_N_JOINTS; i++) {
         can_send_pdo2(can_ids[i], g_arm.q_cmd[i], g_arm.dq_cmd[i]);
@@ -152,10 +164,17 @@ void setup() {
     ft_bus_init();
     host_link_init();
 
-    /* push driver-side current caps out of reset */
-    for (int i = 0; i < CAN_N_JOINTS; i++)
+    /* push driver-side current caps and joint soft limits out of
+     * reset (generated arm_params_gen.h — same source the host uses;
+     * drivers clamp RPDO2 targets to them in user coords) */
+    for (int i = 0; i < CAN_N_JOINTS; i++) {
         can_sdo_write_f32(can_ids[i], SDO_CURRENT_LIMIT_A,
                           PHASE_CURRENT_LIMIT_A[i]);
+        can_sdo_write_f32(can_ids[i], SDO_POS_LIMIT_LO,
+                          ARM_JOINT_MIN_RAD[i]);
+        can_sdo_write_f32(can_ids[i], SDO_POS_LIMIT_HI,
+                          ARM_JOINT_MAX_RAD[i]);
+    }
 
     host_link_send_event(LKE_BOOT, 0);
     Serial.printf("SOMA base node fw %06lX — CAN@1M J15(IO2/IO1), "

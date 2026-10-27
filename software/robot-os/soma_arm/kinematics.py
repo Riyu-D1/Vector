@@ -103,42 +103,49 @@ class ArmKinematics:
         Raises IKError if unreachable or all branches violate limits.
         """
         r = math.hypot(pose.x, pose.y)
-        q1 = math.atan2(pose.y, pose.x) if r > 1e-9 else (
+        q1_fwd = math.atan2(pose.y, pose.x) if r > 1e-9 else (
             q_seed[0] if q_seed else 0.0)
 
-        # wrist (J4 axis) in the arm plane, tool tip projected back by L3
-        rw = r - self.l3 * math.cos(pose.pitch)
-        zw = (pose.z - self.base_z) - self.l3 * math.sin(pose.pitch)
-
-        d2 = rw * rw + zw * zw
-        cos_q3 = (d2 - self.l1 ** 2 - self.l2 ** 2) / (2 * self.l1 * self.l2)
-        if cos_q3 > 1.000001 or cos_q3 < -1.000001:
-            raise IKError(
-                f"unreachable: wrist at r={rw*1000:.1f} z={zw*1000:.1f} mm "
-                f"(|D|={math.sqrt(d2)*1000:.1f} mm > "
-                f"L1+L2={(self.l1+self.l2)*1000:.0f} or too close)")
-        cos_q3 = max(-1.0, min(1.0, cos_q3))
-        ang = math.acos(cos_q3)
-
-        branches = [ang, -ang]
+        # Two yaw hypotheses: the tip normally lies at +r in the arm
+        # plane (q1 toward the tip), but with the shoulder able to pitch
+        # to +70 deg the wrist can fold *behind* the J2 axis, putting the
+        # tip at -r in the arm plane (q1 off by pi).  Try both; limits +
+        # guard filter the results.
         sols = []
-        for q3rel in branches:
-            q2 = math.atan2(zw, rw) - math.atan2(
-                self.l2 * math.sin(q3rel),
-                self.l1 + self.l2 * math.cos(q3rel))
-            q3 = q3rel
-            q4 = pose.pitch - q2 - q3
-            q5 = pose.roll
-            # normalise into [-pi, pi]
-            cand = [self._norm(q1), self._norm(q2), self._norm(q3),
-                    self._norm(q4), self._norm(q5), q6]
-            sols.append(cand)
+        zw = (pose.z - self.base_z) - self.l3 * math.sin(pose.pitch)
+        for q1, sgn in ((q1_fwd, +1.0),
+                        (self._norm(q1_fwd + math.pi), -1.0)):
+            # wrist (J4 axis) in the arm plane: tip projected back by L3
+            rw = sgn * r - self.l3 * math.cos(pose.pitch)
+
+            d2 = rw * rw + zw * zw
+            cos_q3 = (d2 - self.l1 ** 2 - self.l2 ** 2) / \
+                (2 * self.l1 * self.l2)
+            if cos_q3 > 1.000001 or cos_q3 < -1.000001:
+                continue
+            cos_q3 = max(-1.0, min(1.0, cos_q3))
+            ang = math.acos(cos_q3)
+
+            for q3rel in (ang, -ang):
+                q2 = math.atan2(zw, rw) - math.atan2(
+                    self.l2 * math.sin(q3rel),
+                    self.l1 + self.l2 * math.cos(q3rel))
+                q4 = pose.pitch - q2 - q3rel
+                # normalise into [-pi, pi]
+                sols.append([self._norm(q1), self._norm(q2),
+                             self._norm(q3rel), self._norm(q4),
+                             self._norm(pose.roll), q6])
+        if not sols:
+            raise IKError(
+                f"unreachable: wrist past L1+L2="
+                f"{(self.l1+self.l2)*1000:.0f} mm or inside elbow")
 
         def ok(c):
             if not check_limits:
                 return True
-            return all(self.jmin[i] - 1e-6 <= c[i] <= self.jmax[i] + 1e-6
-                       for i in range(6))
+            return (all(self.jmin[i] - 1e-6 <= c[i] <= self.jmax[i] + 1e-6
+                        for i in range(6))
+                    and self.within_guard(c))
 
         valid = [c for c in sols if ok(c)]
         if not valid:
@@ -161,15 +168,29 @@ class ArmKinematics:
         return a
 
     # --------------------------------------------------------- helpers
+    def guard_q3_min(self, q2):
+        """Table/case guard: minimum legal q3 for a given q2 (rad)."""
+        return config.guard_q3_min(q2)
+
+    def within_guard(self, q):
+        """True while (q2, q3) keeps the wrist above the table/lid."""
+        return config.within_guard(q)
+
     def clamp_limits(self, q):
-        return [max(self.jmin[i], min(self.jmax[i], q[i])) for i in range(6)]
+        """Clamp into per-joint limits, then onto the guard boundary."""
+        c = [max(self.jmin[i], min(self.jmax[i], q[i])) for i in range(6)]
+        return config.guard_clamp(c)
 
     def within_limits(self, q):
-        return all(self.jmin[i] <= q[i] <= self.jmax[i] for i in range(6))
+        return (all(self.jmin[i] <= q[i] <= self.jmax[i] for i in range(6))
+                and self.within_guard(q))
 
     def random_reachable_q(self, rng):
-        """Sample a random in-limit pose useful for tests."""
-        return [rng.uniform(self.jmin[i], self.jmax[i]) for i in range(6)]
+        """Sample a random in-limit, guard-valid pose useful for tests."""
+        while True:
+            q = [rng.uniform(self.jmin[i], self.jmax[i]) for i in range(6)]
+            if self.within_guard(q):
+                return q
 
     def workspace_r_max(self):
         return self.l1 + self.l2 + self.l3

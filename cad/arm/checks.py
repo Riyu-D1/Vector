@@ -259,7 +259,7 @@ def c6_rom_sweeps():
     static = ["base_housing", "bearing_cap", "j1_clamp_ring"]
     fails = []
     steps = {"J1": range(-170, 171, 34),
-             "J2": range(-15, 31, 15),
+             "J2": range(-70, 36, 7),
              "J3": range(-90, 91, 15),
              "J4": range(-95, 96, 24),
              "J5": range(-160, 161, 40)}
@@ -289,9 +289,15 @@ def c7_extremes_table():
     """Verify the firmware guard envelope, not the raw joint ranges.
 
     Measured boundary: the arm stays clear of table + case lid while
-    J2 + J3 <= 45 deg (folding further pitches the wrist below the
+    J3 <= 45 - 2*J2 deg (folding further pitches the wrist below the
     table).  J3 >= -90 is independently safe (folds up over the base).
-    The check samples the guard region including its upper boundary.
+    The check samples the guard region including its upper boundary;
+    fixed J3 samples are clipped to the boundary so every sampled pose
+    is one the firmware guard could actually allow.  J4 = -60 is the
+    canonical wrist fold this guard was measured against — poses with
+    J4 pitched down (+60..+95) can still reach the table/lid near the
+    boundary, which is expected (the gripper must reach the table to
+    work); see docs/INTEGRATION-REPORT.md for the measured exposure.
     """
     fails = []
     ground = trimesh.creation.box((400, 400, 4))
@@ -301,9 +307,10 @@ def c7_extremes_table():
     lid.apply_translation([0, 0, 2.5 - 1.25])
     drum = trimesh.creation.cylinder(67, 5)
     lid = trimesh.boolean.difference([lid, drum])
-    for j2 in range(-15, 31, 6):
+    for j2 in range(-70, 36, 8):
         j3_max = min(90.0, 45.0 - 2 * j2)   # measured guard line
-        for j3 in (-90, -45, 0, j3_max):
+        # in-guard samples only: fixed folds clipped to the boundary
+        for j3 in sorted({-90.0, -45.0, min(0.0, j3_max), j3_max}):
             ja = {"J2": j2, "J3": j3, "J4": -60}
             ms = {n: posed_stl(n, ja) for n in P}
             for n, m in ms.items():
@@ -318,7 +325,7 @@ def c7_extremes_table():
                 break
         if len(fails) > 6:
             break
-    check("extremes-table-case (guard J2+J3<=45)", not fails,
+    check("extremes-table-case (guard J3<=45-2*J2)", not fails,
           "; ".join(fails[:6]))
 
 

@@ -16,8 +16,10 @@ class SimBaseNode:
     """Pure-software stand-in for firmware/base-node."""
 
     def __init__(self, q_home=None):
+        # in-limit + guard-valid folded pose (tool level): q2 -28.6deg,
+        # q3 >= guard bound 12.3deg satisfied, pitch sums to ~0
         self.q = list(q_home if q_home is not None
-                      else [0.0, 0.5, 0.5, 0.0, 0.0, 0.0])
+                      else [0.0, -0.5, 0.9, -0.4, 0.0, 0.0])
         self.q_target = list(self.q)
         self.estop = False
         self.armed = False

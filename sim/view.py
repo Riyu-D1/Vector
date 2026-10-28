@@ -13,35 +13,25 @@ for a in range(m.nu):
     lo, hi = m.jnt_range[m.actuator_trnid[a, 0]]; lim.append((lo, hi))
 SEG = 4.0
 D = np.radians
-# demo waypoints: (J1,J2,J3,J4,J5,J6 in degrees, finger in mm, move seconds, hold seconds). All inside the joint ranges.
-DEMO = [
- (0,0,0,0,0,0,0,1.5,0.5),
- (50,0,0,0,0,0,0,2.0,0.3), (-50,0,0,0,0,0,0,3.0,0.3), (0,0,0,0,0,0,0,2.0,0.3),
- (0,-40,0,0,0,0,0,2.0,0.3), (0,35,0,0,0,0,0,3.0,0.3), (0,0,0,0,0,0,0,2.0,0.3),
- (0,0,-70,0,0,0,0,2.0,0.3), (0,0,20,0,0,0,0,3.0,0.3), (0,0,0,0,0,0,0,2.0,0.3),
- (0,0,0,50,0,0,0,1.5,0.2), (0,0,0,-50,0,0,0,2.5,0.2), (0,0,0,0,0,0,0,1.5,0.2),
- (0,0,0,0,50,0,0,1.5,0.2), (0,0,0,0,-50,0,0,2.5,0.2), (0,0,0,0,0,0,0,1.5,0.2),
- (0,0,0,0,0,170,0,2.5,0.2), (0,0,0,0,0,-170,0,4.0,0.2), (0,0,0,0,0,0,0,2.5,0.3),
- (0,0,0,0,0,0,12.5,1.0,0.4), (0,0,0,0,0,0,0,1.0,0.4), (0,0,0,0,0,0,12.5,1.0,0.4), (0,0,0,0,0,0,0,1.0,0.4),
- # combined "pick and place" style moves
- (40,-30,-50,25,-20,60,12.5,3.0,0.3),
- (40,-30,-50,25,-20,60,0,1.0,0.3),
- (-40,10,-30,-25,20,-60,0,3.5,0.3),
- (-40,10,-30,-25,20,-60,12.5,1.0,0.3),
- (0,-20,-90,30,0,0,12.5,3.0,0.3),
- (0,0,0,0,0,0,0,3.0,1.0),
-]
+# demo: a SERIES of coordinated routines, played back to back and looped. Each waypoint = (J1..J6 deg, finger mm, seconds to get there).
+# One smooth closed spline passes through every waypoint, so all joints move together and the arm never stops between moves.
+HOME = (0,0,0,0,0,0,0)
+SERIES = {
+ "1 pick and place": [(35,-25,-45,20,-15,50,12.5,2.2),(45,-35,-60,30,-20,90,12.5,1.5),(45,-35,-60,30,-20,90,0,0.8),
+                      (10,-15,-40,10,10,20,0,2.0),(-35,-10,-45,-20,20,-60,0,2.4),(-40,-15,-50,-30,10,-90,12.5,1.2)],
+ "2 wide sweep":      [(-60,-20,-40,25,0,-60,12.5,2.0),(-20,5,-20,-15,20,0,12.5,1.8),(20,-30,-60,30,-20,60,12.5,1.8),(60,0,-30,-25,25,120,12.5,2.0),(20,-30,-60,30,-20,60,12.5,2.0)],
+ "3 reach and wave":  [(0,-45,-20,40,0,0,12.5,2.0),(0,-30,-10,-30,30,90,0,1.6),(15,-30,-10,30,-30,-90,12.5,1.6),(-15,-30,-10,-30,30,90,0,1.6),(15,-30,-10,30,-30,-90,12.5,1.6)],
+ "4 fold and unfold":  [(0,-60,-120,45,0,0,0,2.6),(0,-90,-150,60,0,180,12.5,2.8),(30,-60,-100,30,-30,0,12.5,2.4),(0,-20,-60,0,0,0,0,2.4)],
+}
+_pts = [w for seq in SERIES.values() for w in seq] + [HOME + (3.0,)]
+_W = [np.array([D(x) for x in w[:6]] + [w[6] / 1000.0]) for w in _pts]
+_T = np.array([w[7] for w in _pts]); _TOT = _T.sum(); _CUM = np.concatenate([[0], np.cumsum(_T)])
 def demo_target(t):
-    tot = sum(w[7] + w[8] for w in DEMO); t = t % tot
-    prev = np.zeros(7); k = 0
-    for w in DEMO:
-        tgt = np.array([D(x) for x in w[:6]] + [w[6] / 1000.0])
-        if t < w[7]:
-            u = 0.5 - 0.5 * np.cos(np.pi * t / w[7]); return prev + (tgt - prev) * u, k
-        t -= w[7]
-        if t < w[8]: return tgt, k
-        t -= w[8]; prev = tgt; k += 1
-    return prev, k
+    n = len(_W); t = t % _TOT; k = min(int(np.searchsorted(_CUM, t, side="right")) - 1, n - 1)   # segment k: waypoint k-1 -> k
+    i0 = (k - 1) % n; i1 = k; u = (t - _CUM[k]) / _T[k]
+    pm, p0, p1, p2 = _W[(i0 - 1) % n], _W[i0], _W[i1], _W[(i1 + 1) % n]
+    m0 = 0.5 * (p1 - pm); m1 = 0.5 * (p2 - p0)
+    return ((2*u**3-3*u**2+1)*p0 + (u**3-2*u**2+u)*m0 + (-2*u**3+3*u**2)*p1 + (u**3-u**2)*m1), k
 with mujoco.viewer.launch_passive(m, d) as v:
     t0 = time.time(); last = -1
     while v.is_running():

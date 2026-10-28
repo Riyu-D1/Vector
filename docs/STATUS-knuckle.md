@@ -52,3 +52,19 @@
   - s3_cutaway: tube bore open to the end; J4 servo sectioned in its end pocket; servo plug room (blister void) open below the pocket; pass channel slot under the bore floor; fa_endcap on the end
   - iteration 3 re-render: all 6 views confirmed identical to iteration 1 — J4 hidden bar the horn, blister + pass present, no cable/screw/gap
 - Questions for Riyansh: confirm the minwall 1.59 thin rim on upper_arm is acceptable (same fallback as S2)
+
+## Stage 4 — 2026-10-28 — PASS
+- Gate lines:
+  - `GATE PASS` rc=0 — all 11 part lines OK (vendor_J4/J5/J6 watertight=False as expected for vendor solids); `PRESS head x cup_cap: 6.13 mm3 ok (press fit)` / `PRESS jaw x jaw_cap: 3.30 mm3 ok (press fit)`; no INTERF/BAD lines at all
+- Files added/changed: `docs/STATUS-knuckle.md` only (no code changes this stage)
+- Fallbacks used: none (no gate fallback needed)
+- UNVERIFIED values touched: none
+- Render review (3 iterations done):
+  - s4_frontiso: forearm tube -> head pod -> gripper assembled; servos hidden; M2 heads visible on pod_front and grip_lid (flagged per spec); small orange sliver at a coincident-face seam near the pod (same render-artifact class as the S2/S3 seam slivers); no cable visible
+  - s4_backiso: +Y side closed — dark cup_cap on the head cup, fa_elbow_cap + fa_endcap clean; no internals or screw heads visible
+  - s4_side: profile clean — forearm tube, head, gripper, jaw in line; thin orange sliver at the pod seam only; nothing floating
+  - s4_top: jaw/gripper and pod overlap the forearm end; no gaps, no cable or servo edges visible
+  - s4_front: end-on jaw/gripper — jaw_cap edge on the +Y face; nothing loose
+  - s4_cutaway: KNOWN RENDER ARTIFACT — frame is solid orange. Blender EXACT boolean fails on the non-watertight vendor_J5 mesh (deterministic over 2 renders; bisected: printed parts fine, vendor_J4 and vendor_J6 fine, vendor_J5 alone breaks it). Interior verified via identical debug render with FAST solver (`out/renders/s4dbg_cutaway.png`): J5 servo sectioned inside the head pod, J6 servo inside the gripper body, J4 in the forearm end pocket, channel/slot into the gripper back wall, jaw cavity open — all present
+  - iteration 3 re-render: all 6 views pixel-identical to run 2 (PIL diff none)
+- Questions for Riyansh: (1) s4 cutaway view renders solid orange — EXACT-solver boolean artifact on vendor_J5's non-watertight vendor mesh, not a geometry defect (gate clean, debug FAST render shows correct interior); suggest noting for S7 renders. (2) M2 heads on pod_front + grip_lid visible as flagged — confirm accepted. (3) upper_arm minwall 1.59 question still open from S2/S3.

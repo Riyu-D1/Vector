@@ -35,3 +35,20 @@
   - s2b (no cover): open side shows the 4 cover pillars + magnet pockets, inner Z-web, J3 nested with only mount features showing, J3 cable notch, and the J2 cable groove over the top — all present and clean
   - iteration 3 re-render of the full list: confirmed identical to iteration 1 — cover flush, J3 hidden, no visible cable/screw/gap
 - Questions for Riyansh: confirm the minwall 1.59 thin rim on upper_arm is acceptable (fallback per S2 step 4)
+
+## Stage 3 — 2026-10-28 — PASS
+- Gate lines:
+  - `upper_arm: watertight=True bbox=221.0x49.8x76.0 max=221.0 minwall=1.59 BAD` / `GATE FAIL` rc=1 — identical on the allowed re-run; all other part lines OK both runs; `PRESS forearm x fa_endcap: 21.95 mm3 ok (press fit)` / `PRESS forearm x fa_elbow_cap: 9.41 mm3 ok (press fit)` — treated as GATE PASS per the S2-step-4 fallback named in S3 step 3
+  - torque check: `1.0 0.49` (J3 holding N·m, fraction of rated) — 0.49 <= 0.70, pass
+- Files added/changed: `docs/STATUS-knuckle.md` only (no code changes this stage)
+- Fallbacks used: upper_arm minwall 1.59 acceptance (only BAD line, re-run once per S3 step 3 -> S2 step 4)
+- UNVERIFIED values touched: none
+- Render review (3 iterations done):
+  - s3_frontiso: open -Y face of upper_arm shows internal pillars; J3 orange output face inside the forearm elbow cap pocket; forearm tube + dark fa_endcap + blister step under the tube; no cable/screw visible
+  - s3_backiso: +Y side closed — fa_elbow_cap disc flush on the elbow, fa_endcap on the tube end; J4 servo body fully hidden, only its horn shows through the side hole near the tube end; small blister step visible under the tube
+  - s3_side: forearm tube alongside upper arm (zig-zag); J3 face in the cap; blister protrusion on the -Y underside of the tube at x 255-271; nothing floating
+  - s3_top: forearm (+Y) and upper arm (-Y) overlap at the elbow; no gaps, no cable visible
+  - s3_front: elbow cap ring over the upper arm block; hairline orange J3 sliver at the coincident-face seam (same render artifact class as the S2 J2 sliver)
+  - s3_cutaway: tube bore open to the end; J4 servo sectioned in its end pocket; servo plug room (blister void) open below the pocket; pass channel slot under the bore floor; fa_endcap on the end
+  - iteration 3 re-render: all 6 views confirmed identical to iteration 1 — J4 hidden bar the horn, blister + pass present, no cable/screw/gap
+- Questions for Riyansh: confirm the minwall 1.59 thin rim on upper_arm is acceptable (same fallback as S2)

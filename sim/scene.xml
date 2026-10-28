@@ -1,0 +1,8 @@
+<mujoco model="soma_arm_scene">
+  <compiler meshdir="meshes" angle="radian"/>
+  <include file="arm.xml"/>
+  <worldbody>
+    <light directional="true" pos="1 -1 2.5" dir="-0.4 0.4 -1" diffuse="0.8 0.8 0.8"/>
+    <geom name="floor" type="plane" pos="0 0 -0.001" size="2 2 0.05" contype="0" conaffinity="0" rgba="0.85 0.85 0.85 1"/>
+  </worldbody>
+</mujoco>

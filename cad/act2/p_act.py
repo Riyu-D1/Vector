@@ -31,6 +31,9 @@ def housing():
     for k in range(NP):
         x, y = pol(R, 360.0 * k / NP)
         h -= zcyl(x, y, 2 * RP + 0.05, ap.Z_RINGPIN[0], ap.Z_RINGPIN[1])
+    for k in ap.KEY_PINS:     # A1b: 3 pin grooves continue down through the mid_plate zone = keyways for its lugs
+        x, y = pol(R, 360.0 * k / NP)
+        h -= zcyl(x, y, 2 * RP + 0.05, ap.Z_MID[0], ap.Z_RINGPIN[0] + 0.01)
     h -= Pos(0, 0, ap.Z_ENC_POCKET[1] / 2 - 0.005) * \
         Box(ap.ENC_W, ap.ENC_W, ap.Z_ENC_POCKET[1] + 0.01)        # AS5600 pocket, open to back
     h -= zcyl(0, 0, ap.ENC_WINDOW_D, 1.7, ap.Z_BACK[1] + 0.01)   # chip window (was 1.9, gate fallback)
@@ -53,6 +56,10 @@ def housing():
 
 def mid_plate():
     m = zcyl(0, 0, ap.MID_D, *ap.Z_MID)
+    N, NP, R, RP, E = cyc.gear()
+    for k in ap.KEY_PINS:     # A1b: 3 round anti-rotation lugs that slide in the KEY_PINS grooves
+        x, y = pol(R, 360.0 * k / NP)
+        m += zcyl(x, y, 2 * RP - ap.KEY_CLR, *ap.Z_MID)
     m -= zcyl(0, 0, ap.STATOR_HOLE_D, ap.Z_MID[0] - 0.01, ap.Z_MID[1] + 0.01)
     for a in ap.MOT_SCREW_ANG:
         x, y = pol(ap.MOT_PCD / 2, a)

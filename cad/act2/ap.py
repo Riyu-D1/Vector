@@ -28,7 +28,7 @@ MOT_D = 44.5; MOT_H = 22.0; MOT_MASS_G = 85     # [S study] (check with calipers
 MOT_KV = 330; MOT_R_OHM = 0.145                 # [S study / U xcopterCalc]
 SHAFT_D = 4.0                                    # [S study] not hollow
 SHAFT_OUT = 12.0                                 # [U] shaft length beyond the stator base face (Q2)
-MOT_PCD = 25.0; MOT_SCREW_ANG = (45.0, 135.0, 225.0, 315.0)  # [U] stator base 4x M3 (Q3)
+MOT_PCD = 32.0; MOT_SCREW_ANG = (30.0, 150.0, 270.0)  # [S BOPP Tarot 4008 STEP] stator base 3x M3 on PCD 32 (= 27.7 triangle); was [U] 4x PCD25
 STATOR_HOLE_D = 12.0                             # [U] clearance for the stator bearing boss (Q3)
 BELL_CLR = 0.45                                  # [D] bell radius 22.25 -> bore radius 22.7
 
@@ -54,19 +54,21 @@ Z_685 = (42.4, 47.4)            # [S 685 width 5]
 
 # ---------- housing bores ----------
 BORE_MOTOR = 45.4               # [D] Z_BACK[1] .. Z_MID[0]
-BORE_PIN = 47.0                 # [D] = 2*R: ring pins half buried; Z_MID[0] .. Z_RINGPIN[1]
+BORE_PIN = 47.4                 # [D] A1b: was 47.0 (=2R); +0.2 radius trims the thin pin-web tips (minwall)
 PIN_HOLE_D = 3.05               # [D] ring pin holes (3.0 pins) at radius R (50:1: 2.55)
 SEAT_6808 = 52.1                # [D] 6808 OD 52 + 0.1 (PETG prints holes small)
 WIRE_ANG = 90.0; WIRE_W = 4.0; WIRE_R = (22.5, 25.2)   # [D] axial phase-wire channel
 NOTCH_W = 5.0; NOTCH_Z = (0.0, 8.0)                    # [D] side notch where wires leave
 ENC_GROOVE_W = 3.0; ENC_GROOVE_D = 1.2                 # [D] back-face groove pocket -> notch
-CSK_Z = 31.5; CSK_ANG = (30.0, 150.0, 270.0)           # [D] 3x radial M3 countersunk into mid_plate
+CSK_Z = 31.5; CSK_ANG = ()                           # [D] A1b: radial screws removed (minwall); mid_plate keyed by KEY_PINS
 CSK_D = 6.0; CSK_HOLE = 3.4; CSK_PILOT = 2.5; CSK_PILOT_L = 6.0  # [S ISO 10642 M3 head 6.0]
 
 # ---------- mid_plate ----------
 MID_D = 46.8                    # [D] slides through BORE_PIN, sits on the 45.4/47.0 step
 MID_CB_D = 6.2; MID_CB_H = 1.9  # [S ISO 7380 M3 head 5.7 x 1.65] from the front face
 MID_GROOVE = (4.0, 1.5)         # [D] wire groove on back face at WIRE_ANG: width, depth
+KEY_PINS = (0, 14, 27)          # [D] A1b: ring-pin slots k (angle 360k/NP) that also key the mid_plate
+KEY_CLR = 0.1                   # [D] A1b: lug d = 2*RP - KEY_CLR (groove is 2*RP + 0.05)
 
 # ---------- bearings [S standard sizes: d x D x B] ----------
 BRG_OUT = (40.0, 52.0, 7.0)     # 6808-2RS  output
@@ -80,7 +82,7 @@ CAM_D = 15.0                    # = BRG_ECC d
 STUB_D = 4.99                   # 685 bore 5, slip
 HUB_BORE = 4.05                 # on 4.0 shaft
 HUB_BORE_L = SHAFT_OUT - (Z_HUB[0] - Z_MID[0])   # [U] = 7.7 with SHAFT_OUT 12
-GRUB_Z = 35.8; GRUB_PILOT = 2.5 # M3x5 ISO 4026 set screw, radial, at angle 90
+GRUB_Z = 37.95; GRUB_PILOT = 2.5 # A1b: was 35.8; = Z_CAM_SPLIT (minwall). M3x5 ISO 4026 set screw, radial, at angle 90
 
 # ---------- discs ----------
 DISC_BORE = 21.0                # = BRG_ECC D

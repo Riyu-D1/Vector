@@ -14,8 +14,7 @@ USD, prices from the study read 28 Oct 2026; [U] = not verified.
 | 6 | dowel Ø3×12 (output pins) | | ~1 [U] |
 | 3 | dowel Ø4×8 (output locating) | | ~1 [U] |
 | 6 | M3×8 thread-forming or ISO 7380 (link → back face; length = link plate + 3) | | |
-| 4 | M3×6 ISO 7380 (stator → mid_plate) [U length, Q3] | | |
-| 3 | M3×6 ISO 10642 countersunk (radial, housing → mid_plate) | | |
+| 3 | M3×6 ISO 7380 (stator → mid_plate, PCD 32) [U length] | | |
 | 3 | M3 heat-set insert 4.6×5.7 + M3×8 ISO 7380 (flange → carrier) | | |
 | 1 | M3×5 ISO 4026 set screw (hub on shaft) + Loctite 243 | | |
 | | Filament ~90 g | | ~2 [U] |

@@ -93,3 +93,21 @@
   - iterations 2 and 3: all 6 views pixel-identical to iteration 1 (PIL diff none)
 - Open items (recorded, not decided): 4 pod_front M2 heads + 4 lid screws stay (lid screws now countersunk flush)
 - Questions for Riyansh: (1) all-edges fillet cannot produce a watertight STL in this toolchain (OCC corner-sphere pole degenerate tris) — bump + blister use "Y"-axis edges instead; confirms the look is acceptable vs BLOCKED alternative. (2) GR_LID r=1.1 (geometric max on 2.4 mm plate, not the prescribed 2.0). (3) J2 ROM safe=[-70,25] appears pre-existing (upper_arm x turret, parts unchanged since S2) — confirm known. (4) s4b cutaway solid-orange artifact (same as S4) — note for S7. (5) upper_arm minwall 1.59 still open.
+
+## Stage 5 — 2026-10-28 — PASS
+- Gate lines:
+  - `A_base_to_J2face: samples=551 CLEAR` / `B_upperarm: samples=642 CLEAR` / `C_forearm_in: samples=519 CLEAR` / `D_wrist: samples=361 CLEAR` / `E_gripper: samples=280 CLEAR` / `CABLE PASS`
+  - `gate.py out/*.stl` -> `GATE FAIL` rc=1 with ONE BAD line: `upper_arm: watertight=True bbox=221.0x49.8x76.0 max=221.0 minwall=1.59 BAD` — identical on the allowed re-run; all other part lines OK both runs, zero INTERF lines; `PRESS cup_cap x head: 6.13` / `fa_elbow_cap x forearm: 9.41` / `fa_endcap x forearm: 21.95` / `jaw_cap x jaw: 3.30` / `kn_endcap x turret: 8.36 mm3 ok (press fit)`
+  - minwall 1.59 accepted (thin rim at pillar fillet), needs Riyansh OK — treated as GATE PASS per the S2-step-4 fallback named in S5 step 4
+- Files added/changed: `cad/knuckle/WIRING.md` (new), `docs/STATUS-knuckle.md`
+- Fallbacks used: upper_arm minwall 1.59 acceptance (only BAD line, re-run once per S2 step 4); no `--allow` flags needed (zero INTERF lines)
+- UNVERIFIED values touched: none
+- Render review (3 iterations done; all 22 STLs, prefix s5_):
+  - s5_frontiso: full arm — drum+turret, knuckle, upper arm, forearm tube, pod, gripper with open jaw mouth; J6 block visible inside the open -Y gripper side (design opening, not a cable hole); drum skirt M4 holes only; no cable/connector/wire hole visible
+  - s5_backiso: +Y side fully closed — kn_endcap, upper arm wall, fa_elbow_cap + fa_endcap, cup_cap, jaw_cap all flush; servos/motors hidden; no cable or screw visible
+  - s5_side: -Y side — upper_cover flush on the arm, forearm tube, pod, grip_lid with flush countersunk M2 dots; faint blister outline under tube (shading artifact); no cable visible
+  - s5_top: zigzag overlap clean; no cable path or connector visible; only drum skirt mount holes (hidden under the case per spec)
+  - s5_front: end-on jaw/gripper; pod_front/grip_lid M2 dots visible (flagged per spec); nothing loose, no cable
+  - s5_cutaway: KNOWN RENDER ARTIFACT — solid orange, same as S4/S4b (Blender EXACT boolean fails on non-watertight vendor_J5). Interior verified via FAST-solver debug render (/tmp/s5dbg_cutaway.png): J1 on drum bulkhead, J2 in knuckle cavity, column void + cable path open, J4 in forearm end pocket, J5 in head pod, J6 in gripper body — all seated, channels clear
+  - iterations 2 and 3: all 6 views pixel-identical to iteration 1 (PIL diff none; PNG bytes differ by metadata only)
+- Questions for Riyansh: (1) upper_arm minwall 1.59 still open (same question since S2). (2) s5 cutaway solid-orange EXACT-solver artifact on vendor_J5 persists — note for S7 renders.

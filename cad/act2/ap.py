@@ -24,51 +24,52 @@ OUT_DOWEL_D = 4.0; OUT_DOWEL_HOLE = 4.05; OUT_DOWEL_FLANGE_HOLE = 4.1
 OUT_DOWEL_DEPTH = 3.1; OUT_DOWEL_PROUD = 2.3     # [S kp G36_PIN_TOP 2.30]
 
 # ---------- motor: Tarot TL2955 4008 330KV outrunner ----------
-MOT_D = 44.5; MOT_H = 22.0; MOT_MASS_G = 85     # [S study] (check with calipers: Q1)
+MOT_D = 44.5; MOT_H = 19.0; MOT_MASS_G = 85     # [U] A1c: stator base face -> bell top (community STEP 19.0; Tarot spec 22.0 maybe incl. prop seat)
+DZ = MOT_H - 19.0               # A1c: shifts every part in front of the motor. MOT_H 22.0 -> DZ 3.0 -> length 58.0 (gate limit 55)
 MOT_KV = 330; MOT_R_OHM = 0.145                 # [S study / U xcopterCalc]
 SHAFT_D = 4.0                                    # [S study] not hollow
-SHAFT_OUT = 12.0                                 # [U] shaft length beyond the stator base face (Q2)
+ROTOR_PCD = 34.0; ROTOR_ANG = (90.0, 270.0)      # [S Tarot prop mount 34 mm, Dongil adapter +-17] [U positions on the real bell]
+ROTOR_HOLE = 3.4; ROTOR_CB_D = 6.2; ROTOR_CB_H = 1.9   # [D] A1c: 2x M3x5 ISO 7380 hub -> bell top [U thread depth in the bell]
 MOT_PCD = 32.0; MOT_SCREW_ANG = (30.0, 150.0, 270.0)  # [S BOPP Tarot 4008 STEP] stator base 3x M3 on PCD 32 (= 27.7 triangle); was [U] 4x PCD25
-STATOR_HOLE_D = 12.0                             # [U] clearance for the stator bearing boss (Q3)
+MOT_PLATE = 3.0; MOT_CB_D = 6.2  # [D] A1c: back plate under the stator screw heads; 3x M3x6 ISO 7380 from the back [U thread depth]
 BELL_CLR = 0.45                                  # [D] bell radius 22.25 -> bore radius 22.7
 
 # ---------- Z stack (module frame) ----------
 Z_BACK = (0.0, 3.6)             # [D] housing back wall
 Z_ENC_POCKET = (0.0, 1.8)       # [D] AS5600 board pocket, open to the back face (gate fallback: was 2.0, floor 1.6 -> 1.8)
-Z_MAG = (5.0, 7.5)              # [D] 6x2.5 diametric magnet glued on bell top centre
-Z_MOTOR = (7.5, 29.5)           # [D] bell top -> stator base face (MOT_H 22)
-Z_MID = (29.5, 33.5)            # [D] mid_plate (stator mount)
-Z_DISC1 = (33.8, 37.8)          # [D] 4.0 thick, on 6702 #1
-Z_DISC2 = (38.1, 42.1)          # [D] 4.0 thick, on 6702 #2
-Z_RINGPIN = (33.5, 43.5)        # [D] ring pins (10 long) sit on mid_plate front face
-Z_HUB = (33.8, 47.2)            # [D] cam1 33.8-37.95, cam2 37.95-42.25, stub 42.25-47.2
-Z_CAM_SPLIT = 37.95; Z_STUB0 = 42.25
-Z_CARRIER_PLATE = (42.4, 45.4)  # [D]
-Z_PIN_RING = (43.5, 45.4)       # [D] spacer: ring pins -> 6808 outer race
-Z_6808 = (45.4, 52.4)           # [S 6808 width 7]
-Z_SPIGOT = (45.4, 52.4)         # [D] carrier spigot inside the 6808
-Z_FRONT_RING = (52.4, 54.4)     # [D] retains 6808 outer race; housing ends at 54.4
-Z_FLANGE = (52.4, 55.0)         # [D] out_flange, proud of housing by 0.6
-Z_OUTPIN = (34.0, 46.0)         # [D] output pins 3x12, pressed 3.6 deep into carrier
-Z_685 = (42.4, 47.4)            # [S 685 width 5]
+Z_MAG = (4.7, 7.2)              # [D] A1c: 6x2.5 magnet in mag_puck, faces the AS5600 (gap 0.95 [U chip height])
+Z_STATOR = 10.2                 # [D] A1c: stator base face on the housing back plate
+Z_PUCK = (4.7, Z_STATOR + 0.5)  # [D] A1c: mag_puck; its d8 nose enters the stator washer recess by 0.5 [U]
+PUCK_D = 12.0; PUCK_NOSE = (8.0, 0.8); PUCK_HOLE = 3.2; PUCK_POCKET = (6.05, 4.15)  # [S Dongil puck 12x6, pocket 6.05, hole 3.2] pocket depth = magnet 2.5 + M3 button head 1.65
+PUCK_CAV_D = 13.0               # [D] A1c: housing cavity around the spinning puck
+MOT_RECESS = (9.1, 0.6)         # [S BOPP STEP: retaining washer d9.07, 0.5 inside the base] vendor_motor proxy only
+Z_MOTOR = (Z_STATOR, Z_STATOR + MOT_H)   # [D] A1c: stator base -> bell top (bell top faces the gearbox)
+Z_ADAPT = (Z_MOTOR[1], Z_MOTOR[1] + 4.0)  # [D] A1c: hub rotor flange, 4.0 thick, clamped on the bell top
+ADAPT_L = 44.0; ADAPT_W = 20.0; ADAPT_CTR = (3.0, 4.0)  # [S Dongil adapter 44x20 bar] ends trimmed to d44; centre clearance d, depth [U bell centre]
+Z_DISC1 = (33.8 + DZ, 37.8 + DZ)  # [D] 4.0 thick, on 6702 #1
+Z_DISC2 = (38.1 + DZ, 42.1 + DZ)  # [D] 4.0 thick, on 6702 #2
+Z_RINGPIN = (33.5 + DZ, 43.5 + DZ)  # [D] A1c: ring pins (10 long) stand on the blind housing groove floors
+Z_HUB = (Z_ADAPT[0], 47.2 + DZ)  # [D] A1c: rotor flange Z_ADAPT, cam1 to Z_CAM_SPLIT, cam2 to Z_STUB0, stub to 47.2
+Z_CAM_SPLIT = 37.95 + DZ; Z_STUB0 = 42.25 + DZ
+Z_CARRIER_PLATE = (42.4 + DZ, 45.4 + DZ)  # [D]
+Z_PIN_RING = (43.5 + DZ, 45.4 + DZ)  # [D] spacer: ring pins -> 6808 outer race
+Z_6808 = (45.4 + DZ, 52.4 + DZ)  # [S 6808 width 7]
+Z_SPIGOT = (45.4 + DZ, 52.4 + DZ)  # [D] carrier spigot inside the 6808
+Z_FRONT_RING = (52.4 + DZ, 54.4 + DZ)  # [D] retains 6808 outer race; housing ends at 54.4
+Z_FLANGE = (52.4 + DZ, 55.0 + DZ)  # [D] out_flange, proud of housing by 0.6
+Z_OUTPIN = (34.0 + DZ, 46.0 + DZ)  # [D] output pins 3x12, pressed 3.6 deep into carrier
+Z_685 = (42.4 + DZ, 47.4 + DZ)  # [S 685 width 5]
 
 # ---------- housing bores ----------
-BORE_MOTOR = 45.4               # [D] Z_BACK[1] .. Z_MID[0]
+BORE_MOTOR = 45.4               # [D] A1c: Z_STATOR .. Z_RINGPIN[0]
 BORE_PIN = 47.4                 # [D] A1b: was 47.0 (=2R); +0.2 radius trims the thin pin-web tips (minwall)
 PIN_HOLE_D = 3.05               # [D] ring pin holes (3.0 pins) at radius R (50:1: 2.55)
 SEAT_6808 = 52.1                # [D] 6808 OD 52 + 0.1 (PETG prints holes small)
 WIRE_ANG = 90.0; WIRE_W = 4.0; WIRE_R = (22.5, 25.2)   # [D] axial phase-wire channel
 NOTCH_W = 5.0; NOTCH_Z = (0.0, 8.0)                    # [D] side notch where wires leave
 ENC_GROOVE_W = 3.0; ENC_GROOVE_D = 1.2                 # [D] back-face groove pocket -> notch
-CSK_Z = 31.5; CSK_ANG = ()                           # [D] A1b: radial screws removed (minwall); mid_plate keyed by KEY_PINS
-CSK_D = 6.0; CSK_HOLE = 3.4; CSK_PILOT = 2.5; CSK_PILOT_L = 6.0  # [S ISO 10642 M3 head 6.0]
 
-# ---------- mid_plate ----------
-MID_D = 46.8                    # [D] slides through BORE_PIN, sits on the 45.4/47.0 step
-MID_CB_D = 6.2; MID_CB_H = 1.9  # [S ISO 7380 M3 head 5.7 x 1.65] from the front face
-MID_GROOVE = (4.0, 1.5)         # [D] wire groove on back face at WIRE_ANG: width, depth
-KEY_PINS = (0, 14, 27)          # [D] A1b: ring-pin slots k (angle 360k/NP) that also key the mid_plate
-KEY_CLR = 0.1                   # [D] A1b: lug d = 2*RP - KEY_CLR (groove is 2*RP + 0.05)
+WIRE_GROOVE = (4.0, 1.5)        # [D] A1c: phase-wire groove in the back-plate front face at WIRE_ANG: width, depth [U wire exit]
 
 # ---------- bearings [S standard sizes: d x D x B] ----------
 BRG_OUT = (40.0, 52.0, 7.0)     # 6808-2RS  output
@@ -80,9 +81,6 @@ BRG_6808_OUT_LAND = 47.4        # [U] outer-ring inner land, must stay > 46.0 (f
 # ---------- hub (input) ----------
 CAM_D = 15.0                    # = BRG_ECC d
 STUB_D = 4.99                   # 685 bore 5, slip
-HUB_BORE = 4.05                 # on 4.0 shaft
-HUB_BORE_L = SHAFT_OUT - (Z_HUB[0] - Z_MID[0])   # [U] = 7.7 with SHAFT_OUT 12
-GRUB_Z = 37.95; GRUB_PILOT = 2.5 # A1b: was 35.8; = Z_CAM_SPLIT (minwall). M3x5 ISO 4026 set screw, radial, at angle 90
 
 # ---------- discs ----------
 DISC_BORE = 21.0                # = BRG_ECC D
@@ -103,4 +101,4 @@ FRONT_RING = (52.0, 46.0)       # [D] OD, ID - slip + 2 dots CA after testing
 ENC_W = 23.4                    # [U] AS5600 board 23 x 23 + 0.4 (Q4)
 ENC_WINDOW_D = 10.0             # [D] chip window through the back wall
 MAG = (6.0, 2.5)                # [S] 6 x 2.5 diametric N35 magnet
-# chip face at z ~3.75 [U SOIC-8 1.75 tall] -> magnet gap 1.25 (AS5600 wants 0.5-3) [U]
+# chip face at z ~3.75 [U SOIC-8 1.75 tall] -> magnet gap 0.95 (AS5600 wants 0.5-3) [U]

@@ -1,5 +1,5 @@
 import glob, sys, trimesh
-P = ["housing","mid_plate","hub","disc1","disc2","carrier","out_flange","pin_ring","front_ring"]
+P = ["housing","mag_puck","hub","disc1","disc2","carrier","out_flange","pin_ring","front_ring"]
 ok = True; zmin, zmax, rmax = 1e9, -1e9, 0.0
 for n in P:
     m = trimesh.load_mesh(f"out/{n}.stl", force="mesh"); m.merge_vertices()

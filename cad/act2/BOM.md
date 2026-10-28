@@ -14,9 +14,11 @@ USD, prices from the study read 28 Oct 2026; [U] = not verified.
 | 6 | dowel Ø3×12 (output pins) | | ~1 [U] |
 | 3 | dowel Ø4×8 (output locating) | | ~1 [U] |
 | 6 | M3×8 thread-forming or ISO 7380 (link → back face; length = link plate + 3) | | |
-| 3 | M3×6 ISO 7380 (stator → mid_plate, PCD 32) [U length] | | |
+| 3 | M3×6 ISO 7380 (stator base → housing back plate, PCD 32, from the back) [U thread depth] | | |
 | 3 | M3 heat-set insert 4.6×5.7 + M3×8 ISO 7380 (flange → carrier) | | |
-| 1 | M3×5 ISO 4026 set screw (hub on shaft) + Loctite 243 | | |
+| 2 | M3×5 ISO 7380 (hub flange → Tarot bell top, 34 mm prop holes) + Loctite 243 [U thread depth; kit screws M3×11.3 are too long] | | |
+| 1 | M3×4 ISO 7380 (mag_puck → shaft end, replaces Tarot's button screw + washer) [U] | | |
+| 1 | mag_puck, printed (Ø12 × 6, magnet pocket Ø6.05) | | |
 | | Filament ~90 g | | ~2 [U] |
 | | **Module total** (ESC included) | | **≈ $105 [U]**; 2 modules ≈ $210 (study: $196.50 + pins/screws) |
 

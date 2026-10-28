@@ -13,74 +13,60 @@ def pol(r, a):            # polar -> (x, y)
 def ring(d_out, d_in, z0, z1):
     return zcyl(0, 0, d_out, z0, z1) - zcyl(0, 0, d_in, z0 - 0.01, z1 + 0.01)
 
-def radial_hole(d, r0, r1, ang, z):   # cylinder along the radius from r0 to r1 at angle ang, height z
-    c = Rot(0, 90, 0) * Cylinder(d / 2, r1 - r0)          # axis now along X
-    return Pos(0, 0, z) * Rot(0, 0, ang) * Pos((r0 + r1) / 2, 0, 0) * c
-
-def radial_csk(ang, z):   # 90-deg countersink at the OD for ISO 10642 M3, apex inward
-    c = Rot(0, -90, 0) * Cone(ap.CSK_D / 2, ap.CSK_HOLE / 2, (ap.CSK_D - ap.CSK_HOLE) / 2, align=None)
-    return Pos(0, 0, z) * Rot(0, 0, ang) * Pos(ap.OD / 2 - (ap.CSK_D - ap.CSK_HOLE) / 2, 0, 0) * c
-
-
 def housing():
     N, NP, R, RP, E = cyc.gear()
     h = zcyl(0, 0, ap.OD, 0, ap.Z_FRONT_RING[1])
-    h -= zcyl(0, 0, ap.BORE_MOTOR, ap.Z_BACK[1], ap.Z_MID[0])
-    h -= zcyl(0, 0, ap.BORE_PIN, ap.Z_MID[0], ap.Z_RINGPIN[1])
+    h -= zcyl(0, 0, ap.BORE_MOTOR, ap.Z_STATOR, ap.Z_RINGPIN[0])          # A1c: motor bore down to the back plate
+    h -= zcyl(0, 0, ap.BORE_PIN, ap.Z_RINGPIN[0], ap.Z_RINGPIN[1])
     h -= zcyl(0, 0, ap.SEAT_6808, ap.Z_PIN_RING[0], ap.Z_FRONT_RING[1] + 0.01)
-    for k in range(NP):
+    h -= zcyl(0, 0, ap.PUCK_CAV_D, ap.Z_BACK[1] - 0.01, ap.Z_STATOR + 0.01)   # A1c: mag_puck cavity
+    for k in range(NP):       # blind grooves: the ring pins stand on their floors at Z_RINGPIN[0]
         x, y = pol(R, 360.0 * k / NP)
         h -= zcyl(x, y, 2 * RP + 0.05, ap.Z_RINGPIN[0], ap.Z_RINGPIN[1])
-    for k in ap.KEY_PINS:     # A1b: 3 pin grooves continue down through the mid_plate zone = keyways for its lugs
-        x, y = pol(R, 360.0 * k / NP)
-        h -= zcyl(x, y, 2 * RP + 0.05, ap.Z_MID[0], ap.Z_RINGPIN[0] + 0.01)
     h -= Pos(0, 0, ap.Z_ENC_POCKET[1] / 2 - 0.005) * \
         Box(ap.ENC_W, ap.ENC_W, ap.Z_ENC_POCKET[1] + 0.01)        # AS5600 pocket, open to back
-    h -= zcyl(0, 0, ap.ENC_WINDOW_D, 1.7, ap.Z_BACK[1] + 0.01)   # chip window (was 1.9, gate fallback)
+    h -= zcyl(0, 0, ap.ENC_WINDOW_D, 1.7, ap.Z_BACK[1] + 0.01)   # chip window
     for k in range(ap.LINK_N):
         x, y = pol(ap.LINK_PCD / 2, ap.LINK_ANG0 + 60 * k)
         h -= zcyl(x, y, ap.LINK_PILOT_D, -0.01, ap.LINK_PILOT_L)
-    z0, z1 = ap.Z_BACK[1] - 0.01, ap.Z_MID[0] + 0.01             # axial wire channel
+    for a in ap.MOT_SCREW_ANG:  # A1c: stator base screws from the back face, heads in counterbores
+        x, y = pol(ap.MOT_PCD / 2, a)
+        h -= zcyl(x, y, 3.4, -0.01, ap.Z_STATOR + 0.01)
+        h -= zcyl(x, y, ap.MOT_CB_D, -0.01, ap.Z_STATOR - ap.MOT_PLATE)
+    z0, z1 = ap.Z_BACK[1] - 0.01, ap.Z_STATOR + 0.01              # axial wire channel -> motor bore
     h -= Rot(0, 0, ap.WIRE_ANG) * Pos((ap.WIRE_R[0] + ap.WIRE_R[1]) / 2, 0, (z0 + z1) / 2) * \
         Box(ap.WIRE_R[1] - ap.WIRE_R[0], ap.WIRE_W, z1 - z0)
+    r0, r1 = ap.PUCK_CAV_D / 2 - 0.01, ap.BORE_MOTOR / 2 + 0.1   # A1c: wire groove in the back-plate front face
+    z0, z1 = ap.Z_STATOR - ap.WIRE_GROOVE[1], ap.Z_STATOR + 0.01
+    h -= Rot(0, 0, ap.WIRE_ANG) * Pos((r0 + r1) / 2, 0, (z0 + z1) / 2) * Box(r1 - r0, ap.WIRE_GROOVE[0], z1 - z0)
     h -= Rot(0, 0, ap.WIRE_ANG) * Pos((22.0 + ap.OD / 2 + 1) / 2, 0, (ap.NOTCH_Z[0] + ap.NOTCH_Z[1]) / 2) * \
         Box(ap.OD / 2 + 1 - 22.0, ap.NOTCH_W, ap.NOTCH_Z[1] - ap.NOTCH_Z[0])   # side notch
     r0, r1 = ap.ENC_W / 2 - 0.5, 22.5                            # back-face groove pocket -> notch
     h -= Rot(0, 0, ap.WIRE_ANG) * Pos((r0 + r1) / 2, 0, (ap.ENC_GROOVE_D - 0.01) / 2) * \
         Box(r1 - r0, ap.ENC_GROOVE_W, ap.ENC_GROOVE_D + 0.01)
-    for a in ap.CSK_ANG:
-        h -= radial_hole(ap.CSK_HOLE, ap.OD / 2 - 4, ap.OD / 2 + 0.1, a, ap.CSK_Z)
-        h -= radial_csk(a, ap.CSK_Z)
     return h
 
 
-def mid_plate():
-    m = zcyl(0, 0, ap.MID_D, *ap.Z_MID)
-    N, NP, R, RP, E = cyc.gear()
-    for k in ap.KEY_PINS:     # A1b: 3 round anti-rotation lugs that slide in the KEY_PINS grooves
-        x, y = pol(R, 360.0 * k / NP)
-        m += zcyl(x, y, 2 * RP - ap.KEY_CLR, *ap.Z_MID)
-    m -= zcyl(0, 0, ap.STATOR_HOLE_D, ap.Z_MID[0] - 0.01, ap.Z_MID[1] + 0.01)
-    for a in ap.MOT_SCREW_ANG:
-        x, y = pol(ap.MOT_PCD / 2, a)
-        m -= zcyl(x, y, 3.4, ap.Z_MID[0] - 0.01, ap.Z_MID[1] + 0.01)
-        m -= zcyl(x, y, ap.MID_CB_D, ap.Z_MID[1] - ap.MID_CB_H, ap.Z_MID[1] + 0.01)
-    for a in ap.CSK_ANG:
-        m -= radial_hole(ap.CSK_PILOT, ap.MID_D / 2 - ap.CSK_PILOT_L, ap.MID_D / 2 + 0.1, a, ap.CSK_Z)
-    r0, r1 = 6.0 - 0.01, ap.OD / 2 + 0.1                         # back-face wire groove (0.01 into the r6 stator hole: tangent face fix)
-    z0, z1 = ap.Z_MID[0] - 0.01, ap.Z_MID[0] + ap.MID_GROOVE[1]
-    m -= Rot(0, 0, ap.WIRE_ANG) * Pos((r0 + r1) / 2, 0, (z0 + z1) / 2) * \
-        Box(r1 - r0, ap.MID_GROOVE[0], z1 - z0)
-    return m
+def mag_puck():   # A1c: magnet holder on the shaft-end M3 at the stator base (Dongil motor_and_magnet_holder)
+    p = zcyl(0, 0, ap.PUCK_D, ap.Z_PUCK[0], ap.Z_PUCK[1] - ap.PUCK_NOSE[1])
+    p += zcyl(0, 0, ap.PUCK_NOSE[0], ap.Z_PUCK[1] - ap.PUCK_NOSE[1], ap.Z_PUCK[1])
+    p -= zcyl(0, 0, ap.PUCK_POCKET[0], ap.Z_PUCK[0] - 0.01, ap.Z_PUCK[0] + ap.PUCK_POCKET[1])
+    p -= zcyl(0, 0, ap.PUCK_HOLE, ap.Z_PUCK[0], ap.Z_PUCK[1] + 0.01)
+    return p
 
 
-def hub():
+def hub():   # A1c: one piece = rotor flange (2x M3 into the bell top) + cam1 + cam2 + front stub
     N, NP, R, RP, E = cyc.gear()
-    h = zcyl(E, 0, ap.CAM_D, ap.Z_HUB[0], ap.Z_CAM_SPLIT)
+    z0, z1 = ap.Z_ADAPT
+    h = zcyl(0, 0, ap.ADAPT_L, z0, z1) & (Pos(0, 0, (z0 + z1) / 2) * Box(ap.ADAPT_W, ap.ADAPT_L + 1, z1 - z0))
+    h += zcyl(E, 0, ap.CAM_D, z0, ap.Z_CAM_SPLIT)
     h += zcyl(-E, 0, ap.CAM_D, ap.Z_CAM_SPLIT, ap.Z_STUB0)
     h += zcyl(0, 0, ap.STUB_D, ap.Z_STUB0, ap.Z_HUB[1])
-    h -= zcyl(0, 0, ap.HUB_BORE, ap.Z_HUB[0] - 0.01, ap.Z_HUB[0] + ap.HUB_BORE_L)
-    h -= radial_hole(ap.GRUB_PILOT, 1.5, ap.CAM_D / 2 + 1, 90, ap.GRUB_Z)
+    for a in ap.ROTOR_ANG:
+        x, y = pol(ap.ROTOR_PCD / 2, a)
+        h -= zcyl(x, y, ap.ROTOR_HOLE, z0 - 0.01, z1 + 0.01)
+        h -= zcyl(x, y, ap.ROTOR_CB_D, z1 - ap.ROTOR_CB_H, z1 + 0.01)
+    h -= zcyl(0, 0, ap.ADAPT_CTR[0], z0 - 0.01, z0 + ap.ADAPT_CTR[1])
     return h
 
 
@@ -142,9 +128,9 @@ def front_ring():
 
 
 # ---- bought parts as plain solids (vendor_*: gate.py treats them as bought) ----
-def vendor_motor():
-    return zcyl(0, 0, ap.MOT_D, *ap.Z_MOTOR) + \
-        zcyl(0, 0, ap.SHAFT_D, ap.Z_MOTOR[1], ap.Z_MOTOR[1] + ap.SHAFT_OUT)
+def vendor_motor():   # A1c: stator base on the back plate, bell top toward the gearbox
+    return zcyl(0, 0, ap.MOT_D, *ap.Z_MOTOR) - \
+        zcyl(0, 0, ap.MOT_RECESS[0], ap.Z_STATOR - 0.01, ap.Z_STATOR + ap.MOT_RECESS[1])
 
 
 def vendor_magnet():
@@ -203,7 +189,7 @@ def vendor_as5600():    # AS5600 board proxy: fills the encoder pocket (23 x 23 
         Box(ap.ENC_W - 0.4, ap.ENC_W - 0.4, ap.Z_ENC_POCKET[1] - ap.Z_ENC_POCKET[0])
 
 
-PARTS = {"housing": housing, "mid_plate": mid_plate, "hub": hub,
+PARTS = {"housing": housing, "mag_puck": mag_puck, "hub": hub,
          "disc1": disc1, "disc2": disc2, "carrier": carrier,
          "out_flange": out_flange, "pin_ring": pin_ring, "front_ring": front_ring,
          "vendor_motor": vendor_motor, "vendor_magnet": vendor_magnet,

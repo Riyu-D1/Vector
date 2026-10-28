@@ -1,6 +1,7 @@
 """cad/knuckle/p_wrist.py - S4 parts: head, cup_cap, pod_front. Copied verbatim."""
 import kp
 from frames import gbox, xcyl, ycyl
+from style import rbox
 
 HX, HZ = 280.0, 150.0                                   # J4 axis (x, z)
 HORN = [(HX + 7, HZ), (HX - 7, HZ), (HX, HZ + 7), (HX, HZ - 7)]
@@ -8,7 +9,7 @@ HORN = [(HX + 7, HZ), (HX - 7, HZ), (HX, HZ + 7), (HX, HZ - 7)]
 
 def head():
     h = ycyl(HX, HZ, kp.CUP_D, *kp.CUP_Y) + ycyl(HX, HZ, kp.BOSS_D, *kp.BOSS_Y)
-    h += gbox(*kp.SEG_A) + gbox(*kp.SEG_B) + gbox(*kp.POD)
+    h += gbox(*kp.SEG_A) + gbox(*kp.SEG_B) + rbox(*kp.POD, 8.0, "X")
     px0, px1, py0, py1, pz0, pz1 = kp.POD_POCKET
     h -= gbox(px0, px1 + 0.5, py0, py1, pz0, pz1)
     h -= gbox(*kp.POD_PLUG)
@@ -38,7 +39,7 @@ def cup_cap():
 
 def pod_front():
     x0, x1 = kp.POD_FRONT
-    p = gbox(x0, x1, kp.POD[2], kp.POD[3], kp.POD[4], kp.POD[5])
+    p = rbox(x0, x1, kp.POD[2], kp.POD[3], kp.POD[4], kp.POD[5], 8.0, "X")
     p -= xcyl(0, 150, 22.0, x0 - 1, x1 + 1)
     p -= xcyl(14.5, 150, 4.0, x0 - 1, x1 + 1)
     for y, z in kp.POD_M2:

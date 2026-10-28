@@ -1,6 +1,7 @@
 """cad/knuckle/p_fore.py - S3 parts: forearm, fa_endcap, fa_elbow_cap. Copied verbatim."""
 import kp
 from frames import gbox, mod_pt, sbox, xcyl, ycyl
+from style import rbox
 
 CY = kp.FA_TUBE_CY
 
@@ -8,7 +9,7 @@ CY = kp.FA_TUBE_CY
 def forearm():
     y0, y1 = kp.FA_Y
     f = ycyl(150, 150, kp.FA_CAP_D, y0, y1) + xcyl(CY, 150, kp.FA_TUBE_D, 150, kp.FA_END_X)
-    f += gbox(*kp.BLISTER_OUT)
+    f += rbox(*kp.BLISTER_OUT, 4.0, "Y")
     # hollow: cap interior + tube bore (bore kept above the hub plane y=-17.2)
     f -= ycyl(150, 150, kp.FA_CAP_D - 2 * kp.WALL, kp.FA_HUB_Y[1], y1 - kp.WALL)
     f -= xcyl(CY, 150, kp.FA_TUBE_ID, 150, kp.FA_FILLER_X[0]) & gbox(

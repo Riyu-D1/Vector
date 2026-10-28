@@ -1,12 +1,14 @@
 """cad/knuckle/p_grip.py - S4 parts: gripper, grip_lid, jaw, jaw_cap. Copied verbatim."""
 import kp
+from build123d import Cone, Pos, Rot
 from frames import gbox, servo_pt, xcyl, ycyl, yprism
+from style import rbox
 
 JX, JZ = kp.J6_ORIGIN[0], kp.J6_ORIGIN[2]               # J6 axis (x, z)
 
 
 def gripper():
-    g = gbox(*kp.GR) + gbox(*kp.FINGER_FIX)
+    g = rbox(*kp.GR, 2.5, "X") + gbox(*kp.FINGER_FIX)
     g -= gbox(*kp.GR_POCKET)
     g -= gbox(*kp.GR_SLOT)
     g -= ycyl(JX, JZ, 22.0, kp.GR_POCKET[3] - 0.5, kp.GR[3] + 1)       # J6 horn hole
@@ -26,10 +28,12 @@ def gripper():
 
 
 def grip_lid():
-    l = gbox(*kp.GR_LID) + gbox(*kp.GR_BUMP)
+    l = rbox(*kp.GR_LID, 1.1, "X") + rbox(*kp.GR_BUMP, 4.0, "Y")
     l -= gbox(*kp.GR_PLUG)
     for x, z in kp.GR_PILOTS:
         l -= ycyl(x, z, kp.M2_CLEAR, kp.GR_LID[2] - 1, kp.GR_LID[3] + 1)
+        l -= Pos(x, kp.GR_LID[2] + 0.6, z) * Rot(90, 0, 0) * Cone(
+            bottom_radius=1.1, top_radius=2.1, height=1.2)
     return l
 
 

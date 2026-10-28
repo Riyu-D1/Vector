@@ -68,3 +68,28 @@
   - s4_cutaway: KNOWN RENDER ARTIFACT — frame is solid orange. Blender EXACT boolean fails on the non-watertight vendor_J5 mesh (deterministic over 2 renders; bisected: printed parts fine, vendor_J4 and vendor_J6 fine, vendor_J5 alone breaks it). Interior verified via identical debug render with FAST solver (`out/renders/s4dbg_cutaway.png`): J5 servo sectioned inside the head pod, J6 servo inside the gripper body, J4 in the forearm end pocket, channel/slot into the gripper back wall, jaw cavity open — all present
   - iteration 3 re-render: all 6 views pixel-identical to run 2 (PIL diff none)
 - Questions for Riyansh: (1) s4 cutaway view renders solid orange — EXACT-solver boolean artifact on vendor_J5's non-watertight vendor mesh, not a geometry defect (gate clean, debug FAST render shows correct interior); suggest noting for S7 renders. (2) M2 heads on pod_front + grip_lid visible as flagged — confirm accepted. (3) upper_arm minwall 1.59 question still open from S2/S3.
+
+## Stage 4b — 2026-10-28 — PASS (with fallbacks)
+- Gate lines:
+  - `CABLE PASS` — all 5 routes CLEAR (A_base_to_J2face 551, B_upperarm 642, C_forearm_in 519, D_wrist 361, E_gripper 280)
+  - `gate.py out/*.stl` -> `GATE FAIL` rc=1 with ONE BAD line: `upper_arm: watertight=True bbox=221.0x49.8x76.0 max=221.0 minwall=1.59 BAD` — pre-existing, unchanged this stage, same accepted fallback as S2/S3/S4 (S2 step 4). All other part lines OK, zero INTERF lines; `PRESS cup_cap x head: 6.13` / `fa_elbow_cap: 9.41` / `fa_endcap: 21.95` / `jaw_cap: 3.30` / `kn_endcap: 8.36 mm3 ok`
+  - minwall: head 1.99 / pod_front 1.64 / gripper 1.64 / grip_lid 1.82 / forearm 1.98 (all >= 1.6)
+- Files changed: `cad/knuckle/style.py` (new, verbatim), `p_wrist.py`, `p_grip.py`, `p_fore.py`, `kp.py` (POD_M2 only), `docs/STATUS-knuckle.md`
+- Radii finally used: head pod r=8.0 "X"; pod_front r=8.0 "X"; gripper r=2.5 "X"; grip_lid plate r=1.1 "X"; grip_lid bump r=4.0 "Y"; forearm blister r=4.0 "Y"
+- Fallbacks used:
+  1. GR_LID fillet: prescribed r=2.0 raises OCC StdFail_NotDone (2x2.0 > 2.4 mm plate — two fillets cannot fit one face). Ladder: 2.0 fail -> 1.5 fail -> 1.1 OK. 1.1 is the max feasible on a 2.4 mm plate (full-round limit 1.2).
+  2. All-edges rbox (GR_BUMP r5, BLISTER_OUT r4) always exports a non-watertight STL — 8 zero-area triangles at the corner-fillet sphere poles (OCC meshing artifact, radius-independent; verified r 4.0/3.5/3.0/2.5/2.0 all watertight=False, and the uncut box alone has 8 degenerate faces). Axis-limited fillets have no corner patches. Used axis "Y" for both: rounds exactly the silhouette corners of the -Y outer faces (the "square block"/"square bump" look) and exports watertight.
+  3. GR_BUMP r=5.0 "Y" -> minwall=1.51 BAD -> r=4.0 "Y" -> minwall=1.82 OK (step-7 named fallback).
+- UNVERIFIED values touched: none (POD_M2 changed exactly as step 5 prescribes)
+- Step 8 lid countersinks: worked first try — Cone(1.1->2.1, h1.2) axis +Y, wide face at y=-20.4 per pilot; lid minwall 1.82.
+- ROM (`rom.py`): J1 [-170,170] OK / J2 safe=[-70,25] BAD (30 deg: 47.6, 35 deg: 524.1 mm3 upper_arm x turret) / J3 [-135,90] OK / J4 [-95,95] OK / J5 [-160,160] OK / J6 [-35,0] OK -> ROM FAIL. J2 involves only upper_arm x turret — both untouched this stage (unchanged code+STLs), so identical to pre-stage; not recorded in S2-S4 STATUS, flagging.
+- Render review (3 iterations done; list = s4.txt colours, prefix s4b_):
+  - s4b_frontiso: forearm tube -> pod -> gripper; pod long edges visibly rounded; lid bump front outline rounded; 4 flush M2 dots on lid; small orange sliver at pod seam (S2/S3/S4 artifact class); no cable, nothing floating
+  - s4b_backiso: +Y side closed — elbow cap + tube + cup clean; bump/lid edge rounding visible; servos hidden; nothing loose
+  - s4b_side: pod top and bottom long edges rounded (no square corners at head top/bottom) (a); blister under tube = rounded lozenge, not square block (b); bump on lid rounded (c); all parts seated (d); no cable (e)
+  - s4b_top: zigzag overlap clean; pod edges read rounded; no gaps, no cable
+  - s4b_front: gripper body long edges rounded; jaw + jaw_cap edge clean; M2 dots flush on lid
+  - s4b_cutaway: KNOWN RENDER ARTIFACT — solid orange, same as S4 (Blender EXACT boolean fails on non-watertight vendor_J5). Interior verified via FAST-solver debug render (/tmp/s4bdbg_cutaway.png, same method as S4): J4 servo in forearm end pocket + plug room open below, J5 inside head pod, J6 inside gripper body, channel/slot into gripper back wall — all present
+  - iterations 2 and 3: all 6 views pixel-identical to iteration 1 (PIL diff none)
+- Open items (recorded, not decided): 4 pod_front M2 heads + 4 lid screws stay (lid screws now countersunk flush)
+- Questions for Riyansh: (1) all-edges fillet cannot produce a watertight STL in this toolchain (OCC corner-sphere pole degenerate tris) — bump + blister use "Y"-axis edges instead; confirms the look is acceptable vs BLOCKED alternative. (2) GR_LID r=1.1 (geometric max on 2.4 mm plate, not the prescribed 2.0). (3) J2 ROM safe=[-70,25] appears pre-existing (upper_arm x turret, parts unchanged since S2) — confirm known. (4) s4b cutaway solid-orange artifact (same as S4) — note for S7. (5) upper_arm minwall 1.59 still open.

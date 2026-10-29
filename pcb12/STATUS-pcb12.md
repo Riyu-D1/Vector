@@ -70,6 +70,39 @@ B.Cu island near via (26.924, 81.661).
 - `drc_report.txt`, `soma-carrier-v12-top.png`, `soma-carrier-v12-bottom.png`
 - `bom.csv` — new/changed parts only
 
+## P2 — fix ESTOP and +5V continuity (2026-10-29)
+
+Hand-edited `soma-carrier-v12.kicad_pcb` (backup:
+`soma-carrier-v12.before-P2.kicad_pcb`). No re-route, no regen. Added
+12 segments + 2 vias; removed nothing.
+
+- `+5V` (F.Cu, w=1.5, 4 segments, 0 vias): extended the island tip at
+  (93.98,24.892) east, south at x95.5 (west of IRIN's F.Cu run starting
+  x97.03), east at y37.5 (between IRIN y35.94 and +12V top y40.1), south
+  at x125.5 onto +5V via (125.22,53.21). Joins R3.1's island to the
+  southern +5V body (via 46.99,21.08 side).
+- `ESTOP` (w=0.25, 8 segments, 2 vias at (32.3,63.9) and (30.7,73.8)):
+  F.Cu west at y56 under the U1A row, south at x32.3 through the D1/J7
+  gap, via to B.Cu, south past the ENC dive pickets, west to
+  (30.7,73.8), via to F.Cu, one 45 deg leg to (27,77.5), south onto the
+  island-A F.Cu chain at (27,81.74). U1A.13 <-> J9.1 continuity restored.
+
+DRC after fix (`kicad-cli pcb drc --severity-all`, written to drc.json):
+- `unconnected_items`: 0 (was 2)
+- `shorting_items`: 0, `clearance`: 0, `track_dangling`: 0 (was 1),
+  `via_dangling`: 0, `hole_to_hole`: 0
+- remaining violations: 19 = 12 `lib_footprint_mismatch` + 7
+  `silk_overlap` (all pre-existing, non-electrical)
+- 1 fix round needed.
+
+`gen_pcb.py` ROUTES not ported: the autorouter chooses its own copper
+from waypoints, so the hand-placed repair does not map to ROUTES
+semantics — **`soma-carrier-v12.kicad_pcb` is the source of truth** for
+these two nets. Regenerating the board would lose the fix.
+
+Gerbers re-exported to `gerbers/` via fab.sh (16 layers + Excellon
+drill); `soma-carrier-v12-top.png` re-rendered.
+
 ## UNVERIFIED
 
 - TJA1051T/3 pin order and the VIO pin — check against the datasheet

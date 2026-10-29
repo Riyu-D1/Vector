@@ -1,11 +1,8 @@
 ** Drc report for soma-carrier-v12.kicad_pcb **
-** Created on 2026-10-29T20:08:06 **
+** Created on 2026-10-29T23:25:45 **
 ** Report includes: Errors, Warnings, Exclusions **
 
-** Found 20 DRC violations **
-[track_dangling]: Track has unconnected end
-    Local override; warning
-    @(51.8160 mm, 51.4350 mm): Track [ESTOP] on F.Cu, length 6.4658 mm
+** Found 19 DRC violations **
 [lib_footprint_mismatch]: Footprint 'R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal' does not match copy in library 'Resistor_THT'
     Local override; warning
     @(112.0000 mm, 95.0000 mm): Footprint R5
@@ -71,15 +68,7 @@
     @(95.8800 mm, 102.5700 mm): Segment of J17 on F.Silkscreen
     @(92.5000 mm, 101.5000 mm): PCB text 'CAN G-H-L' on F.Silkscreen
 
-** Found 2 unconnected pads **
-[unconnected_items]: Missing connection between items
-    Local override; error
-    @(54.0000 mm, 56.0000 mm): PTH pad 1 [+5V] of R3
-    @(46.9900 mm, 21.0820 mm): Track [+5V] on B.Cu, length 22.9874 mm
-[unconnected_items]: Missing connection between items
-    Local override; error
-    @(51.8160 mm, 51.4350 mm): Track [ESTOP] on F.Cu, length 6.4658 mm
-    @(27.1780 mm, 81.4070 mm): Track [ESTOP] on B.Cu, length 0.3592 mm
+** Found 0 unconnected pads **
 
 ** Found 0 Footprint errors **
 

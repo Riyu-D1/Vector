@@ -1,0 +1,67 @@
+==========================================================================
+frd2report  arm_C.frd
+inp=arm_C.inp  parts=parts_C.json
+49285 nodes, 157428 tets, 4 result block(s) in 1 step(s)
+result block -4 headers seen:
+     -4  DISP        4    1   (known)
+     -4  STRESS      6    1   (known)
+     -4  FORC        4    1   (UNKNOWN -> nodal-force candidate)
+     -4  ERROR       1    1   (known)
+elsets -> parts: back_spacer_j2->back_spacer_j2(538), back_spacer_j3->back_spacer_j3(540), base_link->base_link(2906), base_plate->base_plate(5834), base_reinf->base_reinf(2071), dogleg_l->dogleg_l(1032), dogleg_r->dogleg_r(1050), finger_d->finger_d(180), finger_u->finger_u(178), flange_j2->flange_j2(889), flange_j3->flange_j3(922), fore_l2->fore_l2(4207), fore_r2->fore_r2(4874), front_spacer_j2->front_spacer_j2(496), front_spacer_j3->front_spacer_j3(540), grip_frame->grip_frame(750), j1_cradle->j1_cradle(525), j4_cradle->j4_cradle(1178), link1->link1(6193), link4->link4(583), link5->link5(742), upper_back->upper_back(711), upper_out->upper_out(171), vendor_6803_j2->vendor_6803_j2(150), vendor_6803_j3->vendor_6803_j3(150), vendor_act_j2->vendor_act_j2(268), vendor_act_j3->vendor_act_j3(264), vendor_actout_j2->vendor_actout_j2(363), vendor_actout_j3->vendor_actout_j3(363), vendor_gear_grip->vendor_gear_grip(195), vendor_rack_d->vendor_rack_d(3441), vendor_rack_u->vendor_rack_u(3443), vendor_sts3215_g->vendor_sts3215_g(336), vendor_sts3215_j4->vendor_sts3215_j4(336), vendor_sts3215_j5->vendor_sts3215_j5(333), vendor_sts3215_j6->vendor_sts3215_j6(332), vendor_sts3250_j1->vendor_sts3250_j1(332), yaw_limit->yaw_limit(1869)
+NFIX: 880 nodes (*NSET NFIX)
+payload 4.9050 N, rated moments J2=3.5 J3=2.25 J4=0.98 N.m
+
+==========================================================================
+STEP 1  (frd step 1)   x1 load   ->  run/report_C_step1.vtu
+--------------------------------------------------------------------------
+max von Mises = 1.07 MPa  at node 26282 (169.45, 15.01, 186.20)  part=grip_frame
+max |U| = 0.0644 mm  at node 26313 (215.90, -32.00, 238.60)  part=grip_frame
+TCP (228.20, 0.00, 216.20) -> nearest node 14011 (228.20, -1.00, 214.80) : |U| = 0.0564 mm  U=(0.0125, -0.0075, -0.0545)
+
+printed part              n_nodes  maxVM(MPa)  max|U|(mm) SF=25/VM
+--------------------------------------------------------------------------
+grip_frame                    750        1.07      0.0644    23.42
+fore_l2                      4207        0.38      0.0104    66.45
+link1                        6193        0.37      0.0013    68.17
+fore_r2                      4874        0.36      0.0049    68.64
+base_reinf                   2071        0.23      0.0002   110.47
+dogleg_r                     1050        0.16      0.0052   153.43
+base_link                    2906        0.16      0.0000   155.68
+upper_back                    711        0.13      0.0046   192.00
+link4                         583        0.06      0.0143   388.96
+finger_u                      178        0.02      0.0593  1215.82
+finger_d                      180        0.02      0.0610  1242.59
+base_plate                   5834        0.01      0.0000  2231.99
+j4_cradle                    1178        0.00      0.0052 91048.45
+dogleg_l                     1032        0.00      0.0064 183963.78
+j1_cradle                     525        0.00      0.0000 220602.60
+link5                         742        0.00      0.0140 321515.99
+yaw_limit                    1869        0.00      0.0000 1283423.70
+upper_out                     171        0.00      0.0069 1349937.67
+flange_j3                     922        0.00      0.0059 1449662.88
+flange_j2                     889        0.00      0.0008 2000134.49
+front_spacer_j3               540        0.00      0.0060 2817616.59
+back_spacer_j2                538        0.00      0.0009 4775075.01
+back_spacer_j3                540        0.00      0.0066 7251661.75
+front_spacer_j2               496        0.00      0.0010 8217939.91
+
+reactions (FORC block) summed over 880/880 NFIX nodes:
+    Fx =     -0.000 N   Fy =      0.000 N   Fz =     21.162 N
+    J2 reaction moment about (-20.00, 0.00, 143.50) =   -1.866 N.m
+    J3 reaction moment about (-20.00, 0.00, 270.20) =   -1.866 N.m
+    J4 reaction moment about (96.40, 0.00, 216.20) =    0.597 N.m
+    total overturning moment about Y through x=0,z=0 =   -1.443 N.m
+joint moments vs actuator rating (N.m):
+    J2 reaction    1.87 N.m vs rated 3.50 (margin  1.88x)   [frd; analytic 1.76]
+    J3 reaction    1.87 N.m vs rated 2.25 (margin  1.21x)   [frd; analytic 1.76]
+    J4 reaction    0.60 N.m vs rated 0.98 (margin  1.64x)   [frd; analytic 0.80]
+    base_y analytic 1.44 N.m  (frd -1.44)
+
+top-5 highest-stress nodes:
+    1. VM     1.07 MPa  node 26282 (169.45, 15.01, 186.20)  part=grip_frame
+    2. VM     0.79 MPa  node 26391 (187.53, 15.01, 186.20)  part=grip_frame
+    3. VM     0.77 MPa  node 26498 (187.53, 12.51, 186.20)  part=grip_frame
+    4. VM     0.72 MPa  node 26499 (178.49, 12.51, 186.20)  part=grip_frame
+    5. VM     0.66 MPa  node 26390 (178.49, 15.01, 186.20)  part=grip_frame
+
+sanity: RF_z 21.162 N  vs  expected total weight 22.218 N (parts 17.313 + payload 4.905 x1)

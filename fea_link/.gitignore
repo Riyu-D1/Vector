@@ -1,0 +1,15 @@
+# generated artifacts — never commit (rule 0.4 / <30 MB)
+input/
+run/
+*.msh
+*.inp
+*.frd
+*.vtu
+*.12d
+*.dat
+*.cvg
+*.sta
+*.stl
+spooles.out
+__pycache__/
+.DS_Store

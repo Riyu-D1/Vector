@@ -1,0 +1,11 @@
+run/housing_J3.frd: 275769 nodes 164418 tets, 4 result blocks
+constrained 91264 (NFIX 63765 NLOAD 27499); excluded-with-elements 179709
+step1: max|U| 0.005 mm | raw maxVM 3.01 | filtered maxVM 3.01 | patch maxVM 1.20 MPa
+    hot VM 3.01 at node 1972 (2.0, 22.6, 10.2)
+    hot VM 2.20 at node 2021 (-2.0, 22.6, 10.2)
+    hot VM 1.24 at node 63 (2.0, 22.6, 10.2)
+    hot VM 1.03 at node 62 (2.0, 22.6, 10.2)
+    hot VM 0.93 at node 30550 (2.0, 23.3, 10.2)
+    patch VM 1.20 at node 249 (21.9, -9.1, 33.5)
+    patch VM 1.17 at node 171 (23.6, -2.1, 33.5)
+    patch VM 1.16 at node 172 (23.7, -1.5, 33.5)

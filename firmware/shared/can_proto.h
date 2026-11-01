@@ -1,5 +1,5 @@
 /*
- * can_proto.h — SOMA v3 joint CAN protocol (J1-J3 brushless actuators)
+ * can_proto.h — SOMA v3 joint CAN protocol (J2-J3 brushless actuators)
  *
  * CANopen-flavoured layout, compatible in spirit with the Berkeley Humanoid
  * Lite Recoil-Motor-Controller-BESC firmware (MIT licence,
@@ -40,8 +40,7 @@ typedef enum {
     CAN_FC_RSDO  = 0xC    /* 0x600+node   : param read/write request (master) */
 } can_fc_t;
 
-/* joint CAN node IDs */
-#define CAN_NODE_J1   1u
+/* joint CAN node IDs — J2/J3 only; J1 is an STS3250 servo on bus A */
 #define CAN_NODE_J2   2u
 #define CAN_NODE_J3   3u
 #define CAN_NODE_ALL  0u    /* NMT broadcast target only */
@@ -51,6 +50,9 @@ typedef enum {
     NMT_DISABLE   = 0x00,   /* torque off, coast                            */
     NMT_ENABLE    = 0x01,   /* enable FOC position/velocity control         */
     NMT_CALIBRATE = 0x02,   /* run encoder-offset calibration               */
+    NMT_HOME      = 0x03,   /* drive into the hard stop, set zero, mark
+                               * homed (AS5600 is single-turn: required
+                               * every boot before torque is allowed)    */
     NMT_ESTOP     = 0x7F    /* latch e-stop: immediate torque-off until
                                * an explicit NMT_ENABLE clears it          */
 } nmt_cmd_t;
@@ -62,8 +64,8 @@ typedef enum {
 /* SDO parameter addresses (little-endian u16). Type: F = fp32, U = u32. */
 typedef enum {
     SDO_CURRENT_LIMIT_A = 0x0001, /* F rw  q-axis phase current cap, A   */
-    SDO_POLE_PAIRS      = 0x0002, /* U rw  motor pole pairs (5010 = 7?)  */
-    SDO_GEAR_RATIO      = 0x0003, /* F rw  reducer ratio, 15.0           */
+    SDO_POLE_PAIRS      = 0x0002, /* U rw  motor pole pairs (4008 = 7?)  */
+    SDO_GEAR_RATIO      = 0x0003, /* F rw  reducer ratio, 40.0           */
     SDO_ENCODER_OFFSET  = 0x0004, /* U rw  AS5600 electrical zero offset */
     SDO_CAN_NODE_ID     = 0x0005, /* U rw  node id (persist to flash)    */
     SDO_KP              = 0x0006, /* F rw  position-loop gain            */
@@ -76,10 +78,13 @@ typedef enum {
     SDO_ZERO_HERE       = 0x000D, /* U wo  write 1 = set present pos = 0 */
     SDO_FW_VERSION      = 0x000E, /* U ro                                */
     SDO_STATUS          = 0x000F, /* U ro  bit0 enabled b1 estop b2 cal
-                                          b3 fault                        */
+                                          b3 fault b4 homed               */
     SDO_SAVE_FLASH      = 0x0010, /* U wo  write 0x53515645 = persist    */
     SDO_VELOCITY_RADS   = 0x0011, /* F ro  measured output velocity      */
-    SDO_IQ_MEAS_A       = 0x0012  /* F ro  measured q-axis current, A    */
+    SDO_IQ_MEAS_A       = 0x0012, /* F ro  measured q-axis current, A    */
+    SDO_HOME_STOP_RAD   = 0x0013, /* F rw  output rad at the hard stop   */
+    SDO_HOME_CURRENT_A  = 0x0014, /* F rw  iq used while homing          */
+    SDO_HOME_SPEED_RADS = 0x0015  /* F rw  homing crawl, output rad/s    */
 } sdo_addr_t;
 
 /* ---- helpers ---------------------------------------------------------- */

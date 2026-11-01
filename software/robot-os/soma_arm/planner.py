@@ -9,6 +9,7 @@ base node to stream.
 import math
 
 from . import config
+from . import gravity
 
 
 def _minjerk(s):
@@ -55,11 +56,26 @@ class TrajectoryPlanner:
             t = max(t, tv, ta)
         return max(t, 0.05)  # never a zero-length move
 
-    def plan(self, q0, q1, speed_scale=1.0, dt=config.STREAM_DT_S):
+    def check_torque(self, q, payload_kg=0.0):
+        """Raise PlanError if any joint's static gravity torque at q
+        exceeds 80% of rated under payload_kg. Returns worst ratio."""
+        ok, wi, ratio = gravity.torque_ok(q, payload_kg)
+        if not ok:
+            raise PlanError(
+                f"joint {wi+1} gravity torque exceeds "
+                f"{config.TORQUE_DERATE:.0%} of rated "
+                f"(worst {ratio:.2f}x) with {payload_kg:.2f} kg payload "
+                f"— refuse move or reduce payload")
+        return ratio
+
+    def plan(self, q0, q1, speed_scale=1.0, dt=config.STREAM_DT_S,
+             payload_kg=0.0):
         """-> (T, [(t, q[6]), ...]) synchronized quintic move.
 
         Includes the endpoint at t=T exactly. Both q0 and q1 must be
-        inside joint limits.
+        inside joint limits. If payload_kg > 0 every waypoint is also
+        checked against the 80%-of-rated gravity-torque derate; the
+        whole move is refused if any sample violates.
         """
         self.check_in_limits(q0)
         self.check_in_limits(q1)
@@ -71,16 +87,18 @@ class TrajectoryPlanner:
             s = _minjerk(t / T)
             pts.append((t, [q0[i] + (q1[i] - q0[i]) * s for i in range(6)]))
         pts[-1] = (T, list(q1))
+        for (_, q) in pts:
+            self.check_torque(q, payload_kg)
         return T, pts
 
     def plan_via(self, q0, waypoints, speed_scale=1.0,
-                 dt=config.STREAM_DT_S):
+                 dt=config.STREAM_DT_S, payload_kg=0.0):
         """Multi-segment move through a list of joint targets."""
         traj = []
         t_off = 0.0
         q = list(q0)
         for qn in waypoints:
-            T, pts = self.plan(q, qn, speed_scale, dt)
+            T, pts = self.plan(q, qn, speed_scale, dt, payload_kg)
             for (t, p) in pts:
                 traj.append((t + t_off, p))
             t_off += T

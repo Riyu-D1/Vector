@@ -1,73 +1,92 @@
-"""Robot configuration — SOMA v3 hybrid arm.
+"""Robot configuration — SOMA v3 hybrid arm (carrier v1.3 hardware).
 
+Real geometry from sim/STATUS-sim.md (home pose, all joints 0 = the
+"L" folded pose, mm):
+  J1 (0,0,80.8) axis z | J2 (-20,0,143.5) y | J3 (-20,0,270.2) y
+  J4 (96.4,0,216.2) y | J5 (134,0,240.4) z | J6 (153.2,0,216.2) x
+  TCP home (228.2, 0, 216.2). Pitch joints: + angle = tip DOWN.
 Anything marked UNVERIFIED could not be sourced yet and MUST be confirmed
-before driving real hardware (see docs/STATUS-firmware.md).
+before driving real hardware (see docs/STATUS-fw2.md).
 """
 
 import math
 
 # ---------------------------------------------------------------- geometry
-# Link lengths from ARM_HYBRID_V3.md (verified spec):
-L1 = 0.120          # shoulder -> elbow, m
-L2 = 0.100          # elbow -> wrist (J4 axis), m
-L3 = 0.040          # wrist -> tool point, m
+# Rest-pose (q=0) translations between consecutive joint frames, metres.
+# Frame chain (see kinematics.py):
+#   T(0,0,BASE_Z) Rz(q1) T(D_J2) Ry(q2) T(U_J3) Ry(q3) T(F_J4) Ry(q4)
+#   T(W_J5) Rz(q5) T(W_J6) Rx(q6) T(T_J6)
+BASE_Z = 0.0808                     # J1 output plane height
+D_J2 = (-0.020, 0.0, 0.0627)        # J1 -> J2  (J2 sits behind J1 axis)
+U_J3 = (0.0, 0.0, 0.1267)           # J2 -> J3  (upper arm, vertical at 0)
+F_J4 = (0.1164, 0.0, -0.0540)       # J3 -> J4  (forearm dogleg)
+W_J5 = (0.0376, 0.0, 0.0242)        # J4 -> J5
+W_J6 = (0.0192, 0.0, -0.0242)       # J5 -> J6
+T_TCP = (0.075, 0.0, 0.0)           # J6 -> TCP (on the J6 axis)
+# derived: J4 -> TCP straight-line at q=0 = 0.1318 m along +X
 
-# Height of the J2 (shoulder) axis above the base/J1 mounting plane.
-# UNVERIFIED — comes from Stream B CAD (base + J1 actuator stack height).
-# Placeholder consistent with a ~60 mm OD x ~70 mm actuator on a turntable.
-BASE_Z = 0.070
+L_UPPER = 0.1267                    # |U_J3|
+L_FORE = (0.1164**2 + 0.0540**2) ** 0.5   # |F_J4| = 0.12833
+F_REST_ANG = math.atan2(-0.0540, 0.1164)  # forearm rest droop = -24.90 deg
+L_WRIST = 0.1318                    # |W_J5+W_J6+T_TCP| at q=0
 
-# Zero convention: q = 0 -> arm fully extended horizontally along +X,
-# tool pointing forward (+X), roll 0. Joint pitch angles are elevation
-# from horizontal (positive = tip up).
+# Pitch sign convention (sim): +q about +Y moves the tool tip DOWN.
+# Pose.pitch = tool elevation (+up) = -(q2+q3+q4). Pose.roll = q6.
 
 # ------------------------------------------------------------------ limits
-# Mechanical joint limits (rad). UNVERIFIED until Stream B publishes
-# interference/ROM numbers; current values are conservative placeholders.
+# Mechanical joint limits (rad) — sim/STATUS-sim.md swept ranges.
 JOINT_MIN = [
-    math.radians(-170),   # J1 base yaw
-    math.radians(-150),   # J2 shoulder
-    math.radians(-150),   # J3 elbow
-    math.radians(-150),   # J4 wrist pitch
-    math.radians(-180),   # J5 wrist roll
-    0.0,                  # J6 gripper jaw (0 = open)
+    -math.pi,               # J1 base yaw  ±180
+    math.radians(-120),     # J2 shoulder  -120..+70
+    -math.pi,               # J3 elbow     -180..+30
+    math.radians(-70),      # J4 wrist pitch ±70
+    math.radians(-70),      # J5 wrist yaw   ±70
+    -math.pi,               # J6 gripper twist ±180
 ]
 JOINT_MAX = [
-    math.radians(170),
-    math.radians(150),
-    math.radians(150),
-    math.radians(150),
-    math.radians(180),
-    1.4,                  # ~80 deg jaw travel
+    math.pi,
+    math.radians(70),
+    math.radians(30),
+    math.radians(70),
+    math.radians(70),
+    math.pi,
 ]
+GRIP_MIN = 0.0                        # jaw open (rad) — UNVERIFIED
+GRIP_MAX = 1.4                        # jaw closed — calibrate on bench
 
-# Velocity limits (rad/s) — conservative defaults for a 250 g payload arm.
-# J1-J3 limited by chosen driver current caps; J4-J6 by STS3215 speed.
-JOINT_VEL_MAX = [1.5, 1.5, 1.5, 2.0, 2.5, 3.0]
-JOINT_ACC_MAX = [4.0, 4.0, 4.0, 8.0, 8.0, 12.0]
+# Velocity limits (rad/s) — conservative defaults.
+JOINT_VEL_MAX = [1.5, 1.0, 1.0, 2.0, 2.5, 2.5]
+JOINT_ACC_MAX = [4.0, 3.0, 3.0, 8.0, 8.0, 12.0]
 
-# ------------------------------------------------------------- CAN (J1-J3)
-CAN_NODE_IDS = {0: 1, 1: 2, 2: 3}          # joint index -> CAN node id
+# Rated joint torques (N·m) — stage W1 + fea_arm3; J1/J5/J6 [U].
+RATED_TORQUE_NM = [0.98, 3.5, 2.25, 0.98, 0.98, 0.98]
+TORQUE_DERATE = 0.80                  # planner refuses >80% of rated
+
+# ------------------------------------------------------------- CAN (J2-J3)
+CAN_NODE_IDS = {1: 2, 2: 3}           # joint index -> CAN node id
 CAN_BITRATE = 1_000_000
 
-# Driver phase-current caps (A). Spec: ~5 A phase max, lower for J1.
-CURRENT_LIMIT_A = [3.0, 5.0, 5.0]          # J1, J2, J3  (UNVERIFIED pending
-                                           # bench measurement — start here)
-GEAR_RATIO = 15.0                          # cycloidal 15:1
-MOTOR_POLE_PAIRS = 7                       # 5010 = 12N14P -> 7 pp (UNVERIFIED)
+# Driver phase-current caps (A) — conservative until bench test [U].
+CURRENT_LIMIT_A = [5.0, 5.0]          # J2, J3
+GEAR_RATIO = 40.0                     # cycloidal 40:1
+GEAR_EFF = 0.7                        # UNVERIFIED
+MOTOR_POLE_PAIRS = 7                  # 4008 assumed 12N14P (UNVERIFIED)
+KT_MOTOR = 60.0 / (2.0 * math.pi * 330.0)   # ~0.0289 N·m/A, Tarot 4008
+                                          # 330KV estimate (UNVERIFIED)
 
-# ------------------------------------------------------ Feetech (J4-J6)
-SERVO_IDS = {3: 4, 4: 5, 5: 6}             # joint index -> servo id
-SERVO_BAUD = 1_000_000                     # Feetech factory default; the spec
-                                           # flags 1 Mbps UNVERIFIED on this
-                                           # bus wiring — confirm on bench
+# ------------------------------------------------------ Feetech (bus A)
+# channel index -> servo id: J1 STS3250, J4/J5/J6 STS3215, GRIP STS3215
+SERVO_IDS = {0: 1, 3: 4, 4: 5, 5: 6, 6: 7}
+SERVO_BAUD = 1_000_000                # factory default; UNVERIFIED on
+                                      # this wiring — confirm on bench
 SERVO_COUNTS_PER_RAD = 4096.0 / (2.0 * math.pi)
 SERVO_CENTER = 2048
 
 # --------------------------------------------------------------- host link
-LINK_BAUD = 115200                         # USB-UART console speed
-LINK_TIMEOUT_S = 0.5                       # watchdog: no frame -> freeze
+LINK_BAUD = 115200
+LINK_TIMEOUT_S = 0.5
 HEARTBEAT_PERIOD_S = 0.1
-STREAM_DT_S = 0.02                         # trajectory point period (50 Hz)
+STREAM_DT_S = 0.02
 
 JOINT_NAMES = ["J1", "J2", "J3", "J4", "J5", "J6"]
+N_CHAN = 7                            # J1..J6 + GRIP on the wire

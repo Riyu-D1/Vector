@@ -54,11 +54,12 @@ def _sim_arm():
 def test_sim_ping():
     arm, _ = _sim_arm()
     r = arm.ping()
-    assert r["fw"] == 0x000100
+    assert r["fw"] == 0x000200
 
 
 def test_sim_state():
     arm, node = _sim_arm()
+    arm.arm_motors()
     arm.enable()
     arm.stream_joints([0, 0.4, 0.6, 0, 0, 0.2])
     for _ in range(80):
@@ -70,12 +71,14 @@ def test_sim_state():
 
 def test_sim_estop_latch():
     arm, node = _sim_arm()
+    arm.arm_motors()
     arm.enable()
     arm.estop()
     arm._pump()
     s = arm.sense()
     assert s["flags"] & link.FLAG_ESTOP
     assert not (s["flags"] & link.FLAG_ARMED)
+    assert not (s["flags"] & link.FLAG_MOTOR_EN)
     # commands are ignored while estopped
     arm.stream_joints([1.0] * 6)
     for _ in range(50):
@@ -83,16 +86,22 @@ def test_sim_estop_latch():
     assert node.q[0] != pytest.approx(1.0, abs=0.1)
     arm.clear_estop()
     arm._pump()
+    # MOTOR_EN stays off until an explicit re-arm command
+    s = arm.sense()
+    assert not (s["flags"] & link.FLAG_MOTOR_EN)
+    arm.arm_motors()
     arm.enable()
     s = arm.sense()
+    assert s["flags"] & link.FLAG_MOTOR_EN
     assert not (s["flags"] & link.FLAG_ESTOP)
 
 
 def test_sim_move_tcp():
     from soma_arm.kinematics import Pose
     arm, node = _sim_arm()
+    arm.arm_motors()
     arm.enable()
-    target = Pose(0.18, 0.0, 0.12, 0.0, 0.0)
+    target = Pose(0.1729, 0.0, 0.1948, 0.0, 0.0)
     T = arm.move_tcp(target.x, target.y, target.z, realtime=False)
     assert T > 0
     for _ in range(80):

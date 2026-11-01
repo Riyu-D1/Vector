@@ -13,8 +13,9 @@ import struct
 import time
 
 from . import config, link
+from .gravity import gravity_torques, max_payload
 from .kinematics import ArmKinematics, Pose
-from .planner import TrajectoryPlanner
+from .planner import TrajectoryPlanner, PlanError
 
 
 class ArmError(RuntimeError):
@@ -23,7 +24,7 @@ class ArmError(RuntimeError):
 
 class Arm:
     def __init__(self, transport, kin=None, planner=None,
-                 state_timeout=1.0):
+                 state_timeout=1.0, payload_kg=0.0):
         self.t = transport
         self.kin = kin or ArmKinematics()
         self.planner = planner or TrajectoryPlanner()
@@ -34,6 +35,8 @@ class Arm:
         self.events = []
         self._state_timeout = state_timeout
         self.q = [0.0] * 6           # last known/commanded joint state
+        self.g = 0.0                 # jaw channel (rad)
+        self.payload_kg = payload_kg  # carried TCP load for derating
 
     # --------------------------------------------------------- low level
     def _send(self, ftype, payload=b""):
@@ -48,7 +51,8 @@ class Arm:
     def _dispatch(self, ftype, payload):
         if ftype == link.T.STATE:
             self.state = link.parse_state(payload)
-            self.q = list(self.state["pos"])
+            self.q = list(self.state["pos"][:6])
+            self.g = self.state["pos"][6]
         elif ftype == link.T.EVENT:
             if payload:
                 self.events.append((payload[0], payload[1] if len(payload) > 1 else 0))
@@ -97,6 +101,20 @@ class Arm:
     def disable(self):
         self._send(link.T.SET_MODE, link.p_set_mode(0, 0))
 
+    def arm_motors(self):
+        """Explicit MOTOR_EN arm command — required after boot and after
+        every safety drop; enables only while e-stop is clear and both
+        ESCs report fresh heartbeats."""
+        self._send(link.T.ARM_MOTOR)
+
+    def home(self, joint=0):
+        """NMT_HOME to one CAN joint (node 2/3) or both (joint=0)."""
+        self._send(link.T.SET_MODE, link.p_set_mode(joint, 3))
+
+    def calibrate(self, joint=0):
+        """NMT_CALIBRATE — rotor free, one node or both."""
+        self._send(link.T.SET_MODE, link.p_set_mode(joint, 2))
+
     def estop(self):
         self._send(link.T.ESTOP)
 
@@ -104,9 +122,9 @@ class Arm:
         self._send(link.T.CLEAR_ESTOP)
 
     def set_current_limit(self, joint, amps):
-        """joint 1..3 (CAN brushless) — amps phase-current cap."""
-        if not 1 <= joint <= 3:
-            raise ArmError("current limit applies to CAN joints 1..3")
+        """joint 2|3 (CAN node ids J2/J3) — amps phase-current cap."""
+        if joint not in (2, 3):
+            raise ArmError("current limit applies to CAN joints 2|3")
         self._send(link.T.SET_CURRENT_LIM,
                    link.p_set_current_lim(joint, amps))
 
@@ -127,23 +145,31 @@ class Arm:
         return None
 
     # ------------------------------------------------------------ motion
+    def _pack(self, q):
+        """6 joints + jaw -> 7-channel wire vector."""
+        return list(q) + [self.g]
+
     def stream_joints(self, q, blocking=False, dt=config.STREAM_DT_S):
         """Send one joint setpoint. q = 6 rad."""
         q = self.kin.clamp_limits(q)
         self.planner.check_in_limits(q)
-        self._send(link.T.SET_JOINT_POS, link.p_set_joint_pos(q))
+        self._send(link.T.SET_JOINT_POS,
+                   link.p_set_joint_pos(self._pack(q)))
         self.q = list(q)
         if blocking:
             time.sleep(dt)
 
     def move_joints(self, q_target, speed_scale=0.5, q_start=None,
                     dt=config.STREAM_DT_S, realtime=True):
-        """Planned joint move; streams setpoints. Returns duration T."""
+        """Planned joint move; streams setpoints. Refuses paths where a
+        joint would exceed 80% of rated torque under payload_kg."""
         q0 = list(q_start if q_start is not None else self.q)
-        T, pts = self.planner.plan(q0, q_target, speed_scale, dt)
+        T, pts = self.planner.plan(q0, q_target, speed_scale, dt,
+                                   payload_kg=self.payload_kg)
         t0 = time.monotonic()
         for (t, q) in pts:
-            self._send(link.T.SET_JOINT_POS, link.p_set_joint_pos(q))
+            self._send(link.T.SET_JOINT_POS,
+                       link.p_set_joint_pos(self._pack(q)))
             if realtime:
                 while time.monotonic() - t0 < t:
                     time.sleep(0.001)
@@ -154,18 +180,32 @@ class Arm:
                  elbow=+1, gripper=None, realtime=True):
         """Cartesian move: IK then a planned joint move."""
         pose = Pose(x=x, y=y, z=z, pitch=pitch, roll=roll)
-        q6 = self.q[5] if gripper is None else gripper
-        sol = self.kin.ik(pose, elbow=elbow, q_seed=self.q, q6=q6)
+        sol = self.kin.ik(pose, elbow=elbow, q_seed=self.q)
+        if gripper is not None:
+            self.g = gripper
         return self.move_joints(sol.q, speed_scale=speed_scale,
                                 realtime=realtime)
 
     def set_gripper(self, v):
-        """v in [0,1]: 0 open, 1 closed -> J6 setpoint."""
+        """v in [0,1]: 0 open, 1 closed -> GRIP channel setpoint."""
         v = max(0.0, min(1.0, v))
-        q = list(self.q)
-        q[5] = config.JOINT_MIN[5] + v * (config.JOINT_MAX[5]
-                                        - config.JOINT_MIN[5])
-        self.stream_joints(q)
+        self.g = config.GRIP_MIN + v * (config.GRIP_MAX - config.GRIP_MIN)
+        self.stream_joints(self.q)
+
+    # --------------------------------------------------------- payloads
+    def max_payload(self, pose=None, q=None):
+        """Allowed TCP payload (kg) at a Pose or joint vector — the
+        80%-of-rated derate; J4-limited at full reach."""
+        if q is None:
+            sol = self.kin.ik(pose, q_seed=self.q)
+            q = sol.q
+        return max_payload(q)
+
+    def joint_torques(self, payload_kg=None):
+        """Static gravity torques (N·m) at the current q."""
+        return gravity_torques(self.q,
+                               self.payload_kg if payload_kg is None
+                               else payload_kg)
 
     def tcp_pose(self):
         return self.kin.fk(self.q)

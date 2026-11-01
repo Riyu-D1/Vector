@@ -8,6 +8,7 @@
   python -m soma_arm.cli --sim ik 0.20 0.0 0.12 --pitch 0
   python -m soma_arm.cli --sim sense | estop | clear-estop | enable | disable
   python -m soma_arm.cli --sim gripper 0.5
+  python -m soma_arm.cli --sim arm-motors | home | calibrate | max-payload
 """
 
 import argparse
@@ -47,6 +48,10 @@ def main(argv=None):
     sub.add_parser("disable")
     sub.add_parser("estop")
     sub.add_parser("clear-estop")
+    sub.add_parser("arm-motors")
+    sub.add_parser("home")
+    sub.add_parser("calibrate")
+    sub.add_parser("max-payload")
 
     p = sub.add_parser("move-joints", help="planned move, 6 rad args")
     p.add_argument("q", type=float, nargs=6)
@@ -74,12 +79,12 @@ def main(argv=None):
     p.add_argument("v", type=float)
 
     p = sub.add_parser("limit", help="set CAN phase-current cap")
-    p.add_argument("joint", type=int, choices=[1, 2, 3])
+    p.add_argument("joint", type=int, choices=[2, 3])
     p.add_argument("amps", type=float)
 
-    p = sub.add_parser("mode", help="NMT mode: joint(0=all) cmd(0=dis,"
-                                    "1=en,2=cal,127=estop)")
-    p.add_argument("joint", type=int, choices=[0, 1, 2, 3])
+    p = sub.add_parser("mode", help="NMT mode: joint(0=all,2,3) "
+                                    "cmd(0=dis,1=en,2=cal,3=home,127=estop)")
+    p.add_argument("joint", type=int, choices=[0, 2, 3])
     p.add_argument("cmd", type=int)
 
     p = sub.add_parser("param", help="read a CAN SDO or Feetech register")
@@ -118,12 +123,24 @@ def main(argv=None):
             arm.estop(); print("ESTOP sent")
         elif args.cmd == "clear-estop":
             arm.clear_estop(); print("estop cleared")
+        elif args.cmd == "arm-motors":
+            arm.arm_motors(); print("ARM_MOTOR sent")
+        elif args.cmd == "home":
+            arm.home(); print("HOME sent to J2/J3")
+        elif args.cmd == "calibrate":
+            arm.calibrate(); print("CALIBRATE sent to J2/J3")
+        elif args.cmd == "max-payload":
+            m, wi, bounds = arm.max_payload(q=arm.q)
+            print(f"max payload at current pose: {m:.3f} kg "
+                  f"(limited by {config.JOINT_NAMES[wi]})")
+            for i, name in enumerate(config.JOINT_NAMES):
+                print(f"  {name}: bound {bounds[i]:.3f} kg")
         elif args.cmd == "sense":
             s = arm.sense()
             print("pos:", _fmtq(s["pos"]))
             print("flags: 0x%02X can_ok: 0x%02X" % (s["flags"], s["can_ok_mask"]))
         elif args.cmd == "move-joints":
-            arm.enable()
+            arm.arm_motors(); arm.enable()
             T = arm.move_joints(args.q, speed_scale=args.speed,
                                 realtime=not args.sim)
             if sim:
@@ -131,7 +148,7 @@ def main(argv=None):
                     sim.step(0.02)
             print(f"move done, T={T:.2f}s  q={_fmtq(arm.q)}")
         elif args.cmd == "move-tcp":
-            arm.enable()
+            arm.arm_motors(); arm.enable()
             T = arm.move_tcp(args.x, args.y, args.z, pitch=args.pitch,
                              roll=args.roll, speed_scale=args.speed,
                              elbow=args.elbow, realtime=not args.sim)
@@ -154,6 +171,7 @@ def main(argv=None):
                   f"addr=0x{args.addr:04X}: {v.hex() if v else 'no resp'}")
         elif args.cmd == "demo":
             print("[demo] ping:", arm.ping())
+            arm.arm_motors()
             arm.enable()
             for target in [(0.20, 0.0, 0.15), (0.15, 0.08, 0.10),
                            (0.15, -0.08, 0.10), (0.20, 0.0, 0.15)]:

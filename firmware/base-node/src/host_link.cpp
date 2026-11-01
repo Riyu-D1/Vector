@@ -9,6 +9,7 @@
 static link_parser_t parser;
 static uint8_t seq_tx = 0;
 static uint32_t last_rx_ms = 0;
+static bool     ever_seen = false;
 
 static void send(uint8_t type, const uint8_t *payload, uint8_t len) {
     uint8_t frame[LINK_MAX_FRAME];
@@ -22,27 +23,37 @@ void host_link_init(void) {
 }
 
 uint32_t host_link_last_rx_ms(void) { return last_rx_ms; }
+bool     host_link_seen(void)       { return ever_seen; }
 
 void host_link_send_state(void) {
-    uint8_t p[74];
+    uint8_t p[86];
+    static const uint8_t can_ids[CAN_N_JOINTS] = CAN_JOINT_NODES;
+    static const uint8_t ft_ids[FT_N_SERVOS]  = FT_SERVO_IDS;
+    memset(p, 0, sizeof(p));
     /* measured positions: CAN joints from TPDO2, servos counts->rad */
-    for (int i = 0; i < 3; i++) {
-        lp_put_f32(p + 4 * i, g_arm.can[i].pos);
-        lp_put_f32(p + 12 + 4 * i, ft_counts_to_rad(g_arm.ft[i].pos));
-        lp_put_f32(p + 24 + 4 * i, g_arm.can[i].vel);
-        lp_put_f32(p + 24 + 12 + 4 * i,
-                   (float)g_arm.ft[i].speed * (6.283185307f / 4096.0f));
-        lp_put_f32(p + 48 + 4 * i, g_arm.can[i].iq);
-        lp_put_f32(p + 48 + 12 + 4 * i, (float)g_arm.ft[i].load);
+    for (int i = 0; i < CAN_N_JOINTS; i++) {
+        uint8_t ch = CAN_JOINT_CHAN[i];
+        lp_put_f32(p + 4 * ch, g_arm.can[i].pos);
+        lp_put_f32(p + 28 + 4 * ch, g_arm.can[i].vel);
+        lp_put_f32(p + 56 + 4 * ch, g_arm.can[i].iq);
     }
+    for (int i = 0; i < FT_N_SERVOS; i++) {
+        uint8_t ch = FT_SERVO_CHAN[i];
+        lp_put_f32(p + 4 * ch, ft_counts_to_rad(g_arm.ft[i].pos));
+        lp_put_f32(p + 28 + 4 * ch,
+                   (float)g_arm.ft[i].speed * (6.283185307f / 4096.0f));
+        lp_put_f32(p + 56 + 4 * ch, (float)g_arm.ft[i].load);
+    }
+    (void)can_ids; (void)ft_ids;
     uint8_t flags = 0;
     if (g_arm.estop) flags |= LKF_ESTOP;
     if (g_arm.watchdog_tripped) flags |= LKF_WATCHDOG;
     if (g_arm.armed) flags |= LKF_ARMED;
     if (g_arm.can_ok_mask) flags |= LKF_CAN_ONLINE;
-    p[72] = flags;
-    p[73] = g_arm.can_ok_mask;
-    send(LK_STATE, p, 74);
+    if (g_arm.motor.motor_en) flags |= LKF_MOTOR_EN;
+    p[84] = flags;
+    p[85] = g_arm.can_ok_mask;
+    send(LK_STATE, p, 86);
 }
 
 void host_link_send_event(uint8_t code, uint8_t arg) {
@@ -69,9 +80,9 @@ static void dispatch(uint8_t seq, uint8_t type,
     (void)seq;
     switch (type) {
     case LK_SET_JOINT_POS:
-        if (len == 24) {
-            float q[6];
-            for (int i = 0; i < 6; i++) q[i] = lp_get_f32(p + 4 * i);
+        if (len == 4 * ARM_N_CHAN) {
+            float q[ARM_N_CHAN];
+            for (int i = 0; i < ARM_N_CHAN; i++) q[i] = lp_get_f32(p + 4 * i);
             arm_clamp_q(q);
             memcpy(g_arm.q_cmd, q, sizeof(q));
             /* position stream owns the joints — clear any stale jog
@@ -80,21 +91,21 @@ static void dispatch(uint8_t seq, uint8_t type,
         } else nack(type, 1);
         break;
     case LK_SET_JOINT_VEL:
-        if (len == 24)
-            for (int i = 0; i < 6; i++)
+        if (len == 4 * ARM_N_CHAN)
+            for (int i = 0; i < ARM_N_CHAN; i++)
                 g_arm.dq_cmd[i] = lp_get_f32(p + 4 * i);
         else nack(type, 1);
         break;
     case LK_SET_TORQUE:
-        if (len == 12)
-            for (int i = 0; i < 3; i++)
+        if (len == 4 * CAN_N_JOINTS)
+            for (int i = 0; i < CAN_N_JOINTS; i++)
                 g_arm.tau_ff[i] = lp_get_f32(p + 4 * i);
         else nack(type, 1);
         break;
     case LK_SET_CURRENT_LIM:
-        if (len == 5 && p[0] >= 1 && p[0] <= 3) {
-            static const uint8_t ids[CAN_N_JOINTS] = CAN_JOINT_NODES;
-            can_sdo_write_f32(ids[p[0] - 1], SDO_CURRENT_LIMIT_A,
+        /* joint number == CAN node id (J2=2, J3=3) */
+        if (len == 5 && p[0] >= 2 && p[0] <= 3) {
+            can_sdo_write_f32(p[0], SDO_CURRENT_LIMIT_A,
                               lp_get_f32(p + 1));
         } else nack(type, 1);
         break;
@@ -102,14 +113,20 @@ static void dispatch(uint8_t seq, uint8_t type,
         if (len == 2) {
             if (p[1] == NMT_ENABLE) arm_set_armed(true);
             else if (p[1] == NMT_DISABLE) arm_set_armed(false);
-            else if (p[1] == NMT_CALIBRATE && p[0] >= 1 && p[0] <= 3) {
-                static const uint8_t ids[CAN_N_JOINTS] = CAN_JOINT_NODES;
-                can_send_nmt(NMT_CALIBRATE, ids[p[0] - 1]);
+            else if ((p[1] == NMT_CALIBRATE || p[1] == NMT_HOME) &&
+                     (p[0] == 0 || (p[0] >= 2 && p[0] <= 3))) {
+                /* joint 0 = broadcast to all CAN nodes */
+                can_send_nmt(p[1], p[0]);
             }
         } else nack(type, 1);
         break;
+    case LK_ARM_MOTOR:
+        /* explicit host re-arm: the safety_tick runs motor_en_step with
+         * arm_cmd=1; rises only while every safety condition holds */
+        g_arm.motor_arm_req = 1;
+        break;
     case LK_ESTOP:
-        arm_estop("host");
+        arm_estop(MEDR_ESTOP);
         break;
     case LK_CLEAR_ESTOP:
         arm_clear_estop();
@@ -126,7 +143,8 @@ static void dispatch(uint8_t seq, uint8_t type,
         pr[1] = (uint8_t)(FW_VERSION >> 8);
         pr[2] = (uint8_t)(FW_VERSION >> 16);
         pr[3] = (uint8_t)(FW_VERSION >> 24);
-        pr[4] = (g_arm.armed ? 0x04 : 0) | (g_arm.estop ? 0x01 : 0);
+        pr[4] = (g_arm.armed ? 0x04 : 0) | (g_arm.estop ? 0x01 : 0)
+              | (g_arm.motor.motor_en ? 0x10 : 0);
         send(LK_PONG, pr, 5);
         break;
     }
@@ -166,6 +184,7 @@ void host_link_poll(void) {
         static uint8_t payload[LINK_MAX_PAYLOAD];
         if (link_parser_feed(&parser, b, &type, &seq, payload, &plen)) {
             last_rx_ms = millis();
+            ever_seen = true;
             dispatch(seq, type, payload, plen);
         }
     }

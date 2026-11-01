@@ -1,5 +1,11 @@
 # Carrier PCB verification — pre-order audit
 
+> **Superseded**: this audit covered the v1.1-era carrier. Carrier
+> **v1.3** removed bus B (IO15/12), I2C2 (IO41/42) and the wrist UART
+> (IO39/14), and added the MOTOR_EN relay + reverse-polarity FET —
+> its own audit is `pcb13/STATUS-pcb13.md` (worktree
+> `~/Vector-wt/pcb13`). Kept for history.
+
 Board under audit: `pcb/soma-carrier.kicad_pcb` (135 × 115 mm, 2 layers,
 all through-hole, no ICs). Audit run on the emitted file, not the
 generator's assumptions, per `VERIFY_GUIDE.md`.

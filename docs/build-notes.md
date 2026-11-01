@@ -1,5 +1,11 @@
 # Build notes
 
+> **Superseded pin map**: this file documents the pre-v1.3 carrier
+> (bus B IO15/12, I2C2 IO41/42, wrist UART IO39/14). Those nets were
+> REMOVED in carrier v1.3 — the current map is in
+> `docs/STATUS-fw2.md` and `firmware/base-node/README.md`. Kept for
+> history.
+
 Order of operations that minimizes rework. Print everything first (days),
 order parts while prints run, then assemble bottom-up.
 

@@ -1,5 +1,7 @@
 /* feetech_bus.h — Feetech STS half-duplex TTL bus driver.
- * Bus A on UART1 (IO17 TX / IO11 RX via 1k coupling R1) for J4/J5/J6.
+ * Bus A on UART1 (IO17 TX / IO11 RX via 1k coupling R1): J1 STS3250
+ * (id 1), J4/J5/J6 STS3215 (id 4/5/6), gripper STS3215 (id 7).
+ * Bus B was removed from the carrier in v1.3 — do not re-add.
  * TX and RX share the single bus wire: our own transmit echoes into RX
  * and is discarded after every send. */
 #pragma once

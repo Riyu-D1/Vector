@@ -10,9 +10,10 @@
  * base-node watchdog torque-disables the arm if no frame arrives within
  * LINK_TIMEOUT_MS (default 500 ms).
  *
- * All floats are fp32 little-endian. Joint order is always J1..J6.
- * Positions in radians at the output shaft (J6 = gripper, 0 = open,
- * ~1.57 = closed — calibrate on bench).
+ * All floats are fp32 little-endian. Channel order is always
+ * J1..J6,GRIP (7 channels; GRIP = gripper jaw servo, rad at the output,
+ * 0 = open — calibrate on bench). Positions in radians at the output
+ * shaft.
  */
 #ifndef SOMA_LINK_PROTO_H
 #define SOMA_LINK_PROTO_H
@@ -32,10 +33,10 @@ extern "C" {
 
 typedef enum {
     /* host -> base node */
-    LK_SET_JOINT_POS   = 0x01,  /* 6*fp32 rad: stream at 20-50 Hz      */
-    LK_SET_JOINT_VEL   = 0x02,  /* 6*fp32 rad/s (jog mode)             */
-    LK_SET_TORQUE      = 0x03,  /* 3*fp32 Nm feedforward J1..J3        */
-    LK_SET_CURRENT_LIM = 0x05,  /* u8 joint(1..3) + fp32 amps          */
+    LK_SET_JOINT_POS   = 0x01,  /* 7*fp32 rad: stream at 20-50 Hz      */
+    LK_SET_JOINT_VEL   = 0x02,  /* 7*fp32 rad/s (jog mode)             */
+    LK_SET_TORQUE      = 0x03,  /* 2*fp32 Nm feedforward J2..J3        */
+    LK_SET_CURRENT_LIM = 0x05,  /* u8 joint(2..3) + fp32 amps          */
     LK_SET_MODE        = 0x06,  /* u8 joint(0=all CAN) + u8 nmt_cmd    */
     LK_ESTOP           = 0x07,  /* immediate torque-off, latched       */
     LK_CLEAR_ESTOP     = 0x08,  /* re-enable after estop               */
@@ -44,9 +45,11 @@ typedef enum {
     LK_PING            = 0x13,  /* -> PONG                             */
     LK_READ_PARAM      = 0x16,  /* u8 bus(0=CAN,1=FT) + u8 node + u16 addr */
     LK_SET_SERVO_REG   = 0x18,  /* u8 id + u8 addr + u8 len + data     */
+    LK_ARM_MOTOR       = 0x19,  /* explicit re-arm: MOTOR_EN high if all
+                                   * safety conditions hold              */
 
     /* base node -> host */
-    LK_STATE           = 0x11,  /* 6*fp32 pos + 6*fp32 vel + 6*fp32
+    LK_STATE           = 0x11,  /* 7*fp32 pos + 7*fp32 vel + 7*fp32
                                    iq/load + u8 flags + u8 can_ok_mask  */
     LK_PONG            = 0x14,  /* u32 fw_version + u8 status flags    */
     LK_PARAM           = 0x17,  /* echo of READ_PARAM + 4B value       */
@@ -59,6 +62,7 @@ typedef enum {
 #define LKF_WATCHDOG    0x02
 #define LKF_ARMED       0x04
 #define LKF_CAN_ONLINE  0x08
+#define LKF_MOTOR_EN    0x10    /* relay K1 closed: +12V_MOT live        */
 
 /* LK_EVENT codes */
 #define LKE_ESTOP_ASSERTED  0x01
@@ -66,6 +70,8 @@ typedef enum {
 #define LKE_WD_TRIPPED      0x03
 #define LKE_CAN_FAULT       0x04
 #define LKE_BOOT            0x05
+#define LKE_MOTOR_EN_ON     0x06  /* relay closed                          */
+#define LKE_MOTOR_EN_OFF    0x07  /* relay opened; arg = medr_t reason     */
 
 uint16_t link_crc16(const uint8_t *data, uint16_t n);
 

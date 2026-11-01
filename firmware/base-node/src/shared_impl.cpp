@@ -5,4 +5,5 @@ extern "C" {
 #include "../../shared/can_proto.c"
 #include "../../shared/feetech_proto.c"
 #include "../../shared/link_proto.c"
+#include "../../shared/motor_en.c"
 }

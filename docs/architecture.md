@@ -1,5 +1,11 @@
 # SOMA — System Architecture
 
+> **Superseded**: this describes the early all-servo design (six
+> servos, SEA cartridges, wrist node with eyes). The current arm is
+> the hybrid in `docs/STATUS-fw2.md`: STS3250 J1 + Tarot 4008/40:1
+> CAN cycloidals on J2/J3 + STS3215 J4–J6/gripper, carrier v1.3 with
+> the MOTOR_EN safety relay. Kept for history.
+
 ## The three-level nervous system
 
 ```

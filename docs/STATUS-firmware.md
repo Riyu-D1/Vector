@@ -1,5 +1,11 @@
 # STATUS — Stream C: firmware & software (branch arm-firmware)
 
+> **Superseded by `docs/STATUS-fw2.md`** (stage W1, branch `arm-fw2`).
+> This file describes the v1 firmware for the OLD arm (5010s on J1–J3
+> CAN, bus B, wrist UART) — the hardware moved to carrier v1.3, J1
+> became a servo, and J2/J3 use Tarot 4008 + 40:1. Kept for history;
+> current truth is STATUS-fw2 + the v1.3 docs.
+
 Deadline 31 Oct 2026. Updated every push.
 
 ## Done

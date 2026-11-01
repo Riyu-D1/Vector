@@ -19,3 +19,6 @@ void host_link_send_param(uint8_t bus, uint8_t node, uint16_t addr,
 
 /* timestamp of the last valid frame received (for the watchdog) */
 uint32_t host_link_last_rx_ms(void);
+/* true once >=1 valid host frame has been received (the "handshake"
+ * the MOTOR_EN machine requires) */
+bool host_link_seen(void);

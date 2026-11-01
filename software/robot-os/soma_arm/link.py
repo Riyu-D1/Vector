@@ -28,6 +28,7 @@ class T(IntEnum):
     PING = 0x13
     READ_PARAM = 0x16
     SET_SERVO_REG = 0x18
+    ARM_MOTOR = 0x19
     # base -> host
     STATE = 0x11
     PONG = 0x14
@@ -42,12 +43,15 @@ FLAG_ESTOP = 0x01
 FLAG_WATCHDOG = 0x02
 FLAG_ARMED = 0x04
 FLAG_CAN_ONLINE = 0x08
+FLAG_MOTOR_EN = 0x10
 
 EV_ESTOP_ASSERTED = 0x01
 EV_ESTOP_CLEARED = 0x02
 EV_WD_TRIPPED = 0x03
 EV_CAN_FAULT = 0x04
 EV_BOOT = 0x05
+EV_MOTOR_EN_ON = 0x06
+EV_MOTOR_EN_OFF = 0x07
 
 
 def crc16(data):
@@ -123,20 +127,25 @@ class FrameParser:
 
 # ------------------------------------------------------------ payloads
 
+N_CHAN = 7            # J1..J6 + GRIP on the wire
+
+
 def p_set_joint_pos(q):
-    if len(q) != 6:
-        raise ValueError("need 6 joints")
-    return struct.pack("<6f", *q)
+    if len(q) != N_CHAN:
+        raise ValueError("need 7 channels (J1..J6 + GRIP)")
+    return struct.pack("<7f", *q)
 
 
 def p_set_joint_vel(dq):
-    if len(dq) != 6:
-        raise ValueError("need 6 joints")
-    return struct.pack("<6f", *dq)
+    if len(dq) != N_CHAN:
+        raise ValueError("need 7 channels (J1..J6 + GRIP)")
+    return struct.pack("<7f", *dq)
 
 
-def p_set_torque(tau3):
-    return struct.pack("<3f", *tau3)
+def p_set_torque(tau2):
+    if len(tau2) != 2:
+        raise ValueError("need 2 output torques (J2, J3)")
+    return struct.pack("<2f", *tau2)
 
 
 def p_set_current_lim(joint, amps):
@@ -156,16 +165,19 @@ def p_set_servo_reg(servo_id, addr, data):
 
 
 def parse_state(payload):
-    """-> dict(pos[6], vel[6], tau[6], flags, can_ok_mask)"""
-    if len(payload) < 74:
+    """-> dict(pos[7], vel[7], tau[7], flags, can_ok_mask)
+
+    Channel order: J1..J6, GRIP. flags bit 0x10 = MOTOR_EN relay closed.
+    """
+    if len(payload) < 86:
         raise ValueError(f"STATE payload too short: {len(payload)}")
-    vals = struct.unpack("<18f", payload[:72])
+    vals = struct.unpack("<21f", payload[:84])
     return {
-        "pos": list(vals[0:6]),
-        "vel": list(vals[6:12]),
-        "tau": list(vals[12:18]),
-        "flags": payload[72],
-        "can_ok_mask": payload[73],
+        "pos": list(vals[0:7]),
+        "vel": list(vals[7:14]),
+        "tau": list(vals[14:21]),
+        "flags": payload[84],
+        "can_ok_mask": payload[85],
     }
 
 

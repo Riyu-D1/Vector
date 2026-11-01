@@ -1,5 +1,10 @@
 # SOMA — Joint Torque & Mass Budget
 
+> **Superseded**: early all-servo sizing analysis. The current
+> gravity-torque model and the 80%-of-rated payload derating live in
+> `software/robot-os/soma_arm/gravity.py` + `config.py`, cross-checked
+> against `fea_arm3` numbers (`docs/STATUS-fw2.md`). Kept for history.
+
 Worst-case static analysis used to size actuators and define the rated payload.
 All numbers are conservative estimates to be re-verified against the final CAD
 mass properties.

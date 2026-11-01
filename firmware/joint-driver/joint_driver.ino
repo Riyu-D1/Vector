@@ -1,57 +1,77 @@
 /*
  * joint_driver.ino — SOMA v3 joint drive firmware for the ST
- * B-G431B-ESC1 (STM32G431CB), one per cycloidal actuator (J1, J2, J3).
+ * B-G431B-ESC1 (STM32G431CB), one per cycloidal actuator (J2, J3).
  *
  * SimpleFOC-based re-implementation of the Berkeley Humanoid Lite
  * Recoil-Motor-Controller-BESC protocol (MIT licence — protocol shape
  * and CANopen-style ID layout kept compatible in spirit):
  *   11-bit CAN ID = (function_code << 7) | node_id
- *   RPDO2 0x300+id : fp32 pos + fp32 vel command (output shaft, rad)
+ *   RPDO2 0x300+id : fp32 pos + fp32 vel command (OUTPUT shaft, rad)
  *   TPDO2 0x280+id : fp32 pos + fp32 vel feedback
- *   RPDO3 0x400+id : fp32 feedforward output torque (Nm) / iq cmd in
+ *   RPDO3 0x400+id : fp32 feedforward OUTPUT torque (Nm) / iq cmd in
  *                    torque mode
  *   TPDO3 0x380+id : fp32 measured q-axis current (A)
  *   RSDO  0x600+id : param read/write (see sdo_addr_t in can_proto.h)
  *   TSDO  0x580+id : param read response (4 bytes)
  *   NMT   0x000    : byte0 cmd, byte1 node (0 = broadcast)
- *                    0=DISABLE 1=ENABLE 2=CALIBRATE 0x7F=ESTOP(latched)
+ *                    0=DISABLE 1=ENABLE 2=CALIBRATE 3=HOME 0x7F=ESTOP
  *   EMCY  0x080+id : fault report
+ *
+ * Motor: Tarot TL2955 4008 330KV on a 40:1 printed cycloidal. The AS5600
+ * is on the MOTOR shaft (single-turn) — one output turn = 40 motor
+ * turns, so the output position is NOT recoverable at boot: NMT_HOME
+ * must run every power-up before NMT_ENABLE is accepted.
  *
  * Hardware (ST UM2516 + NuttX board doc — verified):
  *   6PWM : A_PHASE_UH/UL/VH/VL/WH/WL (PA8,PC13,PA9,PA12,PA10,PB15)
  *   shunt: 0.003 ohm, PGA gain 16 -> sense gain -9.14 (inverting)
  *   CAN  : PA11 RX, PB9 TX, onboard transceiver, PC14 = CAN_TERM(H=on)
  *   AS5600 on I2C1 PB6(SCL)/PB7(SDA) via the J8 sensor connector
- *          — UNVERIFIED: confirm J8 pin order against UM2516 fig/;
+ *          — UNVERIFIED: confirm J8 pin order against UM2516;
  *            alternative pair PB7(SDA)/PB8(SCL) also lands on J8.
  */
 #include <SimpleFOC.h>
 #include <Wire.h>
 #include <EEPROM.h>
 extern "C" {
-#include "../../shared/can_proto.h"
+#include "can_proto.h"    /* -I../shared via platformio.ini */
+#include "can_proto.c"
 }
 #include "bus_can.h"
 
 /* ------------------------------------------------------------ config */
-#define DEVICE_CAN_ID   1           /* set per joint: 1=J1, 2=J2, 3=J3   */
-#define CAN_TERM_LAST   true        /* 120R: true only on the last node */
-#define POLE_PAIRS      7           /* 5010 = 12N14P -> 7 pp UNVERIFIED  */
-#define GEAR_RATIO      15.0f       /* printed cycloidal 15:1           */
-#define CURRENT_LIMIT_A 5.0f        /* phase q-axis cap; J1 ships 3.0   */
+#define DEVICE_CAN_ID   2           /* set per joint: 2=J2, 3=J3        */
+/* last node on the bus terminates; J3 is last in the daisy chain */
+#define CAN_TERM_LAST   (DEVICE_CAN_ID == CAN_NODE_J3)
+#define POLE_PAIRS      7           /* 4008 assumed 12N14P -> 7 pp
+                                     * UNVERIFIED — count rotor magnets */
+#define GEAR_RATIO      40.0f       /* printed cycloidal 40:1           */
+#define GEAR_EFF        0.7f        /* cycloidal efficiency UNVERIFIED  */
+#define CURRENT_LIMIT_A 5.0f        /* phase q-axis cap, conservative
+                                     * until the bench test [U]         */
 #define VOLTAGE_LIMIT   8.0f        /* of the 12 V rail                 */
-#define VEL_LIMIT_MOTOR 60.0f       /* rad/s motor-side cap             */
-#define KT_MOTOR        0.0265f     /* Nm/A estimate for 5010 360KV     */
+#define VEL_LIMIT_MOTOR 100.0f      /* rad/s motor-side cap             */
+#define KT_MOTOR        0.0289f     /* Nm/A estimate for 4008 330KV     */
                                     /* (Kt ~= 60/(2*pi*KV)) UNVERIFIED  */
 #define POS_P_GAIN      20.0f       /* angle P gain (SimpleFOC units)   */
 #define VEL_FF_GAIN     1.0f
+
+/* homing: drive into the mechanical hard stop at low current, detect
+ * stall, set output zero at the stop angle. Direction/signs are
+ * per-joint UNVERIFIED — adjust after first bench run. */
+#define HOME_DIR        (-1.0f)     /* -1 = toward the negative stop    */
+#define HOME_CURRENT_A  1.0f        /* q-axis current while homing [U]  */
+#define HOME_SPEED_OUT  0.15f       /* informational crawl, out rad/s   */
+#define HOME_VEL_EPS    0.4f        /* |motor vel| below this = stall   */
+#define HOME_STALL_MS   300         /* must stay stalled this long      */
+#define HOME_TIMEOUT_MS 20000       /* give up -> EMCY                  */
 
 #define FB_HZ           50          /* TPDO2/TPDO3 telemetry rate       */
 #define CMD_TIMEOUT_MS  300         /* hold last pos if bus goes quiet  */
 
 /* ------------------------------------------------------------ params */
 typedef struct {
-    uint32_t magic;          /* 'SOMA' = 0x534F4D41                     */
+    uint32_t magic;          /* 'SOM2' = 0x324D4F53 (v2 layout)         */
     uint32_t can_id;
     float    zero_offset;    /* electrical zero (rad) from initFOC      */
     int32_t  direction;      /* +1 CW, -1 CCW                           */
@@ -60,7 +80,10 @@ typedef struct {
     uint32_t calibrated;     /* nonzero once calibrate ran              */
     float    kp, kd;
     float    pos_lo, pos_hi;
-    float    pos_zero;       /* user zero offset (ZERO_HERE)            */
+    float    pos_zero;       /* output offset set by homing/ZERO_HERE   */
+    float    home_stop;      /* output rad at the hard stop             */
+    float    home_current;   /* iq while homing (A)                     */
+    float    home_speed;     /* informational crawl (output rad/s)      */
 } params_t;
 static params_t P;
 
@@ -70,10 +93,15 @@ typedef enum { MODE_DISABLED = 0, MODE_POSITION, MODE_VELOCITY,
 static run_mode_t mode = MODE_DISABLED;
 static bool   estop = false;
 static bool   armed = false;
+static bool   homed = false;         /* NOT persisted: re-home every boot */
 static float  cmd_pos = 0.0f, cmd_vel_ff = 0.0f;
 static float  cmd_iq  = 0.0f;          /* torque-mode q-current setpoint */
-static float  pos_zero = 0.0f;         /* user offset (ZERO_HERE)       */
+static float  pos_zero = 0.0f;         /* output offset (home/ZERO_HERE) */
 static uint32_t last_cmd_ms = 0, last_fb_ms = 0, last_rx_any_ms = 0;
+
+/* homing state */
+static bool     homing = false;
+static uint32_t home_start_ms = 0, home_stall_ms = 0;
 
 /* ------------------------------------------------------------ motor  */
 #ifndef A_VBUS
@@ -95,22 +123,36 @@ static float motor_iq_a = 0.0f;
 #define EEPROM_ADDR 0
 void params_load(void) {
     EEPROM.get(EEPROM_ADDR, P);
-    if (P.magic != 0x534F4D41) {
+    if (P.magic != 0x324D4F53) {
         memset(&P, 0, sizeof(P));
-        P.magic         = 0x534F4D41;
+        P.magic         = 0x324D4F53;
         P.can_id        = DEVICE_CAN_ID;
         P.current_limit = CURRENT_LIMIT_A;
         P.gear_ratio    = GEAR_RATIO;
         P.kp            = POS_P_GAIN;
         P.kd            = 0.2f;
-        P.pos_lo        = -3.14f;
-        P.pos_hi        =  3.14f;
+        /* soft limits from sim/STATUS-sim.md joint ranges;
+         * home_stop defaults to the negative limit edge [U — the real
+         * stop may sit short of it; measure on bench] */
+        if (P.can_id == CAN_NODE_J2) {
+            P.pos_lo = -2.0944f; P.pos_hi = 1.2217f;   /* -120..+70 deg */
+        } else if (P.can_id == CAN_NODE_J3) {
+            P.pos_lo = -3.1416f; P.pos_hi = 0.5236f;   /* -180..+30 deg */
+        } else {
+            P.pos_lo = -3.14f;   P.pos_hi = 3.14f;
+        }
         P.pos_zero      = 0.0f;
+        P.home_stop     = P.pos_lo;
+        P.home_current  = HOME_CURRENT_A;
+        P.home_speed    = HOME_SPEED_OUT;
     }
 }
 void params_save(void) { EEPROM.put(EEPROM_ADDR, P); }
 
 /* ------------------------------------------------------------ helpers */
+/* SimpleFOC shaft_angle accumulates full rotations — the single-turn
+ * AS5600 gives us a multi-turn MOTOR angle for free; homing fixes which
+ * of the 40 motor turns per output turn we are on. */
 static float output_pos(void)  { return motor.shaft_angle / P.gear_ratio
                                         - pos_zero; }
 static float output_vel(void)  { return motor.shaft_velocity / P.gear_ratio; }
@@ -161,6 +203,7 @@ static void set_mode(run_mode_t m) {
 static void do_estop(void) {
     estop = true;
     armed = false;
+    homing = false;
     set_mode(MODE_DISABLED);
 }
 
@@ -171,6 +214,12 @@ static void do_enable(void) {
         send_emcy(0x02, 0x10);
         return;
     }
+    if (!homed) {
+        /* refuse: single-turn encoder on the motor side can't tell
+         * which output turn we're on — run NMT_HOME first */
+        send_emcy(0x03, 0x11);
+        return;
+    }
     estop = false;
     armed = true;
     set_mode(MODE_POSITION);
@@ -179,12 +228,61 @@ static void do_enable(void) {
 /* ------------------------------------------------------------ calib  */
 static void do_calibrate(void) {
     /* rotor must be FREE TO SPIN — encoder direction + electrical zero */
-    motor.initFOC();
+    motor.sensor_direction = Direction::UNKNOWN;
+    motor.zero_electric_angle = NOT_SET;
+    motor.initFOC();                        /* runs alignment */
     P.zero_offset = motor.zero_electric_angle;
-    P.direction   = (int32_t)sensor.direction;
+    P.direction   = (int32_t)motor.sensor_direction;
     P.calibrated  = 1;
+    homed = false;                 /* calibration may shift the angle */
     params_save();
     send_emcy(0x00, 0x00);            /* cal done "all clear" event */
+}
+
+/* ------------------------------------------------------------ homing */
+/* NMT_HOME: crawl into the hard stop at HOME_DIR * home_current, wait
+ * for a sustained stall, then declare the current output position to be
+ * P.home_stop. Runs as a state machine so FOC + CAN stay alive. */
+static void do_home(void) {
+    if (P.calibrated == 0) {
+        send_emcy(0x02, 0x10);        /* need FOC zero first */
+        return;
+    }
+    homing = true;
+    home_start_ms = millis();
+    home_stall_ms = 0;
+    armed = false;                  /* no position commands while homing */
+    set_mode(MODE_TORQUE);
+    motor.current_limit = P.home_current;
+    motor.target = HOME_DIR * P.home_current;
+}
+
+static void home_tick(void) {
+    if (!homing) return;
+    uint32_t now = millis();
+    if (now - home_start_ms > HOME_TIMEOUT_MS) {
+        homing = false;
+        motor.current_limit = P.current_limit;
+        set_mode(MODE_DISABLED);
+        send_emcy(0x04, 0x12);        /* homing timed out */
+        return;
+    }
+    if (fabsf(motor.shaft_velocity) < HOME_VEL_EPS) {
+        home_stall_ms += 1;           /* called once per loop iter */
+        if (home_stall_ms > HOME_STALL_MS) {
+            /* stall held: we are on the stop — pin the offset */
+            pos_zero = motor.shaft_angle / P.gear_ratio - P.home_stop;
+            P.pos_zero = pos_zero;
+            homed = true;
+            homing = false;
+            motor.current_limit = P.current_limit;
+            params_save();
+            set_mode(MODE_POSITION);  /* holds the stop position */
+            send_emcy(0x00, 0x13);    /* homed ok */
+        }
+    } else {
+        home_stall_ms = 0;
+    }
 }
 
 /* ------------------------------------------------------------ SDO     */
@@ -192,7 +290,7 @@ static void sdo_write(uint16_t addr, const uint8_t val4[4]) {
     switch (addr) {
     case SDO_CURRENT_LIMIT_A:
         P.current_limit = get_f32(val4);
-        motor.current_limit = P.current_limit;
+        if (!homing) motor.current_limit = P.current_limit;
         break;
     case SDO_POLE_PAIRS:
         /* pole pairs is a constructor arg — needs reflash; store for
@@ -217,6 +315,9 @@ static void sdo_write(uint16_t addr, const uint8_t val4[4]) {
     case SDO_SAVE_FLASH:
         if (get_u32(val4) == 0x53515645) params_save();
         break;
+    case SDO_HOME_STOP_RAD:  P.home_stop = get_f32(val4); break;
+    case SDO_HOME_CURRENT_A: P.home_current = get_f32(val4); break;
+    case SDO_HOME_SPEED_RADS: P.home_speed = get_f32(val4); break;
     default: break;
     }
 }
@@ -240,17 +341,21 @@ static void sdo_read(uint16_t addr) {
         put_f32(b, vbus);
         break;
     }
-    case SDO_FW_VERSION:      put_u32(b, 0x000100); break;
+    case SDO_FW_VERSION:      put_u32(b, 0x000200); break;
     case SDO_STATUS: {
         uint32_t s = 0;
         if (armed) s |= 0x1;
         if (estop) s |= 0x2;
         if (P.calibrated) s |= 0x4;
+        if (homed) s |= 0x10;
         put_u32(b, s);
         break;
     }
     case SDO_VELOCITY_RADS:   put_f32(b, output_vel()); break;
     case SDO_IQ_MEAS_A:       put_f32(b, motor_iq_a); break;
+    case SDO_HOME_STOP_RAD:   put_f32(b, P.home_stop); break;
+    case SDO_HOME_CURRENT_A:  put_f32(b, P.home_current); break;
+    case SDO_HOME_SPEED_RADS: put_f32(b, P.home_speed); break;
     default: break;
     }
     send_tsdo(b);
@@ -267,9 +372,11 @@ static void handle_frame(uint16_t id, const uint8_t *d, uint8_t dlc) {
         if (dec_nmt(d, dlc, &cmd, &target) != 0) return;
         if (target != 0 && target != P.can_id) return;  /* not for us */
         switch (cmd) {
-        case NMT_DISABLE:   set_mode(MODE_DISABLED); armed = false; break;
+        case NMT_DISABLE:   set_mode(MODE_DISABLED); armed = false;
+                            homing = false; break;
         case NMT_ENABLE:    do_enable(); break;
         case NMT_CALIBRATE: do_calibrate(); break;
+        case NMT_HOME:      do_home(); break;
         case NMT_ESTOP:     do_estop(); break;
         }
         return;
@@ -292,7 +399,8 @@ static void handle_frame(uint16_t id, const uint8_t *d, uint8_t dlc) {
             float p = pos;
             if (p < P.pos_lo) p = P.pos_lo;
             if (p > P.pos_hi) p = P.pos_hi;
-            /* command frame is in user coordinates (pos_zero applied) */
+            /* command frame is in user coordinates (pos_zero applied);
+             * motor side = output * 40 */
             motor.target = (p + pos_zero) * P.gear_ratio;
             motor.feed_forward_velocity = vel * P.gear_ratio * VEL_FF_GAIN;
         }
@@ -301,9 +409,9 @@ static void handle_frame(uint16_t id, const uint8_t *d, uint8_t dlc) {
     case CAN_FC_RPDO3: {
         float tau;
         if (dec_pdo3(d, dlc, &tau) != 0) break;
-        /* output torque Nm -> motor q-current setpoint (torque mode);
-         * in position mode it is ignored (documented) */
-        cmd_iq = tau / (P.gear_ratio * KT_MOTOR);
+        /* OUTPUT torque Nm -> motor q-current:
+         * tau_out = iq * Kt * ratio * eff  =>  iq = tau/(Kt*r*eff) */
+        cmd_iq = tau / (P.gear_ratio * GEAR_EFF * KT_MOTOR);
         if (armed && !estop && mode == MODE_TORQUE) {
             if (cmd_iq > P.current_limit) cmd_iq = P.current_limit;
             if (cmd_iq < -P.current_limit) cmd_iq = -P.current_limit;
@@ -357,8 +465,11 @@ void setup() {
 
     motor.init();
     if (P.calibrated) {
-        /* skip the rotation alignment: reuse stored electrical zero */
-        motor.initFOC(P.zero_offset, (Direction)P.direction);
+        /* skip the rotation alignment: preset stored values, initFOC()
+         * sees them and skips re-aligning */
+        motor.sensor_direction = (Direction)P.direction;
+        motor.zero_electric_angle = P.zero_offset;
+        motor.initFOC();
     }
     /* else: stays un-FOC'd until NMT_CALIBRATE runs on the bench */
 
@@ -369,13 +480,18 @@ void setup() {
 void loop() {
     /* FOC at full rate */
     motor.loopFOC();
-    if (armed && !estop && mode != MODE_DISABLED) motor.move();
+    if (mode == MODE_TORQUE && homing) {
+        motor.move();               /* iq = HOME_DIR * home_current */
+    } else if (armed && !estop && mode != MODE_DISABLED) {
+        motor.move();
+    }
 
-    /* measure iq for telemetry (cheap, non-blocking path) */
-    if (armed) {
-        DQCurrent c = currentSense.getFOCCurrents(motor.electrical_angle);
+    /* measure iq for telemetry + stall detect (cheap, non-blocking) */
+    if (armed || homing) {
+        DQCurrent_s c = currentSense.getFOCCurrents(motor.electrical_angle);
         motor_iq_a = c.q;
     }
+    home_tick();
 
     /* CAN RX — drain FIFO */
     uint16_t id; uint8_t d[8]; uint8_t dlc;

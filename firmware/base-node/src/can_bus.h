@@ -40,5 +40,6 @@ void can_estop_broadcast(void);
 void can_enable_all(void);
 void can_disable_all(void);
 
-/* bus health: attempts recovery if driver reports bus-off */
-void can_bus_housekeeping(void);
+/* bus health: attempts recovery if driver reports bus-off; sets
+ * *bus_off latched flag if non-NULL (cleared on recovery) */
+void can_bus_housekeeping(bool *bus_off);

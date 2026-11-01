@@ -120,13 +120,15 @@ void can_disable_all(void) {
     can_send_nmt(NMT_DISABLE, CAN_NODE_ALL);
 }
 
-void can_bus_housekeeping(void) {
+void can_bus_housekeeping(bool *bus_off) {
     uint32_t alerts = 0;
     if (twai_read_alerts(&alerts, 0) != ESP_OK) return;
     if (alerts & TWAI_ALERT_BUS_OFF) {
+        if (bus_off) *bus_off = true;
         twai_initiate_recovery();
     }
     if (alerts & TWAI_ALERT_BUS_RECOVERED) {
+        if (bus_off) *bus_off = false;
         twai_start();
     }
 }

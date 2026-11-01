@@ -27,6 +27,7 @@ class NMT(IntEnum):
     DISABLE = 0x00
     ENABLE = 0x01
     CALIBRATE = 0x02
+    HOME = 0x03
     ESTOP = 0x7F
 
 
@@ -49,6 +50,9 @@ class SDO(IntEnum):
     SAVE_FLASH = 0x0010
     VELOCITY_RADS = 0x0011
     IQ_MEAS_A = 0x0012
+    HOME_STOP_RAD = 0x0013
+    HOME_CURRENT_A = 0x0014
+    HOME_SPEED_RADS = 0x0015
 
 
 class Status(IntFlag):
@@ -56,6 +60,7 @@ class Status(IntFlag):
     ESTOP = 0x2
     CALIBRATED = 0x4
     FAULT = 0x8
+    HOMED = 0x10
 
 
 SDO_CMD_DOWNLOAD = 0x20

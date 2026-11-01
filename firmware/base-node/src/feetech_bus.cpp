@@ -3,18 +3,14 @@
 #include "config.h"
 #include "feetech_bus.h"
 
-/* UART1 = bus A. Bus B (UART2, IO15/IO12) initialised but unused in v3 —
- * kept for the second-bus expansion path. */
+/* UART1 = bus A — the only servo bus on carrier v1.3 */
 static HardwareSerial BusA(1);
-static HardwareSerial BusB(2);
 
 static HardwareSerial *bus = &BusA;
 
 void ft_bus_init(void) {
     BusA.begin(FT_BAUD, SERIAL_8N1, PIN_BUSA_RX, PIN_BUSA_TX);
     BusA.setTimeout(FT_READ_TIMEOUT_MS);
-    BusB.begin(FT_BAUD, SERIAL_8N1, PIN_BUSB_RX, PIN_BUSB_TX);
-    BusB.setTimeout(FT_READ_TIMEOUT_MS);
 }
 
 /* send packet, eat the echo, return number of echo bytes consumed */

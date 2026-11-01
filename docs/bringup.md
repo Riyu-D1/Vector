@@ -33,39 +33,49 @@ whole point of the board.
 4. **Multimeter on J18 pin 1 (+12V_MOT) vs GND: must read 0 V**
    even with 12 V on JP1 — the relay is open by default. Same on J20.
    Jumper J19 open → IO38 sense must show `ESTOP` in the next STATE.
-5. Try `arm-motors` now: it must NOT close the relay (ESTOP latched +
-   no ESC heartbeats) → STATE keeps `MOTOR_EN=0`, event `MOTOR_EN_OFF`
-   with reason logged on console. J18/J20 stay at 0 V.
-6. Close J19, `clear-estop`, `arm-motors`: still must fail — no ESC
-   heartbeat yet (CAN precondition). **The rail must never come up
-   before the ESCs prove they're alive.** This is the check that
-   matters most; if +12V_MOT appears anyway, power down and debug
-   `motor_en_step()`/the K1/Q3/J19 wiring before anything else.
-7. Press the NC e-stop while watching the meter: coil path opens —
-   nothing else needed, the rail can't be on anyway at this stage,
-   but the STATE flag must latch ESTOP and require `clear-estop`.
+5. Try `arm-motors` now: it must NOT close the relay — the latched
+   ESTOP blocks phase 1 of the two-phase arm. STATE keeps
+   `MOTOR_EN=0`, J18/J20 stay at 0 V.
+6. Close J19, `clear-estop`, `arm-motors`: **the relay must now
+   CLOSE** — phase 1 needs no ESC heartbeats (the drives are dead
+   until the rail is live; that was the W1 deadlock). EVENT
+   `MOTOR_EN_ON`, STATE b4 set, **J18/J20 read 12 V**. Then, with no
+   ESCs connected, ~1.5 s after K1 closes the boot window expires:
+   rail drops, EVENT `MOTOR_EN_OFF` **reason=6 (esc-boot-timeout)**,
+   estop latches. `clear-estop` + `arm-motors` re-runs the same
+   close→timeout→drop cycle. This is the check that matters most:
+   if +12V_MOT never appears, or appears but never times out, power
+   down and debug `motor_en_step()`/the K1/Q3/J19 wiring before
+   anything else.
+7. Press the NC e-stop during a boot window: coil path opens — the
+   rail dies instantly regardless of firmware, and STATE must latch
+   ESTOP requiring `clear-estop` + a fresh `arm-motors`.
 8. Stop sending host frames >0.5 s → watchdog trips (flag b1), estop
    latches. `clear-estop` to recover.
 
-**Do not continue until the relay has proven it stays open.**
+**Do not continue until the relay has proven it closes on command,
+drops on boot timeout, and dies on e-stop.**
 
-## Stage 1 — CAN heartbeat precondition
+## Stage 1 — ESC boot under the live rail
 
-9. One B-G431B-ESC1 flashed as node 2, **logic side powered from an
-   unswitched supply** (its own 12 V, or ST-LINK USB — see the power
-   caveat in `docs/can-protocol.md`; if the ESC logic is fed by
-   +12V_MOT it can never heartbeat and the arm can never arm — this
-   is UNVERIFIED, check the board's power path first). CANH/CANL to
-   the carrier's TJA1051T/3 header; both ends ~120 Ω.
-10. `sense` → `can_ok_mask` bit0 sets once the drive answers the
-    200 ms ping round-robin (TPDO1 echo). `READ_PARAM 0 2 0x0E` →
-    fw version.
-11. Now `clear-estop` + `arm-motors` → EVENT `MOTOR_EN_ON`, STATE
-    b4 set, **J18/J20 read 12 V**. Repeat the J19 e-stop press with
-    the meter on J18: rail must die instantly, EVENT `MOTOR_EN_OFF`
-    reason=1, and `arm-motors` alone won't restore it until
-    `clear-estop` + `arm-motors` again — while the loop is open the
-    relay physically can't close.
+9. One B-G431B-ESC1 flashed as node 2, powered **only from J18**
+   (`+12V_MOT` — the final wiring; no bench supply, no ST-LINK power
+   while testing this path). CANH/CANL to the carrier's TJA1051T/3
+   header; both ends ~120 Ω.
+10. `arm-motors` → K1 closes, J18 goes live, the ESC boots and must
+    answer the 200 ms ping round-robin **within ~1.5 s**: STATE
+    `can_ok_mask` bit0 sets, `MOTOR_EN` stays on (phase ARMED).
+    `READ_PARAM 0 2 0x0E` → fw version. If the heartbeat never
+    appears the rail drops `ESC_BOOT_TIMEOUT` after ~1.5 s — debug
+    CAN wiring/termination, then `clear-estop` + `arm-motors`.
+11. **One-ESC-missing test:** with only node 2 on the bus (node 3
+    unplugged), `arm-motors` → the rail must still close, then drop
+    ~1.5 s later reason=6 because the second ESC never heartbeated.
+    Repeat the J19 e-stop press with the meter on J18 while armed:
+    rail must die instantly, EVENT `MOTOR_EN_OFF` reason=1, and
+    `arm-motors` alone won't restore it until `clear-estop` +
+    `arm-motors` again — while the loop is open the relay physically
+    can't close.
 12. Kill the host stream >0.5 s with the rail live → watchdog drops
     MOTOR_EN (reason=2) and NMT ESTOP goes out on CAN.
 

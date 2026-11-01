@@ -51,6 +51,9 @@ static const float PHASE_CURRENT_LIMIT_A[CAN_N_JOINTS] = { 5.0f, 5.0f };
 #define HOST_TIMEOUT_MS   500             /* watchdog: no frame -> drop   */
 #define CAN_PING_PERIOD_MS 200            /* RPDO1 heartbeat probe        */
 #define CAN_ALIVE_MS      400             /* ESC heartbeat freshness      */
+#define ESC_BOOT_WINDOW_MS 1500           /* two-phase arm: every ESC must
+                                           * heartbeat within this of K1
+                                           * closing (motor_en.c param)  */
 
 /* conversions */
 #define FT_COUNTS_PER_RAD (4096.0f / 6.283185307f)

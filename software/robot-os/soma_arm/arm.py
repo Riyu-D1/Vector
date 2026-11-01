@@ -103,8 +103,10 @@ class Arm:
 
     def arm_motors(self):
         """Explicit MOTOR_EN arm command — required after boot and after
-        every safety drop; enables only while e-stop is clear and both
-        ESCs report fresh heartbeats."""
+        every safety drop. Phase 1 closes K1 while the e-stop is clear
+        and the host link is alive; every ESC must then heartbeat
+        inside the 1500 ms boot window or the rail drops
+        ESC_BOOT_TIMEOUT."""
         self._send(link.T.ARM_MOTOR)
 
     def home(self, joint=0):

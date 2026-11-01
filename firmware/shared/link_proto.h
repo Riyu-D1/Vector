@@ -45,8 +45,9 @@ typedef enum {
     LK_PING            = 0x13,  /* -> PONG                             */
     LK_READ_PARAM      = 0x16,  /* u8 bus(0=CAN,1=FT) + u8 node + u16 addr */
     LK_SET_SERVO_REG   = 0x18,  /* u8 id + u8 addr + u8 len + data     */
-    LK_ARM_MOTOR       = 0x19,  /* explicit re-arm: MOTOR_EN high if all
-                                   * safety conditions hold              */
+    LK_ARM_MOTOR       = 0x19,  /* explicit re-arm: phase-1 MOTOR_EN high
+                                   * if the pre-arm conditions hold;
+                                   * ESCs then get the boot window       */
 
     /* base node -> host */
     LK_STATE           = 0x11,  /* 7*fp32 pos + 7*fp32 vel + 7*fp32

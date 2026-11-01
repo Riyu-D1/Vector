@@ -3,7 +3,8 @@
 Implements the host link protocol exactly (same frames, same CRC) plus a
 tiny behavioural model: commanded positions are tracked with first-order
 lag, J2/J3 CAN joints report simulated state, ESTOP latches, the
-MOTOR_EN relay requires an explicit ARM_MOTOR command and drops on
+MOTOR_EN relay requires an explicit ARM_MOTOR command (phase 1 of the
+two-phase arm — the sim's ESCs are always alive) and drops on
 estop/watchdog. Use via link.SimTransport.
 """
 
@@ -93,7 +94,9 @@ class SimBaseNode:
                 self.q_target = [self.q_target[i] + dq[i] * dt
                                  for i in range(7)]
         elif ftype == link.T.ARM_MOTOR:
-            # explicit re-arm; rises only while estop is clear
+            # explicit re-arm (phase 1: closes K1 while estop is clear;
+            # sim doesn't model the ESC boot window — drives are always
+            # alive here)
             if not self.estop and not self.motor_en:
                 self.motor_en = True
                 self._emit(link.T.EVENT, bytes([link.EV_MOTOR_EN_ON, 0]))

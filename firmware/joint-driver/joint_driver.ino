@@ -236,6 +236,8 @@ static void do_calibrate(void) {
     P.calibrated  = 1;
     homed = false;                 /* calibration may shift the angle */
     params_save();
+    motor.disable();               /* initFOC leaves the driver enabled;
+                                    * torque off until NMT_HOME/ENABLE  */
     send_emcy(0x00, 0x00);            /* cal done "all clear" event */
 }
 
@@ -277,7 +279,8 @@ static void home_tick(void) {
             homing = false;
             motor.current_limit = P.current_limit;
             params_save();
-            set_mode(MODE_POSITION);  /* holds the stop position */
+            set_mode(MODE_DISABLED);  /* torque off until explicit
+                                         * NMT_ENABLE (W2 rule) */
             send_emcy(0x00, 0x13);    /* homed ok */
         }
     } else {
@@ -472,6 +475,13 @@ void setup() {
         motor.initFOC();
     }
     /* else: stays un-FOC'd until NMT_CALIBRATE runs on the bench */
+
+    /* power up torque-DISABLED: the rail can close at any moment
+     * (two-phase MOTOR_EN arm) — no PWM may reach the motor until an
+     * explicit NMT_ENABLE (gated on calibrated + homed in do_enable).
+     * initFOC()/init() can leave the driver hot; force it off and keep
+     * loopFOC() inert via the enabled flag (mode = MODE_DISABLED). */
+    motor.disable();
 
     last_cmd_ms = last_fb_ms = last_rx_any_ms = millis();
     pos_zero = P.pos_zero;

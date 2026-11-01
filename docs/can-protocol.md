@@ -47,27 +47,37 @@ the output angle is otherwise unknown) |
 ## Safety state (base node → MOTOR_EN → drives)
 
 `MOTOR_EN` (IO40) closes relay K1 → `+12V_MOT` (J18/J20) feeds the
-ESC power stages. The firmware drives it LOW at boot and raises it
-**only** on an explicit host `ARM_MOTOR` command while ALL of:
+ESCs (power *and* logic — the drives are dead until K1 closes, so a
+heartbeat precondition could never be satisfied; that was the W1
+arm deadlock). The state machine is therefore a **two-phase arm**:
 
-- at least one valid host frame has been received (handshake);
-- a host frame arrived inside the 500 ms watchdog window;
-- the e-stop sense (IO38, NC loop) is released and no latched estop;
-- every configured ESC answered a CAN ping inside 400 ms;
-- no EMCY / STATUS fault bit; CAN not bus-off.
+- **Phase 1 (pre-arm)** — `MOTOR_EN` LOW at boot; rises only on an
+  explicit host `ARM_MOTOR` command while ALL of:
+  - at least one valid host frame has been received (handshake);
+  - a host frame arrived inside the 500 ms watchdog window;
+  - the e-stop sense (IO38, NC loop) is released and no latched estop;
+  - CAN not bus-off.
 
-Any violation while powered drops `MOTOR_EN` LOW immediately and the
-base node broadcasts `NMT ESTOP` (0x7F → node 0) plus servo
-torque-off. The drop reason rides in the `MOTOR_EN_OFF` event arg
+  Closing K1 starts the `ESC_BOOT_WINDOW_MS` timer (1500 ms, param
+  in `config.h` / `motor_en.esc_boot_window_ms`).
+
+- **Phase 2 (boot window)** — every configured ESC must answer a CAN
+  ping (its first heartbeat) inside the window. Any ESC missing at
+  window expiry drops `MOTOR_EN` immediately with reason
+  `ESC_BOOT_TIMEOUT`; a fresh explicit `ARM_MOTOR` retries.
+  All ESCs alive → phase `ARMED`.
+
+- **Armed** — every configured ESC heartbeat must stay inside the
+  400 ms alive window. Any estop, host watchdog timeout, CAN bus-off,
+  ESC fault or lost heartbeat drops `MOTOR_EN` LOW immediately and the
+  base node broadcasts `NMT ESTOP` (0x7F → node 0) plus servo
+  torque-off. Estop/host-timeout/bus-off/ESC-fault also drop during
+  the boot window — only the *lost-heartbeat* rule waits for armed.
+
+The drop reason rides in the `MOTOR_EN_OFF` event arg
 (`docs/host-protocol.md`, medr_t: 1 estop, 2 host-timeout,
-3 bus-off, 4 esc-fault, 5 esc-lost). Re-arm needs a fresh explicit
-`ARM_MOTOR`.
-
-**Power caveat (UNVERIFIED):** if the ESC logic section is fed from
-the switched `+12V_MOT` rail, the drives are dead until the relay
-closes and can never satisfy the heartbeat precondition. ESC logic
-must be powered from an unswitched supply for this scheme — check
-the B-G431B-ESC1 power path on the bench before first power-up.
+3 bus-off, 4 esc-fault, 5 esc-lost, 6 esc-boot-timeout). Re-arm
+always needs a fresh explicit `ARM_MOTOR`.
 
 The physical NC e-stop loop on **J19** sits in the relay coil path —
 opening it drops K1 regardless of firmware. The IO38 sense line lets

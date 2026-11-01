@@ -6,11 +6,15 @@ Runs on the ESP32-S3-DevKitC-1 socketed onto the `soma-carrier` PCB
 ## What it does
 
 - **MOTOR_EN safety chain**: IO40 → Q3 → relay K1 → `+12V_MOT`
-  (J18/J20). Low at boot; rises only on an explicit host `ARM_MOTOR`
-  while host link alive + estop released + every CAN ESC heartbeat
-  fresh + no fault + no bus-off. Any violation drops it instantly
-  (NMT ESTOP broadcast + servo torque-off). Pure-C machine in
-  `firmware/shared/motor_en.c`, host-tested via ctypes.
+  (J18/J20). Two-phase arm: phase 1 = explicit host `ARM_MOTOR`
+  while host link alive + estop released + no bus-off (ESC
+  heartbeats can't be a precondition — the drives are dead until
+  K1 closes); phase 2 = every configured ESC must heartbeat inside
+  the 1500 ms boot window else the rail drops `ESC_BOOT_TIMEOUT`.
+  Once armed, any estop/watchdog/bus-off/ESC-fault/lost-heartbeat
+  drops it instantly (NMT ESTOP broadcast + servo torque-off).
+  Pure-C machine in `firmware/shared/motor_en.c`, host-tested via
+  ctypes.
 - **CAN master @ 1 Mbit/s** for J2/J3 cycloidal actuators
   (B-G431B-ESC1 running `firmware/joint-driver`, nodes 2 and 3),
   CANopen-style — see [docs/can-protocol.md](../../docs/can-protocol.md).
@@ -67,9 +71,10 @@ real output (RAM 6.0 %, flash 8.6 %).
   proves itself.
 - CAN init, Feetech init, SDO `CURRENT_LIMIT_A` (5 A) pushed to J2/J3,
   joints left DISABLED.
-- HOST must `ARM_MOTOR` → `enable` (NMT ENABLE) → joints must have
-  been calibrated + homed or the drives refuse (see
-  `docs/bringup.md`).
+- HOST must `ARM_MOTOR` → K1 closes → every ESC must heartbeat inside
+  1500 ms (`ESC_BOOT_TIMEOUT` drop otherwise) → `enable` (NMT ENABLE)
+  → joints must have been calibrated + homed or the drives refuse
+  (see `docs/bringup.md`).
 - `STATE` telemetry streams at ~25 Hz automatically.
 
 ## Pin map (authoritative: pcb13 STATUS + gen_pcb.py)

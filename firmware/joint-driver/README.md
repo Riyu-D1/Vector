@@ -16,10 +16,7 @@ SimpleFOC implementation of the Berkeley Recoil-BESC protocol shape
 | AS5600 SCL/SDA | J8 sensor pads → PB6/PB7 | **UNVERIFIED** J8 pin order — check UM2516 before soldering; the alternative I2C1 pair PB7(SDA)/PB8(SCL) is also on J8 |
 | CAN | J1 port | onboard transceiver — twisted pair to the carrier's TJA1051T/3 |
 | 120 Ω term | PC14 = `CAN_TERM` | `CAN_TERM_LAST true` on the LAST node only |
-| 12 V | J5/J6 power pads | switched `+12V_MOT` rail (J18/J20 on carrier) |
-| ESC logic feed | — | **UNVERIFIED**: if logic is fed from +12V_MOT the drive can't
-heartbeat while the rail is off and the arm can never arm — see
-`docs/can-protocol.md` power caveat |
+| 12 V | J5/J6 power pads | switched `+12V_MOT` rail (J18/J20 on carrier) — power and logic; the drive boots when K1 closes (two-phase arm, `docs/can-protocol.md`) |
 
 Soldering the small J1 CAN pads is fragile (Berkeley docs warn about
 this too) — use thin wire, flux, and strain-relief the cable.
@@ -64,9 +61,11 @@ flash 38.8 %).
 ## First-time bring-up per joint (bench, before installing)
 
 1. Flash with the right `DEVICE_CAN_ID`.
-2. Wire CAN to the base node (both ends terminated). **Logic power
-   from an unswitched supply** — the relay rail is off until the
-   drive has heartbeated (see the caveat above).
+2. Wire CAN to the base node (both ends terminated). Power the ESC
+   from J18 (`+12V_MOT`) — `arm-motors` closes the rail and the drive
+   must heartbeat inside the 1500 ms boot window or the rail drops
+   `ESC_BOOT_TIMEOUT` (a bench supply on the power pads works too,
+   it just bypasses the part being proven).
 3. Rotor free: `NMT CALIBRATE` — SimpleFOC measures encoder
    direction + electrical zero; stored to flash (persisted).
 4. `NMT HOME` — joint creeps into the hard stop at the homing
@@ -87,6 +86,10 @@ for the full arm checklist.
 - Torque commands (RPDO3) act only in torque mode; in position mode
   a non-zero RPDO3 is ignored (by design — keeps the position loop
   clean).
+- Boots torque-DISABLED: `motor.disable()` at the end of setup —
+  initFOC leaves the driver enabled, and PWM may not reach the motor
+  until an explicit NMT_ENABLE (the rail can close at any moment).
+  Calibration and homing run their moves then return to disabled.
 - Command watchdog: if RPDO2 stops for >300 ms the joint holds its
   current angle (never silent torque-off under load).
 - NMT ESTOP or a base-node MOTOR_EN drop → torque off immediately;

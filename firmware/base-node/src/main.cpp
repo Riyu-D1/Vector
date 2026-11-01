@@ -8,11 +8,14 @@
  *       '-- ESTOP sense IO38 (J9 NC loop) + host-link watchdog
  *
  * MOTOR_EN (firmware/shared/motor_en.c, unit-tested on host):
- *   boot LOW; HIGH only on an explicit host ARM_MOTOR command while the
- *   host link is alive, the estop loop is released and every configured
- *   ESC heartbeats on CAN; any estop / watchdog / CAN bus-off / ESC
- *   fault / lost heartbeat drops it instantly + NMT stop. Re-arm needs
- *   the explicit host command again.
+ *   two-phase arm. Phase 1: an explicit host ARM_MOTOR while the host
+ *   link is alive, the estop loop released and no bus-off closes K1 —
+ *   the ESCs are dead until the rail is live, so heartbeats can't be
+ *   a precondition. Phase 2: every configured ESC must heartbeat
+ *   inside esc_boot_window_ms (else drop, MEDR_ESC_BOOT_TIMEOUT).
+ *   Once armed: any estop / watchdog / CAN bus-off / ESC fault /
+ *   lost heartbeat drops it instantly + NMT stop. Re-arm needs the
+ *   explicit host command again.
  */
 #include <Arduino.h>
 #include "pins.h"
@@ -51,12 +54,13 @@ void arm_clamp_q(float q[ARM_N_CHAN]) {
 
 static const char *medr_str(uint8_t r) {
     switch (r) {
-    case MEDR_ESTOP:        return "estop";
-    case MEDR_HOST_TIMEOUT: return "host-timeout";
-    case MEDR_CAN_BUS_OFF:  return "can-bus-off";
-    case MEDR_ESC_FAULT:    return "esc-fault";
-    case MEDR_ESC_LOST:     return "esc-lost";
-    default:                return "estop";
+    case MEDR_ESTOP:            return "estop";
+    case MEDR_HOST_TIMEOUT:     return "host-timeout";
+    case MEDR_CAN_BUS_OFF:      return "can-bus-off";
+    case MEDR_ESC_FAULT:        return "esc-fault";
+    case MEDR_ESC_LOST:         return "esc-lost";
+    case MEDR_ESC_BOOT_TIMEOUT: return "esc-boot-timeout";
+    default:                    return "estop";
     }
 }
 
@@ -68,6 +72,7 @@ void arm_estop(uint8_t medr_reason) {
         g_arm.motor.motor_en = 0;
         g_arm.motor.fault_latched = 1;
         g_arm.motor.drop_reason = medr_reason;
+        g_arm.motor.phase = MEP_IDLE;
     }
     digitalWrite(PIN_MOTOR_EN, LOW);
     motor_pin_level = 0;
@@ -78,7 +83,8 @@ void arm_estop(uint8_t medr_reason) {
         host_link_send_event(LKE_WD_TRIPPED, 0);
     } else if (medr_reason == MEDR_CAN_BUS_OFF ||
                medr_reason == MEDR_ESC_FAULT ||
-               medr_reason == MEDR_ESC_LOST) {
+               medr_reason == MEDR_ESC_LOST ||
+               medr_reason == MEDR_ESC_BOOT_TIMEOUT) {
         host_link_send_event(LKE_CAN_FAULT, medr_reason);
     }
 
@@ -196,6 +202,7 @@ static void safety_tick(void) {
     in.esc_fault       = esc_fault_seen();
     in.can_bus_off     = g_arm.can_bus_off;
     in.arm_cmd         = g_arm.motor_arm_req;
+    in.now_ms          = now;
     g_arm.motor_arm_req = 0;
 
     if (motor_en_step(&g_arm.motor, &in)) {
@@ -228,6 +235,7 @@ void setup() {
     Serial.begin(115200);
     memset(&g_arm, 0, sizeof(g_arm));
     motor_en_init(&g_arm.motor);
+    g_arm.motor.esc_boot_window_ms = ESC_BOOT_WINDOW_MS;
     /* safe default pose: zeros keep it sane; we boot disabled anyway */
     for (int i = 0; i < ARM_N_CHAN; i++) g_arm.q_cmd[i] = 0.0f;
 

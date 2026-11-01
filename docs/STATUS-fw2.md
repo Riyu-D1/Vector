@@ -68,9 +68,6 @@ Hardware deltas vs the old code (from pcb13/sim/fea STATUS files):
 | Servo bus 1 Mbps | 1 Mbaud | config.h, config.py | factory default, unproven wiring |
 | J1 servo id | 1 (STS3250, STS proto) | config.h | set id on bench |
 | Gripper servo id | 7 | config.h | jaw channel index 6 |
-| ESC logic feed for heartbeat | — | STATUS/bringup | ESC1s on +12V_MOT are dead until
-  relay closes → heartbeat precondition needs ESC logic powered
-  (unswitched 12 V or ST-LINK USB) — open question for user |
 | Hard-stop offset per joint | pos_lo | joint_driver.ino | stop angle not in sim — measure |
 | J1 rated torque | 0.98 N·m | config.py | STS3250 datasheet pending |
 
@@ -140,3 +137,69 @@ loaded), `firmware-verification.md` (real outputs), READMEs
 (base-node, joint-driver, robot-os). Superseded banners added to
 v1.1-era docs (build-notes, pcb-verification, STATUS-firmware,
 architecture, torque-analysis). UNVERIFIED table above kept current.
+
+## Stage W2 — two-phase MOTOR_EN arm (fixes the W1 deadlock)
+
+Problem: the B-G431B-ESC1s are powered from `+12V_MOT`, dead until
+K1 closes — but the W1 machine required all-ESC-heartbeats BEFORE
+closing K1, so the arm could never arm.
+
+Fix implemented exactly per the stage file:
+
+- `firmware/shared/motor_en.c/.h`: two-phase arm. Phase 1 (pre-arm)
+  needs only host handshake + alive + explicit `ARM_MOTOR` + estop
+  released + no bus-off → closes K1, starts `esc_boot_window_ms`
+  (default 1500 ms; a real param — `ESC_BOOT_WINDOW_MS` in
+  `config.h`). Phase 2: every configured ESC must heartbeat inside
+  the window else immediate drop, reason
+  `MEDR_ESC_BOOT_TIMEOUT` (6); a fresh explicit `ARM_MOTOR` retries.
+  Once `MEP_ARMED` the old rule is unchanged: estop / host timeout /
+  bus-off / ESC fault / heartbeat lost (400 ms) drops at once.
+  Estop/host-timeout/bus-off/ESC-fault also drop during the window.
+- `firmware/base-node`: `safety_tick` feeds `now` to the machine;
+  `medr_str` + `LKE_CAN_FAULT` mapping cover reason 6; `arm_estop`
+  resets `phase` with the other mirrored fields.
+- `firmware/joint-driver/joint_driver.ino` boot path re-checked
+  against vendored SimpleFOC 2.4.0: `initFOC()` ends with an
+  unconditional `enable()` and `loopFOC()` early-returns on
+  `!enabled` — so `motor.disable()` now runs at the end of `setup()`
+  (no PWM before NMT_ENABLE, incl. right after relay close). Same
+  stale-enable cleanups: `do_calibrate()` disables after `initFOC`;
+  homing success now ends `MODE_DISABLED` instead of `MODE_POSITION`
+  (that "hold" never actually ran — `move()` is gated on `armed` —
+  it only left a frozen voltage on the phases). NMT_ENABLE still
+  refuses before calibrated+homed; `homed` is not persisted.
+- **Servo-rail answer (pcb13):** bus-A servos (J1 STS3250 id 1,
+  J4/J5/J6/GRIP STS3215) are on J4/J5 pin 2 = `+12V`, the
+  **unswitched** post-F1 rail — `+12V_MOT` nets only K1.5/J18/J20
+  (pcb13 STATUS net table). Servos are live at board power-on and
+  need no boot-window ping; only the CAN ESCs are windowed.
+
+Tests (`python3 -m pytest tests` in `software/robot-os`,
+Python 3.9.12 / pytest 7.1.1): **62 passed** — test_motor_en.py grew
+to 14 ctypes cases on the real `motor_en.c`: pre-arm closes K1 with
+zero heartbeats, boot-window expiry drops `ESC_BOOT_TIMEOUT`,
+heartbeat inside the window arms, loss after armed drops
+`ESC_LOST`, estop during the window drops `ESTOP`, the window is a
+settable param, all phase-1 refusals, explicit re-arm required —
+plus every W1 drop case re-checked through the armed phase.
+
+Builds (`pio run`, `.venv-pio`, real output in
+`docs/firmware-verification.md`):
+
+- base-node `esp32-s3-devkitc-1`: **SUCCESS** — RAM 6.0 %
+  (19760/327680 B), flash 8.6 % (285969/3342336 B).
+- joint-driver `disco_b_g431b_esc1`: **SUCCESS** — RAM 14.4 %
+  (4728/32768 B), flash 38.8 % (50896/131072 B).
+
+Payload note: the FEA full-reach pose uses J2 = +90°, over the sim
+max of +70°. `max_payload` at the real-limit pose
+`q=[0, +70°, −70°, 0,0,0]` (still fully horizontal — the worst
+gravity case): overall bound 0.391 kg (J2-limited); **J4 allowed
+payload = 0.487 kg** — identical to the +90° pose because J4's
+downstream lever arm is horizontal in both; the <0.5 kg derating
+still holds at the real worst case.
+
+Fallbacks used: none. Open questions: none — the ESC-logic-feed
+[U] row was removed (resolved by design: the drives boot off
+`+12V_MOT` inside the window).

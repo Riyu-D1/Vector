@@ -33,9 +33,12 @@ NMT ESTOP broadcast + servo torque-off) and latches estop. Stream
 | 0x13 | PING | — → PONG |
 | 0x16 | READ_PARAM | u8 bus(0=CAN SDO,1=Feetech) + u8 node + u16 addr |
 | 0x18 | SET_SERVO_REG | u8 id + u8 addr + u8 len + data |
-| 0x19 | **ARM_MOTOR** | — explicit arm: closes relay K1 iff every safety
-condition holds (host handshake+alive, estop released, all ESC
-heartbeats fresh, no fault, no bus-off). Required after every drop. |
+| 0x19 | **ARM_MOTOR** | — explicit arm, phase 1: closes relay K1 iff
+host handshake seen + host alive + estop released + no CAN bus-off
+(ESC heartbeats are NOT required — the drives are dead until K1
+closes). Phase 2 then needs every ESC heartbeat inside the 1500 ms
+boot window, else the rail drops `ESC_BOOT_TIMEOUT`. Required after
+every drop. |
 
 ## Base node → host
 
@@ -55,7 +58,8 @@ within 400 ms.
 EVENT codes: 0x01 estop asserted, 0x02 estop cleared, 0x03 watchdog
 trip, 0x04 CAN fault (arg = drop reason), 0x05 boot,
 0x06 MOTOR_EN on, 0x07 MOTOR_EN off (arg = drop reason:
-1 estop, 2 host-timeout, 3 bus-off, 4 esc-fault, 5 esc-lost).
+1 estop, 2 host-timeout, 3 bus-off, 4 esc-fault, 5 esc-lost,
+6 esc-boot-timeout).
 
 STATE streams automatically at ~25 Hz once the node is up;
 `GET_STATE` forces an extra sample.
@@ -63,11 +67,16 @@ STATE streams automatically at ~25 Hz once the node is up;
 ## Safety summary
 
 1. Boot: MOTOR_EN low — no motor power.
-2. Host sends `ARM_MOTOR` → relay closes iff all conditions hold
-   (`docs/can-protocol.md` safety section). EVENT 0x06 confirms.
-3. `SET_MODE ... ENABLE` then arms the drives (joints must be
-   calibrated + homed; the ESC refuses otherwise).
-4. Any estop/watchdog/bus-off/ESC-fault/lost-heartbeat → MOTOR_EN
-   drop + NMT ESTOP broadcast + servo torque-off + EVENT 0x07.
-5. Recover: fix cause → `CLEAR_ESTOP` → `ARM_MOTOR` → `SET_MODE
+2. Host sends `ARM_MOTOR` → relay closes iff the phase-1 conditions
+   hold (host handshake+alive, estop released, no bus-off — see
+   `docs/can-protocol.md` safety section). EVENT 0x06 confirms.
+3. Phase 2: every ESC must heartbeat within 1500 ms of K1 closing,
+   else the rail drops `ESC_BOOT_TIMEOUT` (EVENT 0x07 arg=6) and a
+   fresh `ARM_MOTOR` is needed to retry.
+4. `SET_MODE ... ENABLE` then arms the drives (joints must be
+   calibrated + homed; the ESC refuses otherwise, and powers up
+   torque-disabled by design).
+5. Any estop/watchdog/bus-off/ESC-fault/lost-heartbeat (400 ms) →
+   MOTOR_EN drop + NMT ESTOP broadcast + servo torque-off + EVENT 0x07.
+6. Recover: fix cause → `CLEAR_ESTOP` → `ARM_MOTOR` → `SET_MODE
    ENABLE`. The relay never re-closes on its own.

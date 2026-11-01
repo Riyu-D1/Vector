@@ -107,3 +107,65 @@ bus-off, and explicit `ARM_MOTOR` required again after any drop.
   convention — full-reach J4 torque collapses payload to <0.5 kg by
   design of the FEA numbers, not a solver artifact.
 - All UNVERIFIED hardware parameters: `docs/STATUS-fw2.md` table.
+
+## W2 — two-phase MOTOR_EN arm (real output)
+
+Same environment (`~/Vector-wt/fw2/.venv-pio` — PlatformIO Core
+6.1.18; tests on anaconda `python3` = Python 3.9.12, pytest 7.1.1).
+
+### Base node — `firmware/base-node`
+
+```
+$ cd firmware/base-node && pio run
+PLATFORM: Espressif 32 (6.5.0) > Espressif ESP32-S3-DevKitC-1
+...
+RAM:   [=         ]   6.0% (used 19760 bytes from 327680 bytes)
+Flash: [=         ]   8.6% (used 285969 bytes from 3342336 bytes)
+========================= [SUCCESS] Took 17.16 seconds =========================
+```
+
+### Joint driver — `firmware/joint-driver`
+
+```
+$ cd firmware/joint-driver && pio run
+PLATFORM: ST STM32 (17.6.0) > ST B-G431B-ESC1 Discovery
+HARDWARE: STM32G431CBU6 170MHz, 32KB RAM, 128KB Flash
+PACKAGES:
+ - framework-arduinoststm32 @ 4.21200.0 (2.12.0)
+ - framework-cmsis-dsp @ 1.17.1
+ - toolchain-gccarmnoneeabi @ 1.120301.0 (12.3.1)
+...
+RAM:   [=         ]  14.4% (used 4728 bytes from 32768 bytes)
+Flash: [====      ]  38.8% (used 50896 bytes from 131072 bytes)
+========================= [SUCCESS] Took 79.86 seconds =========================
+```
+
+### Host test suite
+
+```
+$ cd software/robot-os && python3 -m pytest tests -x -q
+============================= test session starts ==============================
+platform darwin -- Python 3.9.12, pytest-7.1.1, pluggy-1.0.0
+rootdir: /Users/deepakdiwan/Vector-wt/fw2/software/robot-os
+configfile: pytest.ini
+collected 62 items
+
+tests/test_can_proto.py ............                                     [ 19%]
+tests/test_feetech.py ........                                           [ 32%]
+tests/test_gravity.py ........                                           [ 45%]
+tests/test_kinematics.py ..........                                      [ 61%]
+tests/test_link.py ..........                                            [ 77%]
+tests/test_motor_en.py ..............                                    [100%]
+
+============================== 62 passed in 14.40s ==============================
+```
+
+`tests/test_motor_en.py` (14 cases, ctypes on the real
+`firmware/shared/motor_en.c`): pre-arm closes K1 with **no** ESC
+heartbeats (the W2 fix), boot-window expiry drops
+`ESC_BOOT_TIMEOUT` (reason 6) with a fresh-ARM retry, heartbeat
+inside the window reaches `MEP_ARMED`, heartbeat loss after armed
+drops `ESC_LOST`, estop during the window drops `ESTOP`,
+`esc_boot_window_ms` is a settable param, phase-1 refusals
+(no host/dead link/estop/bus-off), explicit re-arm required — plus
+every W1 drop case re-checked through the armed phase.

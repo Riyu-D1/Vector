@@ -19,7 +19,7 @@ soma_arm/
   sim.py         SimBaseNode — protocol-level base-node + MOTOR_EN model
   arm.py         high-level Arm API (move_joints/move_tcp/gripper/arm_motors)
   cli.py         `python -m soma_arm.cli ...`
-tests/           pytest suite (57 tests — see docs/firmware-verification.md)
+tests/           pytest suite (62 tests — see docs/firmware-verification.md)
 ```
 
 ## Quick start (no hardware)
@@ -76,7 +76,7 @@ explicit re-arm (`docs/host-protocol.md`).
 cd software/robot-os && python3 -m pytest
 ```
 
-57 tests incl. a byte-exact cross-check of the Python codecs against the
+62 tests incl. a byte-exact cross-check of the Python codecs against the
 compiled C codecs, the real `motor_en.c` safety machine via ctypes, and
 the gravity/payload-derate model against the FEA numbers (needs any C
 compiler, skips cleanly without).

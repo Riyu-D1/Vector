@@ -1,0 +1,11 @@
+Merge "/Users/deepakdiwan/Vector-wt/ver/verify/out/step/jt_j2/link_clip.step";
+Mesh.ElementOrder = 2;
+Mesh.CharacteristicLengthMax = 3.2;
+Mesh.CharacteristicLengthFromCurvature = 1;
+Mesh.MinimumElementsPerTwoPi = 12;
+Mesh 3;
+Mesh.HighOrderOptimize = 1;
+Mesh.MshFileVersion = 2.2;
+Save "/Users/deepakdiwan/Vector-wt/ver/verify/out/msh/jt_j2_link_clip.msh";
+Printf("GMSH DONE nodes=%g", Mesh.NbNodes);
+Exit;

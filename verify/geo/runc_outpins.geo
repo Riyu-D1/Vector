@@ -1,0 +1,11 @@
+Merge "/Users/deepakdiwan/Vector-wt/ver/verify/out/step/cyc_th0/outpins.step";
+Mesh.ElementOrder = 2;
+Mesh.CharacteristicLengthMax = 1.2;
+Mesh.CharacteristicLengthFromCurvature = 1;
+Mesh.MinimumElementsPerTwoPi = 14;
+Mesh 3;
+Mesh.HighOrderOptimize = 1;
+Mesh.MshFileVersion = 2.2;
+Save "/Users/deepakdiwan/Vector-wt/ver/verify/out/msh/outpins.msh";
+Printf("GMSH DONE nodes=%g", Mesh.NbNodes);
+Exit;

@@ -1,0 +1,13 @@
+out/
+run/
+*.msh
+*.frd
+*.vtu
+*.inp
+*.stl
+*.step
+__pycache__/
+*.dat
+*.cvg
+*.sta
+*.12d

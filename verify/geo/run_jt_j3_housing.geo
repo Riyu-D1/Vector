@@ -1,0 +1,11 @@
+Merge "/Users/deepakdiwan/Vector-wt/ver/verify/out/step/jt_j3/housing.step";
+Mesh.ElementOrder = 2;
+Mesh.CharacteristicLengthMax = 3.0;
+Mesh.CharacteristicLengthFromCurvature = 1;
+Mesh.MinimumElementsPerTwoPi = 12;
+Mesh 3;
+Mesh.HighOrderOptimize = 1;
+Mesh.MshFileVersion = 2.2;
+Save "/Users/deepakdiwan/Vector-wt/ver/verify/out/msh/jt_j3_housing.msh";
+Printf("GMSH DONE nodes=%g", Mesh.NbNodes);
+Exit;

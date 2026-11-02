@@ -1,0 +1,10 @@
+Merge "/Users/deepakdiwan/Vector-wt/ver/verify/out/step/cyc_th0/disc2.step";
+Mesh.ElementOrder = 2;
+Mesh.CharacteristicLengthMax = 1.5;
+Mesh.CharacteristicLengthFromCurvature = 1;
+Mesh.MinimumElementsPerTwoPi = 16;
+Mesh 3;
+Mesh.MshFileVersion = 2.2;
+Save "/Users/deepakdiwan/Vector-wt/ver/verify/out/msh/disc2.msh";
+Printf("GMSH DONE nodes=%g", Mesh.NbNodes);
+Exit;

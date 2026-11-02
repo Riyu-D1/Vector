@@ -1,0 +1,10 @@
+Merge "STEPFILE";
+Mesh.ElementOrder = 2;
+Mesh.CharacteristicLengthMax = CL;
+Mesh.CharacteristicLengthFromCurvature = 1;
+Mesh.MinimumElementsPerTwoPi = 16;
+Mesh 3;
+Mesh.MshFileVersion = 2.2;
+Save "MSHFILE";
+Printf("GMSH DONE nodes=%g", Mesh.NbNodes);
+Exit;

@@ -173,8 +173,8 @@ def main(argv=None):
             print("[demo] ping:", arm.ping())
             arm.arm_motors()
             arm.enable()
-            for target in [(0.20, 0.0, 0.15), (0.15, 0.08, 0.10),
-                           (0.15, -0.08, 0.10), (0.20, 0.0, 0.15)]:
+            for target in [(0.20, 0.0, 0.15), (0.20, 0.06, 0.15),
+                           (0.20, -0.06, 0.15), (0.20, 0.0, 0.15)]:
                 T = arm.move_tcp(*target, speed_scale=0.4,
                                  realtime=not args.sim)
                 if sim:

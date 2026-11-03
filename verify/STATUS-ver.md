@@ -58,11 +58,13 @@ C3D10 tets, hard contact + μ=0.2, `*CONTACT PAIR`/`SURFACE TO SURFACE`.
   which OOM-died at ≥1.2 M DOF (all the "silent deaths" above).
 - Gmsh C3D10 midside inversions (pin walls, housings) — detected by `check_jac.py`
   (Gauss-point detJ in ccx ordering) and repaired by remesh/`fix_jac.py`.
-- `PRESSURE-OVERCLOSURE=TIED` and `*TIE` both fail across a designed 0.15 mm gap here —
+- `PRESSURE-OVERCLOSURE=TIED` and `*TIE` both fail across a designed 0.15 mm gap here
+  *(D4/F1: the flank gap is now ~0.01 nominal — same conclusion, harder)* —
   tied fallback is NOT viable for this model; only hard contact transfers load.
 
 **Verification of the model itself (all done):** surface classification measured against
 the real STEP geometry — ring-pin↔lobe gap 0.163 mm, output-pin↔hole gap 0.198 mm
+*(pre-D4 geometry; now ~0.01 flank / 0.12 out-pin)*
 (`code/gap.py`); all 7 component meshes Jacobian-clean; Newton iteration converges on
 every launch (residual → 0 within 2–3 iterations per increment).
 

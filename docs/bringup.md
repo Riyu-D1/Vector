@@ -19,7 +19,8 @@ whole point of the board.
   A cut/unplugged estop wire also estops — on purpose. The IO38 sense
   input (J9) only *reports* the loop state to firmware.
 - 3S LiPo max if you ever swap the brick — no undervoltage cutoff.
-- Keep clear of the arm sweep; the 4008s at 5 A can throw the links.
+- Keep clear of the arm sweep; even at the capped 3.7 A / 2.5 A
+  (J2/J3 phase, F1 torque envelope) the 4008s can throw the links.
 - Hot parts after a stall: motor bell, ESC board, servo case.
 
 ## Stage 0 — relay + e-stop proof, NO motors attached

@@ -71,7 +71,9 @@ the posed `j4_cradle`), `msh2housing.py` / `msh2cradle.py` (deck writers with
   convention: **25 MPa cross-layer / 50 MPa along-layer** (layer-direction
   strength ≈ 50% of datasheet, per stage rule).
 - **Loads** from `upgrade1/gravity_up1.py` @ 0.5 kg full reach
-  (Q_WORST = [0,+70,−70,0,0,0]°), **×2 dynamic factor**, applied as
+  (Q_WORST = [0,+70,−70,0,0,0]°), **×2 dynamic factor** *(superseded D4:
+  design torque = static at 0.5 kg, no ×2 — firmware torque caps
+  J2 3.0 / J3 2.0 N·m bound the dynamics instead)*, applied as
   (M, F) at a rigid ref node spider-linked to the back-pilot bolt patches:
   J2: 2.565 N·m → **M 5130 N·mm**, F 31.0 N (downstream 1.581 kg×2);
   J3: ROM-max 1.837 N·m → **M 3674 N·mm** (conservative — exceeds the

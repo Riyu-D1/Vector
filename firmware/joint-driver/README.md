@@ -25,10 +25,18 @@ this too) — use thin wire, flux, and strain-relief the cable.
 
 Edit the top of `joint_driver.ino` before flashing each board:
 
-| Joint | `DEVICE_CAN_ID` | `CAN_TERM_LAST` | current cap |
-|---|---|---|---|
-| J2 shoulder | 2 | false | 5.0 A [U] |
-| J3 elbow | 3 | true (last on bus) | 5.0 A [U] |
+| Joint | `DEVICE_CAN_ID` | `CAN_TERM_LAST` | `TQ_CAP_NM` | current cap |
+|---|---|---|---|---|
+| J2 shoulder | 2 | false | 3.0 N·m | 3.71 A |
+| J3 elbow | 3 | true (last on bus) | 2.0 N·m | 2.47 A |
+
+`TQ_CAP_NM` is the F1/D4 output-torque cap; `CURRENT_LIMIT_A` is
+derived from it (`T = I × KT_MOTOR × GEAR_RATIO × GEAR_EFF ≤ TQ_CAP_NM`)
+and is a hard ceiling — SDO writes and EEPROM values are clamped to it,
+so no host command can exceed the disc envelope. Output velocity cap
+`JOINT_VEL_LIMIT_OUT_RADS` = 0.5 rad/s (20 rad/s motor); E-stop /
+MOTOR_EN drop / heartbeat loss ramp phase current to zero over 75 ms
+(the 24 V relay cut stays independent and immediate).
 
 `POLE_PAIRS` = 7 assumes the 4008 is a 12N14P motor — **UNVERIFIED**:
 count rotor magnets (14 → 7 pp) or read the vendor datasheet; wrong

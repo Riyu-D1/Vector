@@ -138,15 +138,24 @@ static void joint_update(void) {
     /* integrate jog velocities into the commanded setpoint */
     const float dt = 1.0f / JOINT_LOOP_HZ;
     for (int i = 0; i < ARM_N_CHAN; i++) {
-        if (g_arm.dq_cmd[i] != 0.0f) {
-            g_arm.q_cmd[i] += g_arm.dq_cmd[i] * dt;
+        /* J2/J3 (cycloidal discs): cap jog velocity — slow, smooth only */
+        float dq = g_arm.dq_cmd[i];
+        if (i == CH_J2 || i == CH_J3) {
+            if (dq > JOINT_VEL_LIMIT_OUT_RADS) dq = JOINT_VEL_LIMIT_OUT_RADS;
+            if (dq < -JOINT_VEL_LIMIT_OUT_RADS) dq = -JOINT_VEL_LIMIT_OUT_RADS;
+        }
+        if (dq != 0.0f) {
+            g_arm.q_cmd[i] += dq * dt;
             if (g_arm.q_cmd[i] < Q_MIN[i]) { g_arm.q_cmd[i] = Q_MIN[i]; g_arm.dq_cmd[i] = 0; }
             if (g_arm.q_cmd[i] > Q_MAX[i]) { g_arm.q_cmd[i] = Q_MAX[i]; g_arm.dq_cmd[i] = 0; }
         }
     }
     for (int i = 0; i < CAN_N_JOINTS; i++) {
         uint8_t ch = CAN_JOINT_CHAN[i];
-        can_send_pdo2(can_ids[i], g_arm.q_cmd[ch], g_arm.dq_cmd[ch]);
+        float v = g_arm.dq_cmd[ch];
+        if (v > JOINT_VEL_LIMIT_OUT_RADS) v = JOINT_VEL_LIMIT_OUT_RADS;
+        if (v < -JOINT_VEL_LIMIT_OUT_RADS) v = -JOINT_VEL_LIMIT_OUT_RADS;
+        can_send_pdo2(can_ids[i], g_arm.q_cmd[ch], v);
         if (g_arm.tau_ff[i] != 0.0f)
             can_send_pdo3(can_ids[i], g_arm.tau_ff[i]);
     }

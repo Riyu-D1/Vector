@@ -47,12 +47,31 @@ extern "C" {
                                      * UNVERIFIED — count rotor magnets */
 #define GEAR_RATIO      40.0f       /* printed cycloidal 40:1           */
 #define GEAR_EFF        0.7f        /* cycloidal efficiency UNVERIFIED  */
-#define CURRENT_LIMIT_A 5.0f        /* phase q-axis cap, conservative
-                                     * until the bench test [U]         */
-#define VOLTAGE_LIMIT   8.0f        /* of the 12 V rail                 */
-#define VEL_LIMIT_MOTOR 100.0f      /* rad/s motor-side cap             */
 #define KT_MOTOR        0.0289f     /* Nm/A estimate for 4008 330KV     */
                                     /* (Kt ~= 60/(2*pi*KV)) UNVERIFIED  */
+/* Torque envelope (cyclo4/STATUS-cyc4.md, D4): the printed discs hold
+ * lobe SF >= 2 only while OUTPUT torque stays under the joint cap:
+ *   T_out = I_phase x KT_MOTOR x GEAR_RATIO x GEAR_EFF <= TQ_CAP_NM
+ *   J2 cap 3.0 N·m -> 3.71 A phase;  J3 cap 2.0 N·m -> 2.47 A phase.
+ * Enforced HERE, not only by the host: CURRENT_LIMIT_A is a hard
+ * ceiling — SDO_CURRENT_LIMIT_A writes and EEPROM values are clamped
+ * to it, so no host command can exceed the disc envelope. */
+#define TQ_CAP_NM       ((DEVICE_CAN_ID == CAN_NODE_J2) ? 3.0f : 2.0f)
+#define CURRENT_LIMIT_A (TQ_CAP_NM / (KT_MOTOR * GEAR_RATIO * GEAR_EFF))
+#define VOLTAGE_LIMIT   8.0f        /* of the 12 V rail                 */
+/* Velocity cap — slow, smooth motion only (documented in
+ * final/BUILD_GUIDE.md): 0.5 rad/s at the output (~29 deg/s; J2
+ * end-to-end ~6.6 s) x 40 = 20 rad/s motor-side. */
+#define VEL_LIMIT_OUT   0.5f        /* rad/s output-side cap            */
+#define VEL_LIMIT_MOTOR (VEL_LIMIT_OUT * GEAR_RATIO)
+/* Soft stop: on NMT_ESTOP / NMT_DISABLE / CAN heartbeat loss, ramp the
+ * q-axis current to zero over ESTOP_RAMP_MS instead of a step cut — a
+ * step off-load kicks an inertial torque spike through the discs. The
+ * base node's K1 relay cut (MOTOR_EN) is independent and stays
+ * instant; this ramp is what the firmware does with whatever rail
+ * charge remains. */
+#define ESTOP_RAMP_MS   75
+#define CAN_HB_LOSS_MS  500         /* total bus silence while armed   */
 #define POS_P_GAIN      20.0f       /* angle P gain (SimpleFOC units)   */
 #define VEL_FF_GAIN     1.0f
 
@@ -94,6 +113,9 @@ static run_mode_t mode = MODE_DISABLED;
 static bool   estop = false;
 static bool   armed = false;
 static bool   homed = false;         /* NOT persisted: re-home every boot */
+static bool     softstop = false;    /* ESTOP_RAMP_MS decay in progress */
+static uint32_t softstop_start_ms = 0;
+static float    softstop_iq0 = 0.0f;
 static float  cmd_pos = 0.0f, cmd_vel_ff = 0.0f;
 static float  cmd_iq  = 0.0f;          /* torque-mode q-current setpoint */
 static float  pos_zero = 0.0f;         /* output offset (home/ZERO_HERE) */
@@ -146,6 +168,10 @@ void params_load(void) {
         P.home_current  = HOME_CURRENT_A;
         P.home_speed    = HOME_SPEED_OUT;
     }
+    /* the D4 torque cap is a ceiling the host can't raise: never trust
+     * a stored value above it (flashes older than F1 wrote 5 A) */
+    if (P.current_limit > CURRENT_LIMIT_A || P.current_limit <= 0.0f)
+        P.current_limit = CURRENT_LIMIT_A;
 }
 void params_save(void) { EEPROM.put(EEPROM_ADDR, P); }
 
@@ -200,11 +226,30 @@ static void set_mode(run_mode_t m) {
     }
 }
 
-static void do_estop(void) {
-    estop = true;
+/* soft stop entry: keep the driver alive and let loop() ramp the
+ * q-current to zero over ESTOP_RAMP_MS, THEN disable. Used by ESTOP,
+ * DISABLE and CAN heartbeat loss so the discs never see a torque step.
+ * If the drive is already off there is nothing to ramp. */
+static void start_softstop(void) {
     armed = false;
     homing = false;
-    set_mode(MODE_DISABLED);
+    if (softstop || mode == MODE_DISABLED) {
+        set_mode(MODE_DISABLED);
+        return;
+    }
+    softstop = true;
+    softstop_start_ms = millis();
+    softstop_iq0 = motor_iq_a;
+    if (softstop_iq0 > P.current_limit) softstop_iq0 = P.current_limit;
+    if (softstop_iq0 < -P.current_limit) softstop_iq0 = -P.current_limit;
+    motor.controller = MotionControlType::torque;
+    motor.enable();
+    mode = MODE_TORQUE;             /* loop() drives the ramp */
+}
+
+static void do_estop(void) {
+    estop = true;
+    start_softstop();
 }
 
 static void do_enable(void) {
@@ -222,6 +267,7 @@ static void do_enable(void) {
     }
     estop = false;
     armed = true;
+    softstop = false;               /* abandon a ramp still in flight */
     set_mode(MODE_POSITION);
 }
 
@@ -293,6 +339,9 @@ static void sdo_write(uint16_t addr, const uint8_t val4[4]) {
     switch (addr) {
     case SDO_CURRENT_LIMIT_A:
         P.current_limit = get_f32(val4);
+        if (P.current_limit > CURRENT_LIMIT_A)
+            P.current_limit = CURRENT_LIMIT_A;  /* hard ceiling (D4) */
+        if (P.current_limit < 0.0f) P.current_limit = 0.0f;
         if (!homing) motor.current_limit = P.current_limit;
         break;
     case SDO_POLE_PAIRS:
@@ -375,8 +424,7 @@ static void handle_frame(uint16_t id, const uint8_t *d, uint8_t dlc) {
         if (dec_nmt(d, dlc, &cmd, &target) != 0) return;
         if (target != 0 && target != P.can_id) return;  /* not for us */
         switch (cmd) {
-        case NMT_DISABLE:   set_mode(MODE_DISABLED); armed = false;
-                            homing = false; break;
+        case NMT_DISABLE:   start_softstop(); break;
         case NMT_ENABLE:    do_enable(); break;
         case NMT_CALIBRATE: do_calibrate(); break;
         case NMT_HOME:      do_home(); break;
@@ -490,7 +538,18 @@ void setup() {
 void loop() {
     /* FOC at full rate */
     motor.loopFOC();
-    if (mode == MODE_TORQUE && homing) {
+    if (softstop) {
+        /* linear q-current decay to zero over ESTOP_RAMP_MS */
+        uint32_t el = millis() - softstop_start_ms;
+        float k = (el >= ESTOP_RAMP_MS) ? 0.0f
+                  : 1.0f - (float)el / (float)ESTOP_RAMP_MS;
+        motor.target = softstop_iq0 * k;
+        motor.move();
+        if (k == 0.0f) {
+            softstop = false;
+            set_mode(MODE_DISABLED);    /* final cut after the ramp */
+        }
+    } else if (mode == MODE_TORQUE && homing) {
         motor.move();               /* iq = HOME_DIR * home_current */
     } else if (armed && !estop && mode != MODE_DISABLED) {
         motor.move();
@@ -514,6 +573,13 @@ void loop() {
     if (armed && !estop && (now - last_cmd_ms) > CMD_TIMEOUT_MS &&
         mode == MODE_POSITION) {
         motor.target = motor.shaft_angle;   /* freeze where we are */
+    }
+
+    /* CAN heartbeat loss: total bus silence while armed -> same soft
+     * stop as ESTOP (the base node's own watchdog is independent) */
+    if (armed && !estop && (now - last_rx_any_ms) > CAN_HB_LOSS_MS) {
+        do_estop();
+        send_emcy(0x05, 0x14);          /* bus heartbeat lost */
     }
 
     /* telemetry */

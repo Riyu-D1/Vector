@@ -58,7 +58,17 @@ class TrajectoryPlanner:
 
     def check_torque(self, q, payload_kg=0.0):
         """Raise PlanError if any joint's static gravity torque at q
-        exceeds 80% of rated under payload_kg. Returns worst ratio."""
+        exceeds 80% of rated under payload_kg, or the J2/J3 printed-disc
+        torque caps (config.TORQUE_CAP_NM — the firmware enforces the
+        same bound, so a waypoint above it cannot physically hold).
+        Returns worst ratio."""
+        tau = gravity.gravity_torques(q, payload_kg)
+        for i, cap in config.TORQUE_CAP_NM.items():
+            if abs(tau[i]) > cap:
+                raise PlanError(
+                    f"joint {i+1} gravity torque {abs(tau[i]):.2f} N·m "
+                    f"exceeds the {cap:.2f} N·m disc cap "
+                    f"(payload {payload_kg:.2f} kg) — refuse move")
         ok, wi, ratio = gravity.torque_ok(q, payload_kg)
         if not ok:
             raise PlanError(

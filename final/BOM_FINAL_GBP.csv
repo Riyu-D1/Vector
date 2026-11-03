@@ -1,0 +1,56 @@
+item,spec,qty (+ spares),UK supplier,product URL,unit £,line £,date checked,status (verified/[U])
+Tarot TL2955 motor,"4008 330KV 6S disc motor, 4mm shaft, 85g",2,FlyingTech,https://www.flyingtech.co.uk/product/tarot-4008-330kv-6s-multirotor-brushless-disc-motor-tl2955/,34.90,69.80,2026-11-01,verified
+B-G431B-ESC1 ESC,"ST STM32G431 CAN speed controller discovery kit",2,DigiKey UK,https://www.digikey.co.uk/en/products/detail/stmicroelectronics/B-G431B-ESC1/10321670,36.07,72.14,2026-11-01,verified
+Feetech STS3250 servo,"12V 50kg.cm TTL bus servo, 74.5g (J1+J4)",2,Amazon UK,https://www.amazon.co.uk/dp/B0FLJ6289C,136.15,272.30,2026-11-02,"verified - user-chosen seller; rechecked today: £136.15, in stock, dispatches 4-5 days"
+Feetech STS3215 servo,"12V 30kg.cm TTL bus servo (J5,J6,gripper; +1 spare from J4 swap)",3+1,RoboSavvy UK,https://robosavvy.co.uk/dfrobot-st3215-serial-bus-servo-12v-30kg-360-magnetic-encoder-df-ser0070.html,22.56,90.24,2026-11-01,verified
+AS5600 encoder module,"12-bit magnetic encoder breakout, 23x23mm",2,38-3D UK,https://38-3d.co.uk/products/as5600-encoder-module,4.04,8.08,2026-11-01,verified
+6808-2RS bearing,"40x52x7 output bearing",2+1,Search4Parts,https://www.search4parts.co.uk/product/6808-2rs-generic-40x52x7-single-row-metric-ball-bearing-with-2-rubber-seals,3.94,11.82,2026-11-01,verified
+6702-2RS bearing,"15x21x4 eccentric/disc bearing",4+1,Bearing Options,https://www.bearingoptions.co.uk/6702-2rs-dunlop-rubber-sealed-thin-wall-bearing-15mm-x-21mm-x-4mm-61702-11644-p.asp,2.04,10.20,2026-11-01,verified
+685-2RS bearing,"5x11x5 hub front bearing",2+1,Search4Parts,https://www.search4parts.co.uk/product/685-2rs-sealed-5x11x5-minature-ball-bearing,1.08,3.24,2026-11-01,verified
+AXK5578 thrust cage,"55x78x3 needle thrust bearing (J1)",1,Henderson Bearings,https://www.hendersonbearings.co.uk/axk5578-55x78x3-needle-thrust-brand-neutral.html,1.91,1.91,2026-11-01,verified
+AS5578 thrust washers,"55x78x1 washers for AXK5578",2,Henderson Bearings,https://www.hendersonbearings.co.uk/,0.60,1.20,2026-11-01,[U] - price not confirmed on page
+6707-2RS bearing,"35x44x5 (reBot J1)",1,Bearing Options,https://www.bearingoptions.co.uk/,4.00,4.00,2026-11-01,[U] - size page not re-verified today
+Dowel pins 3x10,"ISO 8734 hardened, ring pins 2x41 + selective-fit spares",82+18 (2x box 50),Frasar Direct,https://www.frasardirect.com/products/m3-x-10-silver-steel-dowel-pin-iso-8734b-50-box-qty-1,5.05,10.10,2026-11-01,verified (box of 50)
+Dowel pins 3x12,"ISO 8734 hardened, output pins 2x6",12+4,WDS Components,https://www.wdscomponents.com/en-gb/3mm-x-10mm-steel-precision-dowel-pin,0.30,4.80,2026-11-01,[U] - 3x12 length price assumed same band as 3x10
+Dowel pins 4x8,"output locating dowels 2x3",6+2,WDS Components,https://www.wdscomponents.com/en-gb/3mm-x-10mm-steel-precision-dowel-pin,0.35,2.80,2026-11-01,[U]
+Spur gear m1 16T,"steel EN8, needs bore machining (reBot GEAR-1M16C)",1,Technobots,https://www.technobotsonline.com/steel-spur-gear-mod-1.0-16-tooth-ss10-16b.html,6.16,6.16,2026-11-01,verified - machining extra [U]
+Torsion spring 471671,"Springmasters stainless, wire 2.0, OD22, leg 70; 1xLH+1xRH",2,Springmasters,https://springmasters.com/shop/471671,4.71,9.42,2026-11-01,verified - handedness [U]
+PETG-CF filament,"Bambu PETG-CF 1kg spool, black",1,Bambu Lab UK,https://uk.store.bambulab.com/,32.99,32.99,2026-11-01,verified (D2 price)
+Hardened nozzle/hotend,"A1 0.4 hardened steel (PETG-CF wears brass)",1,AliExpress/3DJake,https://uk.store.bambulab.com/,9.99,9.99,2026-11-01,[U] - exact UK listing from D2
+ESP32-S3-DevKitC-1,"N16R8 or N8R8 devkit (carrier U1A/U1B)",1+1,Amazon UK,https://www.amazon.co.uk/dp/B0H8Z8W6ZQ,16.94,33.88,2026-11-01,verified - third-party module, check N8R8 rev
+Songle SRD-12VDC-SL-A,"12V SPNO 10A PCB relay (K1) - fixed pin map in pcb13_fix",1+1,Switch Electronics,https://www.switchelectronics.co.uk/products/12v-mini-power-songle-relay-spno-10a,0.66,1.32,2026-11-01,[U] - out of stock today; alt LCSC C93716 ~$0.40+ship
+IRF4905PBF,"P-FET TO-220 reverse-polarity (Q2)",1+1,eBay UK / AliExpress,https://www.ebay.co.uk/,2.99,5.98,2026-11-01,[U] - RS 919-4772 out of stock; eBay UK ~£3/2pcs
+2N2222A transistor,"TO-92, Q3 low-side relay driver (socketed 1x03)",1+2,Rapid/eBay,https://www.rapidonline.com/,0.30,0.90,2026-11-01,[U]
+1N4007 diode,"flyback D5",1+2,Rapid/eBay,https://www.rapidonline.com/,0.10,0.30,2026-11-01,[U]
+1N5820 Schottky,"D1 5V rail diode",1+2,Rapid/eBay,https://www.rapidonline.com/,0.30,0.90,2026-11-01,[U]
+Resistor set,"R10/R12 10k, R11 1k, R2, CAN-term 120R x2, LED-R; DIN0207",1 kit,Rapid Electronics,https://www.rapidonline.com/,3.00,3.00,2026-11-01,[U]
+TJA1051T/3 CAN XCVR,"SOIC-8 CAN transceiver (carrier, if v1.2 position fitted)",1+1,Mouser/RS,https://uk.rs-online.com/,1.50,3.00,2026-11-01,[U] - confirm v1.3 still fits this position
+Mini-360 buck,"4.75-23V in, 5V out 1.8A (J3, optional)",1+1,Component Shop,https://www.componentshop.co.uk/miniature-voltage-reducer.html,2.50,5.00,2026-11-01,verified
+XT60 connector pair,"J16 12V input plug + PSU-side socket",1 pair,eBay UK / Amazon,https://www.amazon.co.uk/,3.00,3.00,2026-11-01,[U]
+Phoenix MKDS-1,5-2,"5.08mm 2-pin screw terminals (J1,J2,J18,J20,JP1)",5+2,RS/Farnell,https://uk.rs-online.com/,1.20,8.40,2026-11-01,[U]
+KK-254 connector kit,"3-pin housings + crimps for J4/J5 servo bus",1 kit,eBay UK,https://www.ebay.co.uk/,6.00,6.00,2026-11-01,[U]
+Pin headers+sockets,"2.54mm: 2x22 socket ESP32, 1x02..1x07 headers, machined 1x03 for Q3",1 lot,eBay UK,https://www.ebay.co.uk/,4.00,4.00,2026-11-01,[U]
+Blade fuse holder+6A,"F1: PCB mini-blade holder + 6A fuse + spares",1+3 fuses,Amazon UK,https://www.amazon.co.uk/,2.50,2.50,2026-11-01,[U]
+E-stop switch,"22mm latching mushroom, 1NC, twist release (J19 loop)",1,eBay UK SCL Components,https://www.ebay.co.uk/itm/183567919745,9.39,9.39,2026-11-01,verified
+12V PSU 100W,"Mean Well RS-100-12 12V 8.5A enclosed, mains input",1,ETE,https://www.ete.co.uk/product/rs-100-watt-enclosed-power-supply-12-0v-8-50a/,23.20,23.20,2026-11-01,verified
+NC loop jumper wire,"J19 2-pin jumper for bench running w/o e-stop fitted",1,-,-,0.20,0.20,2026-11-01,[U]
+Servo cables 3-pin,"Feetech TTL bus leads 200-300mm daisy chain x3 (+PCB end)",3+1,eBay UK,https://www.ebay.co.uk/,1.00,4.00,2026-11-01,[U] - 1 cable ships with each servo
+Silicone wire kit,"18AWG (motor rail) + 22AWG (signal/CAN) red+black",1 lot,Amazon UK,https://www.amazon.co.uk/,8.00,8.00,2026-11-01,[U]
+M3 fastener kit,"ISO7380+ISO10642: 10/8/6/5/4mm + 14/16mm, A2, ~300pcs",1,Amazon UK,https://www.amazon.co.uk/,8.00,8.00,2026-11-01,[U]
+Heat-set inserts M3,"M3x5.7 OD4.6, brass, for J4 cradle + carrier flanges",10+20,Amazon UK,https://www.amazon.co.uk/,4.00,4.00,2026-11-01,[U]
+Magnet 6x2.5 diametric,"N35(H) diametric NdFeB for AS5600",2+1,AMF Magnets UK,https://amfmagnets.co.uk/products/neodymium-disc-6mm-x-2-5mm-n35-diametrically-magnetised,1.40,4.20,2026-11-01,verified
+SSD1306 OLED,"0.96in I2C (J11, optional)",1,Amazon UK,https://www.amazon.co.uk/,5.00,5.00,2026-11-01,[U]
+MPU6050 IMU,"GY-521 I2C (J12, optional)",1,Amazon UK,https://www.amazon.co.uk/,3.00,3.00,2026-11-01,[U]
+EC11 jog encoder,"with push switch (J13, optional)",1,Amazon UK,https://www.amazon.co.uk/,2.00,2.00,2026-11-01,[U]
+WS2812 LED,"NeoPixel strip segment (J14, optional)",1,Amazon UK,https://www.amazon.co.uk/,1.00,1.00,2026-11-01,[U]
+USB-C cable,"ESP32 flashing/host link",1,Amazon UK,https://www.amazon.co.uk/,5.00,5.00,2026-11-01,[U]
+Heatsinks,"TO-220 sink for IRF4905 + ESC thermal pads",1 lot,eBay UK,https://www.ebay.co.uk/,3.00,3.00,2026-11-01,[U]
+Loctite 243,"M3 threadlock (stator/hub screws)",1,Amazon UK,https://www.amazon.co.uk/,6.00,6.00,2026-11-01,[U]
+Loctite 603,"retaining compound (dowels/press fits)",1,Amazon UK,https://www.amazon.co.uk/,8.00,8.00,2026-11-01,[U]
+PTFE/lithium grease,"ring pins + disc teeth (run-in + service)",1,Amazon UK,https://www.amazon.co.uk/,5.00,5.00,2026-11-01,[U]
+Feeler gauge set,"metric 0.02-1.0 mm - for the calibration-coupon clearance check",1,Amazon UK,https://www.amazon.co.uk/,6.00,6.00,2026-11-02,[U] - any UK metric set
+JLCPCB carrier fab,"v1.3-fixed 2-layer 135x115 HASL 1oz x5 + UK delivery+VAT",1 lot,JLCPCB,https://jlcpcb.com/,18.00,18.00,2026-11-01,[U] - quote not reachable, est landed
+Crimp/JST tool kit,"dupont+KK254 crimps, ferrules, spades",1 lot,Amazon UK,https://www.amazon.co.uk/,10.00,10.00,2026-11-01,[U]
+Gear rack m1,"PRINTED on A1 (vendor_rack_u/d), not purchased",2,-,-,0.00,0.00,2026-11-01,resolved - printed part, PETG-CF
+Cycloidal discs x4,"PRINTED PETG-CF (cyclo4/out disc1/2), 4.25mm, near-zero flank",4,-,-,0.00,0.00,2026-11-02,"resolved - printed, see final/PRINT_LIST.md"
+Calibration coupon,"flank-clearance gauge, PRINTED on A1 (final/out/coupon.stl)",1,-,-,0.00,0.00,2026-11-02,resolved - printed part, PETG-CF

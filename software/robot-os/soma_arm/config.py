@@ -54,8 +54,10 @@ JOINT_MAX = [
 GRIP_MIN = 0.0                        # jaw open (rad) — UNVERIFIED
 GRIP_MAX = 1.4                        # jaw closed — calibrate on bench
 
-# Velocity limits (rad/s) — conservative defaults.
-JOINT_VEL_MAX = [1.5, 1.0, 1.0, 2.0, 2.5, 2.5]
+# Velocity limits (rad/s) — J2/J3 capped at the ESC's VEL_LIMIT_OUT
+# (0.5 rad/s ~ 29 deg/s, slow/smooth for the printed cycloidal discs);
+# the base node clamps jog velocity to the same bound.
+JOINT_VEL_MAX = [1.5, 0.5, 0.5, 2.0, 2.5, 2.5]
 JOINT_ACC_MAX = [4.0, 3.0, 3.0, 8.0, 8.0, 12.0]
 
 # Rated joint torques (N·m) — stage W1 + fea_arm3; J1/J5/J6 [U].
@@ -66,13 +68,20 @@ TORQUE_DERATE = 0.80                  # planner refuses >80% of rated
 CAN_NODE_IDS = {1: 2, 2: 3}           # joint index -> CAN node id
 CAN_BITRATE = 1_000_000
 
-# Driver phase-current caps (A) — conservative until bench test [U].
-CURRENT_LIMIT_A = [5.0, 5.0]          # J2, J3
+# D4 printed-disc torque envelope (cyclo4/STATUS-cyc4.md): joint index
+# -> max output torque the discs may see. The planner refuses waypoints
+# above these caps AND the ESC clamps phase current to the same bound.
+TORQUE_CAP_NM = {1: 3.0, 2: 2.0}      # J2, J3 (0-based joint index)
 GEAR_RATIO = 40.0                     # cycloidal 40:1
 GEAR_EFF = 0.7                        # UNVERIFIED
 MOTOR_POLE_PAIRS = 7                  # 4008 assumed 12N14P (UNVERIFIED)
 KT_MOTOR = 60.0 / (2.0 * math.pi * 330.0)   # ~0.0289 N·m/A, Tarot 4008
                                           # 330KV estimate (UNVERIFIED)
+# Driver phase-current caps (A), CAN order [J2, J3]:
+#   I_cap = T_cap / (KT_MOTOR * GEAR_RATIO * GEAR_EFF)
+#   J2 3.0 N·m -> 3.71 A, J3 2.0 N·m -> 2.47 A
+CURRENT_LIMIT_A = [TORQUE_CAP_NM[1] / (KT_MOTOR * GEAR_RATIO * GEAR_EFF),
+                   TORQUE_CAP_NM[2] / (KT_MOTOR * GEAR_RATIO * GEAR_EFF)]
 
 # ------------------------------------------------------ Feetech (bus A)
 # channel index -> servo id: J1 STS3250, J4/J5/J6 STS3215, GRIP STS3215

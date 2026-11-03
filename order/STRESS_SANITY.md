@@ -69,7 +69,10 @@ loose: ream holes 4.0 and fit 4 mm dowels with retaining compound
 
 ## 3. Ring-pin / disc-tooth conformal contact (Hertz)
 
-Ring pins d3 (RP=1.5) on R=23.5; disc teeth offset CLR_TOOTH 0.15 so the
+Ring pins d3 (RP=1.5) on R=23.5; disc teeth offset CLR_TOOTH 0.15
+*(superseded D4/F1: CLR_TOOTH 0.01, disc t 4.25 mm, ~10 pins share the
+load — this section predates the near-zero-clearance redesign; see
+cyclo4/STATUS-cyc4.md)* so the
 tooth flank wraps the pin (conformal pair, R_eff = 1/(1/1.5 - 1/1.65) =
 16.5 mm). Total tangential pin force at output: S_F = T/R = 7000/23.5 =
 298 N, shared over ~half the 41 pins in the loaded arc; peak on ~6 ->

@@ -39,7 +39,8 @@ Hardware deltas vs the old code (from pcb13/sim/fea STATUS files):
   `can_bus` exposes bus-off; `feetech_bus` drop BusB, 5 servos;
   `host_link` 28 B pos/vel, 2-joint torque, ARM_MOTOR, 86 B STATE.
 - `firmware/joint-driver/`: Tarot 4008 params (Kt 0.0289 [U], pp 7 [U],
-  40:1, eff 0.7 [U], 5 A [U]), NMT_HOME homing-into-stop, torque gated
+  40:1, eff 0.7 [U], 5 A [U] — superseded F1: J2 3.71 A / J3 2.47 A
+  from the D4 disc envelope), NMT_HOME homing-into-stop, torque gated
   on calibrated+homed, output-rad commands unchanged, new
   `platformio.ini` (disco_b_g431b_esc1, SimpleFOC).
 - `software/robot-os/`: `config.py` real geometry+rated torques;
@@ -59,7 +60,7 @@ Hardware deltas vs the old code (from pcb13/sim/fea STATUS files):
 |---|---|---|---|
 | 4008 pole pairs | 7 | joint_driver.ino | count rotor magnets (14→7 pp) |
 | 4008 Kt | 0.0289 N·m/A | joint_driver.ino, config.py | 60/(2π·330 KV), phase current |
-| Phase current cap | 5 A | config.h, joint_driver.ino | conservative until bench |
+| Phase current cap | 5 A — superseded F1: J2 3.71 / J3 2.47 A | config.h, joint_driver.ino | D4 disc envelope; ESC clamps to ceiling |
 | Gear efficiency | 0.7 | joint_driver.ino, gravity.py | 40:1 cycloidal guess |
 | Relay K1 pad map | coil 1/2, COM 3, NO 5 | pcb13 STATUS | check Songle SRD datasheet |
 | AS5600 pins on J8 | PB6 SCL/PB7 SDA | joint_driver.ino | alt pair PB7/PB8 on J8 |
@@ -86,7 +87,8 @@ Hardware deltas vs the old code (from pcb13/sim/fea STATUS files):
   alive window 400 ms. fw_version 0x000200.
 - **Joint driver** (new platformio.ini, disco_b_g431b_esc1):
   Tarot 4008 330KV (Kt 0.0289 [U], pp 7 [U]), 40:1, eff 0.7 [U],
-  5 A phase cap [U]. AS5600 on motor shaft → multi-turn tracking via
+  5 A phase cap [U] — superseded F1 (J2 3.71 / J3 2.47 A + 75 ms
+  soft-stop ramp). AS5600 on motor shaft → multi-turn tracking via
   SimpleFOC shaft angle; commands/feedback in output radians.
   NMT_HOME = low-iq hard-stop homing with stall detect → zero at
   stop + SDO_HOME_STOP_RAD. NMT_ENABLE refused before calibrated

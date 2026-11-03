@@ -69,8 +69,10 @@ real output (RAM 6.0 %, flash 8.6 %).
 
 - MOTOR_EN comes up LOW first thing — the rail is dead until a host
   proves itself.
-- CAN init, Feetech init, SDO `CURRENT_LIMIT_A` (5 A) pushed to J2/J3,
-  joints left DISABLED.
+- CAN init, Feetech init, SDO `CURRENT_LIMIT_A` pushed to J2/J3
+  (3.71 A / 2.47 A — the F1 torque-cap phase limits; the ESC clamps
+  anything higher to its own `CURRENT_LIMIT_A` regardless), joints
+  left DISABLED.
 - HOST must `ARM_MOTOR` → K1 closes → every ESC must heartbeat inside
   1500 ms (`ESC_BOOT_TIMEOUT` drop otherwise) → `enable` (NMT ENABLE)
   → joints must have been calibrated + homed or the drives refuse

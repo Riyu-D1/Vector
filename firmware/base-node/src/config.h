@@ -39,10 +39,28 @@ static const float Q_MIN[ARM_N_CHAN] = {
 static const float Q_MAX[ARM_N_CHAN] = {
      3.1416f,  1.2217f,  0.5236f,  1.2217f,  1.2217f,  3.1416f, 1.4f };
 
-/* driver phase-current caps (A) for J2/J3 — spec 5 A, conservative
- * until the bench test [U] */
-static const float PHASE_CURRENT_LIMIT_A[CAN_N_JOINTS] = { 5.0f, 5.0f };
-#define GEAR_RATIO        40.0f
+/* Driver phase-current caps (A) for J2/J3 — the D4 printed-disc torque
+ * envelope (cyclo4/STATUS-cyc4.md): output torque must stay
+ *   T_out = I_phase x KT_MOTOR_NM_A x GEAR_RATIO x GEAR_EFF <= cap
+ *   J2 <= 3.0 N·m -> 3.0/(0.0289*40*0.7) = 3.71 A
+ *   J3 <= 2.0 N·m -> 2.0/(0.0289*40*0.7) = 2.47 A
+ * Pushed to each ESC via SDO_CURRENT_LIMIT_A at boot; the ESC clamps
+ * to the same ceiling itself. Kt / efficiency are [U] — bench-verify. */
+#define KT_MOTOR_NM_A     0.0289f   /* Tarot 4008 330KV estimate [U]   */
+#define GEAR_RATIO        40.0f     /* printed cycloidal 40:1          */
+#define GEAR_EFF          0.7f      /* cycloidal efficiency [U]        */
+#define J2_TORQUE_CAP_NM  3.0f      /* D4 disc-envelope output caps    */
+#define J3_TORQUE_CAP_NM  2.0f
+#define J2_PHASE_LIMIT_A  (J2_TORQUE_CAP_NM / \
+                           (KT_MOTOR_NM_A * GEAR_RATIO * GEAR_EFF))
+#define J3_PHASE_LIMIT_A  (J3_TORQUE_CAP_NM / \
+                           (KT_MOTOR_NM_A * GEAR_RATIO * GEAR_EFF))
+static const float PHASE_CURRENT_LIMIT_A[CAN_N_JOINTS] = {
+    J2_PHASE_LIMIT_A, J3_PHASE_LIMIT_A };
+
+/* J2/J3 output velocity cap (rad/s) — slow, smooth motion only; the
+ * ESC enforces the same limit motor-side (VEL_LIMIT_OUT). */
+#define JOINT_VEL_LIMIT_OUT_RADS  0.5f
 
 /* rates */
 #define JOINT_LOOP_HZ     100             /* RPDO2 + servo goal update    */

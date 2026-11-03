@@ -11,11 +11,11 @@ kin = ArmKinematics()
 
 
 def test_fk_zero_pose():
-    """q=0 -> the folded "L" pose: TCP (0.2282, 0, 0.2162) m, pitch 0."""
+    """q=0 -> the folded "L" pose: TCP (0.2338, 0, 0.1992) m, pitch 0."""
     p = kin.fk([0] * 6)
-    assert p.x == pytest.approx(0.2282, abs=1e-9)
+    assert p.x == pytest.approx(0.2338, abs=1e-9)
     assert p.y == pytest.approx(0.0, abs=1e-9)
-    assert p.z == pytest.approx(0.2162, abs=1e-9)
+    assert p.z == pytest.approx(0.1992, abs=1e-9)
     assert p.pitch == pytest.approx(0.0)
     assert p.roll == pytest.approx(0.0)
 
@@ -24,18 +24,18 @@ def test_fk_shoulder_down():
     """q2=+90deg tips everything past the shoulder down (tip-down conv)."""
     p = kin.fk([0, math.pi / 2, 0, 0, 0, 0])
     # J2 at (-20,143.5)mm; arm folds forward then the wrist hangs down:
-    # TCP ~ (52.7, -104.7) mm in the (x,z) plane
-    assert p.x == pytest.approx(0.0527, abs=2e-3)
-    assert p.z == pytest.approx(-0.1047, abs=2e-3)
+    # TCP ~ (35.7, -110.3) mm in the (x,z) plane
+    assert p.x == pytest.approx(0.0357, abs=2e-3)
+    assert p.z == pytest.approx(-0.1103, abs=2e-3)
     assert p.pitch == pytest.approx(-math.pi / 2, abs=1e-9)
 
 
 def test_yaw_rotation():
     """yaw 90deg swings the folded pose onto +Y."""
     p = kin.fk([math.pi / 2, 0, 0, 0, 0, 0])
-    assert p.y == pytest.approx(0.2282, abs=1e-9)
+    assert p.y == pytest.approx(0.2338, abs=1e-9)
     assert p.x == pytest.approx(0.0, abs=1e-9)
-    assert p.z == pytest.approx(0.2162, abs=1e-9)
+    assert p.z == pytest.approx(0.1992, abs=1e-9)
 
 
 def test_ik_fk_roundtrip_random():
@@ -77,8 +77,8 @@ def test_ik_known_pose():
 
 
 def test_ik_home_pose():
-    """The home TCP (0.2282,0,0.2162) solves to (near) q=0."""
-    sol = kin.ik(Pose(0.2282, 0.0, 0.2162, pitch=0.0))
+    """The home TCP (0.2338,0,0.1992) solves to (near) q=0."""
+    sol = kin.ik(Pose(0.2338, 0.0, 0.1992, pitch=0.0))
     assert sol.q[1] == pytest.approx(0.0, abs=1e-2)
     assert sol.q[2] == pytest.approx(0.0, abs=1e-2)
     assert sol.q[3] == pytest.approx(0.0, abs=1e-2)

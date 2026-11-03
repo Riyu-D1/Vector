@@ -1,10 +1,10 @@
 """Robot configuration — SOMA v3 hybrid arm (carrier v1.3 hardware).
 
 Real geometry from sim/STATUS-sim.md (home pose, all joints 0 = the
-"L" folded pose, mm):
+"L" folded pose, mm) with the D6 wrist2 redesign (wrist2/STATUS-wrist2.md):
   J1 (0,0,80.8) axis z | J2 (-20,0,143.5) y | J3 (-20,0,270.2) y
-  J4 (96.4,0,216.2) y | J5 (134,0,240.4) z | J6 (153.2,0,216.2) x
-  TCP home (228.2, 0, 216.2). Pitch joints: + angle = tip DOWN.
+  J4 (96.4,0,216.2) y | J5 (127.0,0,223.8) z | J6 (149.4,0,199.2) x
+  TCP home (233.8, 0, 199.2). Pitch joints: + angle = tip DOWN.
 Anything marked UNVERIFIED could not be sourced yet and MUST be confirmed
 before driving real hardware (see docs/STATUS-fw2.md).
 """
@@ -20,15 +20,16 @@ BASE_Z = 0.0808                     # J1 output plane height
 D_J2 = (-0.020, 0.0, 0.0627)        # J1 -> J2  (J2 sits behind J1 axis)
 U_J3 = (0.0, 0.0, 0.1267)           # J2 -> J3  (upper arm, vertical at 0)
 F_J4 = (0.1164, 0.0, -0.0540)       # J3 -> J4  (forearm dogleg)
-W_J5 = (0.0376, 0.0, 0.0242)        # J4 -> J5
-W_J6 = (0.0192, 0.0, -0.0242)       # J5 -> J6
-T_TCP = (0.075, 0.0, 0.0)           # J6 -> TCP (on the J6 axis)
-# derived: J4 -> TCP straight-line at q=0 = 0.1318 m along +X
+W_J5 = (0.0306, 0.0, 0.0076)        # J4 -> J5  (dorsal fin yaw, D6)
+W_J6 = (0.0224, 0.0, -0.0246)       # J5 -> J6  (ventral keel roll, D6)
+T_TCP = (0.0844, 0.0, 0.0)          # J6 -> TCP (on the J6 axis, D6)
+# derived: J4 -> TCP vector at q=0 = (0.1374, 0, -0.017) m — the TCP line
+# rides 17 mm below the J4 tool axis, so IK uses the 2D vector, not a scalar
 
 L_UPPER = 0.1267                    # |U_J3|
 L_FORE = (0.1164**2 + 0.0540**2) ** 0.5   # |F_J4| = 0.12833
 F_REST_ANG = math.atan2(-0.0540, 0.1164)  # forearm rest droop = -24.90 deg
-L_WRIST = 0.1318                    # |W_J5+W_J6+T_TCP| at q=0
+L_WRIST = (0.1374**2 + 0.0170**2) ** 0.5  # |W_J5+W_J6+T_TCP| at q=0 = 0.13845
 
 # Pitch sign convention (sim): +q about +Y moves the tool tip DOWN.
 # Pose.pitch = tool elevation (+up) = -(q2+q3+q4). Pose.roll = q6.

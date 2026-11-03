@@ -1,0 +1,225 @@
+diff --git a/software/robot-os/soma_arm/config.py b/software/robot-os/soma_arm/config.py
+index 68f8b2f..7c8c9c0 100644
+--- a/software/robot-os/soma_arm/config.py
++++ b/software/robot-os/soma_arm/config.py
+@@ -1,10 +1,10 @@
+ """Robot configuration — SOMA v3 hybrid arm (carrier v1.3 hardware).
+ 
+ Real geometry from sim/STATUS-sim.md (home pose, all joints 0 = the
+-"L" folded pose, mm):
++"L" folded pose, mm) with the D6 wrist2 redesign (wrist2/STATUS-wrist2.md):
+   J1 (0,0,80.8) axis z | J2 (-20,0,143.5) y | J3 (-20,0,270.2) y
+-  J4 (96.4,0,216.2) y | J5 (134,0,240.4) z | J6 (153.2,0,216.2) x
+-  TCP home (228.2, 0, 216.2). Pitch joints: + angle = tip DOWN.
++  J4 (96.4,0,216.2) y | J5 (127.0,0,223.8) z | J6 (149.4,0,199.2) x
++  TCP home (233.8, 0, 199.2). Pitch joints: + angle = tip DOWN.
+ Anything marked UNVERIFIED could not be sourced yet and MUST be confirmed
+ before driving real hardware (see docs/STATUS-fw2.md).
+ """
+@@ -20,15 +20,16 @@ BASE_Z = 0.0808                     # J1 output plane height
+ D_J2 = (-0.020, 0.0, 0.0627)        # J1 -> J2  (J2 sits behind J1 axis)
+ U_J3 = (0.0, 0.0, 0.1267)           # J2 -> J3  (upper arm, vertical at 0)
+ F_J4 = (0.1164, 0.0, -0.0540)       # J3 -> J4  (forearm dogleg)
+-W_J5 = (0.0376, 0.0, 0.0242)        # J4 -> J5
+-W_J6 = (0.0192, 0.0, -0.0242)       # J5 -> J6
+-T_TCP = (0.075, 0.0, 0.0)           # J6 -> TCP (on the J6 axis)
+-# derived: J4 -> TCP straight-line at q=0 = 0.1318 m along +X
++W_J5 = (0.0306, 0.0, 0.0076)        # J4 -> J5  (dorsal fin yaw, D6)
++W_J6 = (0.0224, 0.0, -0.0246)       # J5 -> J6  (ventral keel roll, D6)
++T_TCP = (0.0844, 0.0, 0.0)          # J6 -> TCP (on the J6 axis, D6)
++# derived: J4 -> TCP vector at q=0 = (0.1374, 0, -0.017) m — the TCP line
++# rides 17 mm below the J4 tool axis, so IK uses the 2D vector, not a scalar
+ 
+ L_UPPER = 0.1267                    # |U_J3|
+ L_FORE = (0.1164**2 + 0.0540**2) ** 0.5   # |F_J4| = 0.12833
+ F_REST_ANG = math.atan2(-0.0540, 0.1164)  # forearm rest droop = -24.90 deg
+-L_WRIST = 0.1318                    # |W_J5+W_J6+T_TCP| at q=0
++L_WRIST = (0.1374**2 + 0.0170**2) ** 0.5  # |W_J5+W_J6+T_TCP| at q=0 = 0.13845
+ 
+ # Pitch sign convention (sim): +q about +Y moves the tool tip DOWN.
+ # Pose.pitch = tool elevation (+up) = -(q2+q3+q4). Pose.roll = q6.
+diff --git a/software/robot-os/soma_arm/gravity.py b/software/robot-os/soma_arm/gravity.py
+index 14a69f2..f6d13ae 100644
+--- a/software/robot-os/soma_arm/gravity.py
++++ b/software/robot-os/soma_arm/gravity.py
+@@ -42,19 +42,19 @@ PARTS = [
+     ("fore",       0.01476488, ( 122.1943,  39.0023, 116.6632)),
+     ("fore",       0.01822479, ( 176.5844, -34.6000,  88.2569)),
+     ("fore",       0.01811543, ( 176.7825,  34.6000,  88.2658)),
+-    ("fore",       0.02186139, ( 202.3020,   7.8644,  89.4179)),
++    ("fore",       0.01336000, ( 208.9400,   9.5000,  89.4200)),
+     ("fore",       0.05500000, ( 210.3985,  -4.5658,  89.5000)),
+-    ("wrist4",     0.02266971, ( 255.4230,  -7.3274, 121.5595)),
+-    ("wrist4",     0.05500000, ( 260.7000,  12.7015, 126.1442)),
+-    ("wrist5",     0.00853289, ( 262.8755,   0.0000,  90.5865)),
+-    ("wrist5",     0.05500000, ( 264.0658,   0.0000,  76.7985)),
+-    ("grip",       0.01591721, ( 320.2830,   0.0000,  85.8303)),
+-    ("grip",       0.05500000, ( 312.0658,   0.0000,  76.7985)),
+-    ("grip",       0.00800000, ( 337.2000,   0.0000,  89.5000)),
+-    ("grip",       0.01200000, ( 337.4000, -12.9788, 102.5571)),
+-    ("grip",       0.01200000, ( 337.4000,  12.9788,  76.4428)),
+-    ("grip",       0.00096585, ( 348.4791,   3.0000,  89.9452)),
+-    ("grip",       0.00096585, ( 348.4791,  -3.0000,  89.0548)),
++    ("wrist4",     0.00897000, ( 250.5400,  -9.9900, 102.6200)),
++    ("wrist4",     0.05500000, ( 266.2900,   0.0000, 108.5700)),
++    ("wrist5",     0.00539000, ( 256.5400,   2.3600,  55.8400)),
++    ("wrist5",     0.05500000, ( 264.6300,   0.0000,  59.9100)),
++    ("grip",       0.01281000, ( 321.8900,   0.3900,  63.3400)),
++    ("grip",       0.05500000, ( 318.6300,   0.0000,  59.9100)),
++    ("grip",       0.00800000, ( 342.8000,   0.0000,  72.5000)),
++    ("grip",       0.01200000, ( 343.0000, -12.9900,  86.2200)),
++    ("grip",       0.01200000, ( 343.0000,  12.9900,  58.7800)),
++    ("grip",       0.00100000, ( 354.1800,   3.0000,  72.8800)),
++    ("grip",       0.00100000, ( 354.1800,  -3.0000,  72.1200)),
+ ]
+ 
+ # body frame origins in the AB pose (mm): the joint axis each body hangs
+@@ -64,8 +64,8 @@ _ORIGIN_AB_MM = {
+     "upper":      (-20.0, 0.0, 143.5),
+     "fore":       (106.7, 0.0, 143.5),
+     "wrist4":     (223.1, 0.0, 89.5),
+-    "wrist5":     (260.7, 0.0, 113.7),
+-    "grip":       (279.9, 0.0, 89.5),
++    "wrist5":     (253.7, 0.0, 97.1),
++    "grip":       (276.1, 0.0, 72.5),
+ }
+ 
+ # in the AB pose the upper body is pitched +90 deg about J2; un-rotate
+diff --git a/software/robot-os/soma_arm/kinematics.py b/software/robot-os/soma_arm/kinematics.py
+index d27ddf1..e8009cb 100644
+--- a/software/robot-os/soma_arm/kinematics.py
++++ b/software/robot-os/soma_arm/kinematics.py
+@@ -73,6 +73,11 @@ class ArmKinematics:
+         self.l1 = config.L_UPPER
+         self.l2 = config.L_FORE
+         self.l3 = config.L_WRIST
++        # J4 -> TCP vector in the J4 pitch frame (a, z): the D6 TCP line
++        # sits 17 mm below the tool axis, so the back-projection needs the
++        # full 2D offset, not just l3 along the tool direction
++        self.w3a = config.W_J5[0] + config.W_J6[0] + config.T_TCP[0]
++        self.w3z = config.W_J5[2] + config.W_J6[2] + config.T_TCP[2]
+         self.reach_xy0 = config.D_J2[0]   # J2 radial offset (-0.02)
+ 
+     # ------------------------------------------------------------ FK
+@@ -169,8 +174,9 @@ class ArmKinematics:
+         yaw. Returns ([cand,...], (a4,z4,D)) or None if the J4 anchor is
+         outside the annulus."""
+         a_tcp = pose.x * math.cos(q1) + pose.y * math.sin(q1)
+-        a4 = a_tcp - self.l3 * math.cos(pitch)
+-        z4 = pose.z - self.l3 * math.sin(pitch)
++        cp, sp = math.cos(pitch), math.sin(pitch)
++        a4 = a_tcp - (self.w3a * cp - self.w3z * sp)
++        z4 = pose.z - (self.w3a * sp + self.w3z * cp)
+ 
+         j2a = self.reach_xy0
+         j2z = self.base_z + config.D_J2[2]
+diff --git a/software/robot-os/tests/test_gravity.py b/software/robot-os/tests/test_gravity.py
+index 1cdf9e3..6816dff 100644
+--- a/software/robot-os/tests/test_gravity.py
++++ b/software/robot-os/tests/test_gravity.py
+@@ -20,11 +20,12 @@ Q_AB = [0.0, math.pi / 2, -math.pi / 2, 0.0, 0.0, 0.0]
+ 
+ 
+ def test_ab_pose_matches_fea_analytic():
+-    """parts_AB.json moments_nm at 0.5 kg payload."""
++    """D6 wrist2 mass model at 0.5 kg payload (was parts_AB.json
++    3.286/1.759/0.801 — J4 grew with the +5.6 mm TCP offset)."""
+     tau = gravity_torques(Q_AB, payload_kg=0.5)
+-    assert tau[1] == pytest.approx(3.286452213247351, abs=0.02)   # J2
+-    assert tau[2] == pytest.approx(1.7585996360747536, abs=0.02)  # J3
+-    assert tau[3] == pytest.approx(0.8008047092381733, abs=0.02)  # J4
++    assert tau[1] == pytest.approx(3.2486, abs=0.02)   # J2
++    assert tau[2] == pytest.approx(1.7560, abs=0.02)   # J3
++    assert tau[3] == pytest.approx(0.8280, abs=0.02)   # J4
+ 
+ 
+ def test_links_only_torque():
+@@ -41,10 +42,10 @@ def test_j4_payload_limit_at_full_reach():
+     under its own links (FEA case A) so it caps ~0.37 kg."""
+     m, limiting, bounds = max_payload(Q_AB)
+     assert m < 0.5
+-    assert m == pytest.approx(0.368, abs=0.02)
++    assert m == pytest.approx(0.380, abs=0.02)
+     assert limiting == 1                       # J2 at full reach
+     assert bounds[3] < 0.5                     # J4: the required check
+-    assert bounds[3] == pytest.approx(0.487, abs=0.02)
++    assert bounds[3] == pytest.approx(0.467, abs=0.02)
+ 
+ 
+ def test_max_payload_home_pose():
+@@ -67,7 +68,7 @@ def test_planner_refuses_overloaded_move():
+     """move_joints -> planner refuses a move ending at full reach with
+     an over-limit payload."""
+     arm_kin = ArmKinematics()
+-    sol = arm_kin.ik(Pose(0.2282, 0.0, 0.2162, 0.0))
++    sol = arm_kin.ik(Pose(0.2338, 0.0, 0.1992, 0.0))
+     planner = TrajectoryPlanner()
+     q_reach = Q_AB            # direct joint vector (over-travel pose)
+     with pytest.raises(PlanError):
+diff --git a/software/robot-os/tests/test_kinematics.py b/software/robot-os/tests/test_kinematics.py
+index d453398..76c3ca6 100644
+--- a/software/robot-os/tests/test_kinematics.py
++++ b/software/robot-os/tests/test_kinematics.py
+@@ -11,11 +11,11 @@ kin = ArmKinematics()
+ 
+ 
+ def test_fk_zero_pose():
+-    """q=0 -> the folded "L" pose: TCP (0.2282, 0, 0.2162) m, pitch 0."""
++    """q=0 -> the folded "L" pose: TCP (0.2338, 0, 0.1992) m, pitch 0."""
+     p = kin.fk([0] * 6)
+-    assert p.x == pytest.approx(0.2282, abs=1e-9)
++    assert p.x == pytest.approx(0.2338, abs=1e-9)
+     assert p.y == pytest.approx(0.0, abs=1e-9)
+-    assert p.z == pytest.approx(0.2162, abs=1e-9)
++    assert p.z == pytest.approx(0.1992, abs=1e-9)
+     assert p.pitch == pytest.approx(0.0)
+     assert p.roll == pytest.approx(0.0)
+ 
+@@ -24,18 +24,18 @@ def test_fk_shoulder_down():
+     """q2=+90deg tips everything past the shoulder down (tip-down conv)."""
+     p = kin.fk([0, math.pi / 2, 0, 0, 0, 0])
+     # J2 at (-20,143.5)mm; arm folds forward then the wrist hangs down:
+-    # TCP ~ (52.7, -104.7) mm in the (x,z) plane
+-    assert p.x == pytest.approx(0.0527, abs=2e-3)
+-    assert p.z == pytest.approx(-0.1047, abs=2e-3)
++    # TCP ~ (35.7, -110.3) mm in the (x,z) plane
++    assert p.x == pytest.approx(0.0357, abs=2e-3)
++    assert p.z == pytest.approx(-0.1103, abs=2e-3)
+     assert p.pitch == pytest.approx(-math.pi / 2, abs=1e-9)
+ 
+ 
+ def test_yaw_rotation():
+     """yaw 90deg swings the folded pose onto +Y."""
+     p = kin.fk([math.pi / 2, 0, 0, 0, 0, 0])
+-    assert p.y == pytest.approx(0.2282, abs=1e-9)
++    assert p.y == pytest.approx(0.2338, abs=1e-9)
+     assert p.x == pytest.approx(0.0, abs=1e-9)
+-    assert p.z == pytest.approx(0.2162, abs=1e-9)
++    assert p.z == pytest.approx(0.1992, abs=1e-9)
+ 
+ 
+ def test_ik_fk_roundtrip_random():
+@@ -77,8 +77,8 @@ def test_ik_known_pose():
+ 
+ 
+ def test_ik_home_pose():
+-    """The home TCP (0.2282,0,0.2162) solves to (near) q=0."""
+-    sol = kin.ik(Pose(0.2282, 0.0, 0.2162, pitch=0.0))
++    """The home TCP (0.2338,0,0.1992) solves to (near) q=0."""
++    sol = kin.ik(Pose(0.2338, 0.0, 0.1992, pitch=0.0))
+     assert sol.q[1] == pytest.approx(0.0, abs=1e-2)
+     assert sol.q[2] == pytest.approx(0.0, abs=1e-2)
+     assert sol.q[3] == pytest.approx(0.0, abs=1e-2)
+diff --git a/software/robot-os/tests/test_torque_caps.py b/software/robot-os/tests/test_torque_caps.py
+index bfc04cf..f3e35f4 100644
+--- a/software/robot-os/tests/test_torque_caps.py
++++ b/software/robot-os/tests/test_torque_caps.py
+@@ -34,7 +34,7 @@ def test_joint_vel_caps_slow():
+ 
+ 
+ def test_planner_refuses_waypoint_above_disc_cap():
+-    # 0.5 kg at the AB pose pulls 3.29 N·m at J2 — over the 3.0 cap
++    # 0.5 kg at the AB pose pulls ~3.25 N·m at J2 — over the 3.0 cap
+     tau = gravity_torques(Q_AB, 0.5)
+     assert abs(tau[1]) > config.TORQUE_CAP_NM[1]
+     with pytest.raises(PlanError, match="disc cap"):

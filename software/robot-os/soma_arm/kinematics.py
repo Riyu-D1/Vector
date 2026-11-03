@@ -73,6 +73,11 @@ class ArmKinematics:
         self.l1 = config.L_UPPER
         self.l2 = config.L_FORE
         self.l3 = config.L_WRIST
+        # J4 -> TCP vector in the J4 pitch frame (a, z): the D6 TCP line
+        # sits 17 mm below the tool axis, so the back-projection needs the
+        # full 2D offset, not just l3 along the tool direction
+        self.w3a = config.W_J5[0] + config.W_J6[0] + config.T_TCP[0]
+        self.w3z = config.W_J5[2] + config.W_J6[2] + config.T_TCP[2]
         self.reach_xy0 = config.D_J2[0]   # J2 radial offset (-0.02)
 
     # ------------------------------------------------------------ FK
@@ -169,8 +174,9 @@ class ArmKinematics:
         yaw. Returns ([cand,...], (a4,z4,D)) or None if the J4 anchor is
         outside the annulus."""
         a_tcp = pose.x * math.cos(q1) + pose.y * math.sin(q1)
-        a4 = a_tcp - self.l3 * math.cos(pitch)
-        z4 = pose.z - self.l3 * math.sin(pitch)
+        cp, sp = math.cos(pitch), math.sin(pitch)
+        a4 = a_tcp - (self.w3a * cp - self.w3z * sp)
+        z4 = pose.z - (self.w3a * sp + self.w3z * cp)
 
         j2a = self.reach_xy0
         j2z = self.base_z + config.D_J2[2]

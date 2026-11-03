@@ -20,11 +20,12 @@ Q_AB = [0.0, math.pi / 2, -math.pi / 2, 0.0, 0.0, 0.0]
 
 
 def test_ab_pose_matches_fea_analytic():
-    """parts_AB.json moments_nm at 0.5 kg payload."""
+    """D6 wrist2 mass model at 0.5 kg payload (was parts_AB.json
+    3.286/1.759/0.801 — J4 grew with the +5.6 mm TCP offset)."""
     tau = gravity_torques(Q_AB, payload_kg=0.5)
-    assert tau[1] == pytest.approx(3.286452213247351, abs=0.02)   # J2
-    assert tau[2] == pytest.approx(1.7585996360747536, abs=0.02)  # J3
-    assert tau[3] == pytest.approx(0.8008047092381733, abs=0.02)  # J4
+    assert tau[1] == pytest.approx(3.2486, abs=0.02)   # J2
+    assert tau[2] == pytest.approx(1.7560, abs=0.02)   # J3
+    assert tau[3] == pytest.approx(0.8280, abs=0.02)   # J4
 
 
 def test_links_only_torque():
@@ -41,10 +42,10 @@ def test_j4_payload_limit_at_full_reach():
     under its own links (FEA case A) so it caps ~0.37 kg."""
     m, limiting, bounds = max_payload(Q_AB)
     assert m < 0.5
-    assert m == pytest.approx(0.368, abs=0.02)
+    assert m == pytest.approx(0.380, abs=0.02)
     assert limiting == 1                       # J2 at full reach
     assert bounds[3] < 0.5                     # J4: the required check
-    assert bounds[3] == pytest.approx(0.487, abs=0.02)
+    assert bounds[3] == pytest.approx(0.467, abs=0.02)
 
 
 def test_max_payload_home_pose():
@@ -67,7 +68,7 @@ def test_planner_refuses_overloaded_move():
     """move_joints -> planner refuses a move ending at full reach with
     an over-limit payload."""
     arm_kin = ArmKinematics()
-    sol = arm_kin.ik(Pose(0.2282, 0.0, 0.2162, 0.0))
+    sol = arm_kin.ik(Pose(0.2338, 0.0, 0.1992, 0.0))
     planner = TrajectoryPlanner()
     q_reach = Q_AB            # direct joint vector (over-travel pose)
     with pytest.raises(PlanError):

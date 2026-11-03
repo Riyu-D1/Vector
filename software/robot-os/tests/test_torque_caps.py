@@ -34,7 +34,7 @@ def test_joint_vel_caps_slow():
 
 
 def test_planner_refuses_waypoint_above_disc_cap():
-    # 0.5 kg at the AB pose pulls 3.29 N·m at J2 — over the 3.0 cap
+    # 0.5 kg at the AB pose pulls ~3.25 N·m at J2 — over the 3.0 cap
     tau = gravity_torques(Q_AB, 0.5)
     assert abs(tau[1]) > config.TORQUE_CAP_NM[1]
     with pytest.raises(PlanError, match="disc cap"):

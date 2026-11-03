@@ -19,13 +19,13 @@ ESP32-S3 base node on CAN at 1 Mbps. Home "L" pose, J2→TCP reach ≈ 380 mm.
 | J3 output torque cap | **2.0 N·m → 2.47 A phase** | same formula |
 | Enforcement | ESC hard-clamps `CURRENT_LIMIT_A` (SDO + EEPROM clamped); base node pushes caps at boot; planner refuses over-cap waypoints | `joint_driver.ino`, `config.h`, `planner.py` |
 | Output velocity cap | **0.5 rad/s** (20 rad/s motor ≈ 29 °/s) | `JOINT_VEL_LIMIT_OUT_RADS` |
-| Soft stop | MOTOR_EN drop / E-stop / heartbeat loss ramps phase current to 0 over **75 ms**; 24 V relay cut stays independent | `ESTOP_RAMP_MS`, `start_softstop()` |
+| Soft stop | MOTOR_EN drop / E-stop / heartbeat loss ramps phase current to 0 over **75 ms**; 12 V relay cut stays independent | `ESTOP_RAMP_MS`, `start_softstop()` |
 | Disc envelope | lobe SF ≥ 2 at cap (J2 2.21, J3 2.56 nominal @ design torque); ~10 of 41 pins share | cyclo4 |
 | Cycloidal spec | NP=41, R=23.5, RP=1.5, E=0.42, CLR_TOOTH **0.01**, disc 4.25 mm, CLR_OUT 0.12 | D4 |
 
 ## Cost (GBP, BOM_FINAL_GBP.csv recomputed)
 
-- **Verified + resolved lines: £674.07** — includes 3× STS3250 @ £136.15
+- **Verified + resolved lines: £674.07** — includes 2× STS3250 (J1 + J4) @ £136.15
   (Amazon UK B0FLJ6289C, in stock, rechecked 2 Nov 2026).
 - **All-in including [U] estimates: £825.16.**
 

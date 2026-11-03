@@ -1,18 +1,20 @@
-# SOMA arm — final integration summary (arm-final / F1)
+# SOMA arm — final integration summary (arm-final2 / F2)
 
 **What it is.** A 6-joint + gripper desktop robot arm, ~0.48× scale of the
 reBot reference: J1 base yaw on a Feetech STS3250, J2 shoulder and J3 elbow
 on 40:1 **printed cycloidal actuators** (PETG-CF discs, Tarot TL2955 4008
-330KV + B-G431B-ESC1 + AS5600), J4/J5/J6 wrist on STS3250/STS3215/STS3215,
-rack-and-pinion parallel gripper on a 4th STS3215. Coaxial one-way torsion
-balance springs at J2 and J3 (Springmasters 471671). ESP32-S3 base node on
-CAN at 1 Mbps. Home "L" pose, reach ≈ 375 mm.
+330KV + B-G431B-ESC1 + AS5600), J4 pitch on STS3250 and the **D6 K-KEEL
+wrist** — J5 yaw on a dorsal-fin STS3215, J6 roll on a keel-mounted
+STS3215, slim rail-frame parallel gripper on a 4th STS3215
+(`wrist2/out` replaces the arm2b wrist; −43% printed wrist mass vs arm2b).
+Coaxial one-way torsion balance springs at J2 and J3 (Springmasters 471671).
+ESP32-S3 base node on CAN at 1 Mbps. Home "L" pose, J2→TCP reach ≈ 380 mm.
 
-## Final limits (the safety contract — D4/F1)
+## Final limits (the safety contract — D4/F1/F2)
 
 | Item | Value | Basis |
 |---|---|---|
-| Payload (rated) | **0.5 kg** (0.59 kg under caps, J3-limited) | `gravity.max_payload` under the caps |
+| Payload (rated) | **0.5 kg close-in / ~0.41 kg workspace-wide** — the J2 printed-disc cap binds first at full extension; 0.68–0.72 kg best-case under 0.27 m reach, ~0.46 kg at 0.36 m (level tool) | `gravity.max_payload` + F2 2774-pose sweep |
 | J2 output torque cap | **3.0 N·m → 3.71 A phase** | `T = I × Kt(0.0289 [U]) × 40 × η(0.7 [U])` |
 | J3 output torque cap | **2.0 N·m → 2.47 A phase** | same formula |
 | Enforcement | ESC hard-clamps `CURRENT_LIMIT_A` (SDO + EEPROM clamped); base node pushes caps at boot; planner refuses over-cap waypoints | `joint_driver.ino`, `config.h`, `planner.py` |
@@ -66,14 +68,17 @@ pio run -t upload                         # ESP32-S3, UART-labeled USB port
 
 ## Artifacts
 
-- `final/out/assembly.stl` (10.5 MB), `assembly.step.gz` → `gunzip` for
-  the full-assembly STEP (33 MB; gzipped to stay under the 30 MB repo
+- `final/out/assembly.stl` (10.6 MB), `assembly.step.gz` → `gunzip` for
+  the full-assembly STEP (34.1 MB; gzipped to stay under the 30 MB repo
   budget). Composed from arm2b posed parts + cad3 D2 overrides +
-  2× cyclo4 actuator modules replacing the old proxies; cad3 parts were
-  exported unposed and are re-posed here — see `export_assembly.py`.
+  2× cyclo4 actuator modules + the `wrist2/out` D6 wrist/gripper set
+  replacing the arm2b wrist; cad3 parts were exported unposed and are
+  re-posed here — see `export_assembly.py`.
 - `final/out/coupon.stl` / `coupon.step.gz` — 4-station clearance coupon
   (0.00/0.05/0.10/0.15 mm), ~20 min print.
-- `final/renders/{iso,front,side}.png` — Blender workbench renders of
-  the home-pose assembly, verified visually (knuckles, wrist, gripper
-  all seated; no floating parts).
+- `final/renders/{iso,front,side}.png` + `closeup_wrist.png` — Blender
+  workbench renders of the home-pose assembly, verified visually
+  (cyclo modules, K-KEEL wrist, gripper all seated; no floating parts).
 - `PRINT_LIST.md`, `BOM_FINAL.md`, `BOM_FINAL_GBP.csv`, `BUILD_GUIDE.md`.
+- `final2/STATUS-final2.md` — F2 merge + whole-arm validation report
+  (collision, MuJoCo, IK, torque tables).

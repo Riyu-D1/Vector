@@ -19,6 +19,11 @@ Nothing bought, no carts checked out.
 - D4's flagged firmware change is now **done**: phase-current caps
   J2 3.71 A / J3 2.47 A + 75 ms soft-stop ramp (see
   `final/BUILD_GUIDE.md` §7).
+- **F2 BOM delta applied**: `wrist2/out` D6 wrist replaces the arm2b
+  printed wrist — **zero purchased items** (same J4 STS3250, same 3×
+  STS3215 for J5/J6/gripper, same racks/gear/fingers shifted +5.6 mm).
+  Printed wrist structure drops 90.6 → 51.6 cm³ (−39 cm³ ≈ −51 g of
+  PETG-CF at solid equivalent).
 
 ## Totals (computed from the CSV)
 

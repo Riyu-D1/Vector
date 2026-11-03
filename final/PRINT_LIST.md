@@ -1,8 +1,10 @@
-# final/PRINT_LIST.md — Stage F1 print + tolerance plan
+# final/PRINT_LIST.md — Stage F1+F2 print + tolerance plan
 
 Final arm = `cad/arm2b` structure + `cad3/out` D2-changed parts + **2×
 `cyclo4` 40:1 cycloidal actuator modules** (J2, J3 — the D4 redesign:
-PETG-CF discs, near-zero flank clearance, run-in/selective-fit design).
+PETG-CF discs, near-zero flank clearance, run-in/selective-fit design)
++ **D6 K-KEEL wrist/gripper** (`wrist2/out` — F2: the arm2b wrist parts
+j4_cradle/link4/link5/grip_frame are replaced by the w_* set).
 Volumes/bboxes measured from the exported STLs (trimesh); mass = solid
 equivalent at PETG-CF 1.31 g/cm³.
 
@@ -16,9 +18,12 @@ required — see `order/BOM_FINAL_GBP.csv`). Dry the filament first.
 | Bambu PETG-CF 1 kg | uk.store.bambulab.com | £32.99 | 1 Nov 2026 [S] |
 | eSUN ePETG-CF 1 kg | 3djake.uk | £26.50 | 1 Nov 2026 [S] |
 
-## Arm structure — qty 1 (unchanged from D2 list)
+## Arm structure — qty 1 (D2 list + F2 wrist swap)
 
-STLs in `cad/arm2b/out/` (unchanged) and `cad3/out/` (**D2**).
+STLs in `cad/arm2b/out/` (unchanged), `cad3/out/` (**D2**) and
+`wrist2/out/` (**D6** — the four `w_*` structural parts plus the D6
+finger/rack set; fingers and racks are the arm2b geometry shifted
++5.6 mm in a along the wrist axis, kept posed with the D6 train).
 
 | Part | STL | Mass g | Bbox mm | Orientation | Supp. | Walls/Infill |
 |---|---|---|---|---|---|---|
@@ -40,12 +45,12 @@ STLs in `cad/arm2b/out/` (unchanged) and `cad3/out/` (**D2**).
 | dogleg_r | arm2b | 25 | 76.1×5×99 | Flat cheek down | No | 6 / 40% |
 | fore_l2 | arm2b | 31 | 171.6×4×57 | Flat plate down | No | 6 / 40% |
 | fore_r2 | arm2b | 31 | 171.6×4×57 | Flat plate down | No | 6 / 40% |
-| j4_cradle | arm2b | 38 | 38×52.5×30 | Pocket opening up | Yes — plug slot | 6 / 40% |
-| link4 | arm2b | 40 | 66.6×60.6×69 | Horn-plate down | Yes — counterbores | 6 / 40% |
-| link5 | arm2b | 15 | 38.1×30×34.6 | J6 face down | No | 6 / 40% |
-| grip_frame | arm2b | 27 | 56.4×64×52.4 | Channel opening up | Yes — channel | 6 / 40% |
-| vendor_rack_u/d | arm2b | 3 ea | 6×36×12 | Flat flank down | No | 6 / 100% |
-| finger_u/d | arm2b | 2 ea | 14.4×4×25.2 | Flat side down | No | 6 / 100% |
+| w_j4_cradle **D6** | wrist2 | 22 | 49.6×52.5×29.0 | Bolt plate on bed, sleeve mouth up | Yes — under sleeve +b rim [U] | 6 / 40% |
+| w_link4 **D6** | wrist2 | 15 | 81.0×45.6×52.8 | Horn plate down | Yes — horn counterbores, plug tunnel roof [U] | 6 / 40% |
+| w_link5 **D6** | wrist2 | 9 | 50.2×33.8×52.2 | −a end on bed, keel fins up | Yes — cheek-window top edges [U] | 6 / 40% |
+| w_grip_frame **D6** | wrist2 | 21 | 62.4×64.0×59.8 | Keel bottom on bed, channel up | Yes — channel roof + window ledges | 6 / 40% |
+| vendor_rack_u/d **D6** | wrist2 | 3 ea | 6×36×12 | Flat flank down | No | 6 / 100% |
+| finger_u/d **D6** | wrist2 | 2 ea | 14.4×4×25.2 | Flat side down | No | 6 / 100% |
 
 ## Actuator modules — qty 2 (J2 + J3), cyclo4 D4 geometry
 
@@ -167,7 +172,8 @@ printed flanks scatter ±0.05. Sort, don't force:
 
 ## Totals
 
-- Arm 1083 + modules ~175 + coupon 22 ≈ **1280 cm³** solid → **~1.7 kg**
-  at full density; real extruded ≈ **0.8–0.9 kg [U]** — one 1 kg spool
-  prints everything + coupon + ~1 spare disc. Budget a 2nd spool for
-  disc re-prints if the first set's run-in fails.
+- Arm 1044 (D6 wrist structure 51.6 cm³ replaces arm2b's 90.6) + modules
+  ~175 + coupon 22 ≈ **1241 cm³** solid → **~1.6 kg** at full density;
+  real extruded ≈ **0.8–0.9 kg [U]** — one 1 kg spool prints everything
+  + coupon + ~1 spare disc. Budget a 2nd spool for disc re-prints if
+  the first set's run-in fails.

@@ -6,6 +6,9 @@
   - overrides: back_spacer_j2/j3, flange_j2/j3         (cad3 D2 versions, already posed)
   - added:     vendor_spring_j2/j3, vendor_sts3250_j4  (cad3 D2)
   - added:     2x cyclo4 actuator modules (cyclo4/out, module frame) at J2 and J3
+  - F2:        arm2b wrist parts (j4_cradle, link4, link5, grip_frame + posed
+               vendor proxies) swapped for the wrist2/out K-KEEL parts; the
+               wrist2 vendor_sts3215_j4 proxy stays skipped (J4 = cad3 STS3250).
 Module -> arm frame:  +Z_mod -> -Y_arm, +X_mod -> +X_arm, +Y_mod -> +Z_arm;
 back face at ACT_BACK_Y=23.4 (out face lands at ACT_OUT_Y=-31.6), then arm pose:
   housing-side parts  -> group 'up'  (rotate POSE_J2 about the J2 axis)
@@ -26,13 +29,19 @@ sys.path.insert(0, os.path.join(ROOT, "cad", "arm2"))
 import ap2 as P
 
 A2B, C3, CYC = (os.path.join(ROOT, d) for d in ("cad/arm2b/out", "cad3/out", "cyclo4/out"))
+WR = os.path.join(ROOT, "wrist2", "out")
 OUT = os.path.join(HERE, "out")
 TMP = os.path.join(HERE, "renders", "_tmp")
 os.makedirs(OUT, exist_ok=True); os.makedirs(TMP, exist_ok=True)
 
 DROP = {"vendor_act_j2", "vendor_act_j3", "vendor_actout_j2", "vendor_actout_j3",
         "vendor_sts3215_j4", "vendor_6803_j2", "vendor_6803_j3",
-        "back_spacer_j2", "back_spacer_j3", "flange_j2", "flange_j3"}
+        "back_spacer_j2", "back_spacer_j3", "flange_j2", "flange_j3",
+        "j4_cradle", "link4", "link5", "grip_frame",
+        "vendor_sts3215_j5", "vendor_sts3215_j6", "vendor_sts3215_g",
+        "vendor_rack_u", "vendor_rack_d", "vendor_gear_grip",
+        "finger_u", "finger_d"}
+WR_SKIP = {"vendor_sts3215_j4"}              # real J4 = cad3 vendor_sts3250_j4
 
 CYC_UP = {"housing", "pin_ring", "front_ring", "vendor_ringpins", "vendor_motor",
           "mag_puck", "vendor_magnet", "vendor_as5600", "vendor_6808",
@@ -86,6 +95,9 @@ for d, drop in ((A2B, DROP), (C3, set())):
             if f[:-4] in REPOSE:
                 m.apply_transform(REPOSE[f[:-4]])
             parts.append((f[:-4], g_arm(f[:-4]), m))
+for f in sorted(os.listdir(WR)):                       # D6 wrist2 parts, posed home
+    if f.endswith(".stl") and f[:-4] not in WR_SKIP:
+        parts.append((f[:-4], g_arm(f[:-4]), trimesh.load_mesh(os.path.join(WR, f), force="mesh")))
 for f in sorted(os.listdir(CYC)):
     if not f.endswith(".stl"):
         continue
@@ -138,6 +150,9 @@ for d, drop in ((A2B, DROP), (C3, set())):
                         s = s.rotate(Axis((J3[0], 0, J3[1]), (0, 1, 0)), P.POSE_J3)
                     s = s.rotate(Axis((J2[0], 0, J2[1]), (0, 1, 0)), P.POSE_J2)
                 solids.append(s)
+for f in sorted(os.listdir(WR)):
+    if f.endswith(".step") and f[:-5] not in WR_SKIP:
+        solids.extend(import_step(os.path.join(WR, f)).solids())
 cyc_names = [f[:-5] for f in sorted(os.listdir(CYC)) if f.endswith(".step")]
 for jn in (2, 3):
     for n in cyc_names:

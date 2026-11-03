@@ -1,0 +1,3 @@
+/Users/deepakdiwan/Vector-wt/cradlefix/cradlefix/out/w_j4_cradle.stl 0.30 0.31 0.36
+/Users/deepakdiwan/Vector-wt/cradlefix/cradlefix/out/w_link5.stl 0.55 0.20 0.55
+/Users/deepakdiwan/Vector-wt/cradlefix/cradlefix/renders/_tmp/j4servo_posed.stl 0.78 0.38 0.12

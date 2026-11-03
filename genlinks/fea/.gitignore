@@ -1,0 +1,10 @@
+# regenerable FEA intermediates (kept: .html .png .geo scripts + STATUS table)
+*.frd
+*.msh
+*.vtu
+*.inp
+*.dat
+*.cvg
+*.12d
+*.sta
+*.err

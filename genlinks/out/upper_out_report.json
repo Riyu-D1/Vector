@@ -1,0 +1,70 @@
+{
+ "part": "upper_out",
+ "vol_src_cm3": 18.9,
+ "vol_gen_cm3": 13.3,
+ "solid_g_src": 24.8,
+ "solid_g_gen": 17.4,
+ "print_g_src": 18.8,
+ "print_g_gen": 13.2,
+ "mass_saved_print_g": 5.6,
+ "watertight": true,
+ "tris": 29000,
+ "bbox_src": [
+  [
+   -50.5,
+   -32.1,
+   113.1
+  ],
+  [
+   10.5,
+   -25.1,
+   300.6
+  ]
+ ],
+ "bbox_gen": [
+  [
+   -49.8,
+   -31.8,
+   113.2
+  ],
+  [
+   10.8,
+   -24.2,
+   301.8
+  ]
+ ],
+ "keep_vox_src": 10909,
+ "keep_vox_gen": 13641,
+ "holes_src": 2,
+ "holes_gen": 2,
+ "hole_pairs": [
+  {
+   "src": [
+    -19.8,
+    143.8,
+    28.2
+   ],
+   "gen": [
+    -19.2,
+    144.3,
+    27.8
+   ],
+   "dr": -0.45
+  },
+  {
+   "src": [
+    -19.8,
+    270.4,
+    28.2
+   ],
+   "gen": [
+    -19.2,
+    270.9,
+    27.8
+   ],
+   "dr": -0.42
+  }
+ ],
+ "overhang_mm2": 2297.0,
+ "overhang_frac": 0.2
+}

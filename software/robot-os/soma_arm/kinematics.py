@@ -154,8 +154,9 @@ class ArmKinematics:
         def ok(c):
             if not check_limits:
                 return True
+            lo, hi = self.j6_bounds(c[4])
             return all(self.jmin[i] - 1e-6 <= c[i] <= self.jmax[i] + 1e-6
-                       for i in range(6))
+                       for i in range(6)) and lo - 1e-6 <= c[5] <= hi + 1e-6
 
         valid = [c for c in sols if ok(c)]
         if not valid:
@@ -215,13 +216,26 @@ class ArmKinematics:
         return a
 
     # --------------------------------------------------------- helpers
+    def j6_bounds(self, q5):
+        """(lo, hi) for J6 given J5: the D9 conditional sublimit clamps
+        J6 to +-J6_SUBLIM_J5_NEG while J5 < 0 (gripper plug vs J5 case);
+        full mechanical range otherwise."""
+        if q5 < 0.0:
+            lim = config.J6_SUBLIM_J5_NEG
+            return -lim, lim
+        return self.jmin[5], self.jmax[5]
+
     def clamp_limits(self, q):
-        return [max(self.jmin[i], min(self.jmax[i], q[i]))
-                for i in range(6)]
+        out = [max(self.jmin[i], min(self.jmax[i], q[i]))
+               for i in range(6)]
+        lo, hi = self.j6_bounds(q[4])
+        out[5] = max(lo, min(hi, q[5]))
+        return out
 
     def within_limits(self, q):
+        lo, hi = self.j6_bounds(q[4])
         return all(self.jmin[i] <= q[i] <= self.jmax[i]
-                   for i in range(6))
+                   for i in range(6)) and lo <= q[5] <= hi
 
     def random_reachable_q(self, rng):
         """Sample a random in-limit joint vector (for tests)."""

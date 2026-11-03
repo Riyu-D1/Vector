@@ -1,0 +1,2 @@
+/Users/deepakdiwan/Vector-wt/lighten/lighten/out/upper_out.stl 0.75 0.78 0.82
+/Users/deepakdiwan/Vector-wt/lighten/lighten/out/upper_back.stl 0.75 0.78 0.82

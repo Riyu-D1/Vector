@@ -55,6 +55,13 @@ JOINT_MAX = [
 GRIP_MIN = 0.0                        # jaw open (rad) — UNVERIFIED
 GRIP_MAX = 1.4                        # jaw closed — calibrate on bench
 
+# D9 conditional J6 sublimit (cradlefix/STATUS-cradlefix.md residual):
+# with J5 < 0 the gripper servo cable-plug lump rolls up at |J6| > ~110 deg
+# into the J5 vendor case rear-bottom edge — a vendor-pair collision that
+# printed geometry cannot fix. Firmware-side sublimit; J6 keeps its full
+# +-180 deg mechanical range whenever J5 >= 0.
+J6_SUBLIM_J5_NEG = math.radians(110)
+
 # Velocity limits (rad/s) — J2/J3 capped at the ESC's VEL_LIMIT_OUT
 # (0.5 rad/s ~ 29 deg/s, slow/smooth for the printed cycloidal discs);
 # the base node clamps jog velocity to the same bound.

@@ -1,0 +1,18 @@
+ref,value,footprint,qty
+Q2,IRF4905,TO-220-3_Vertical,1
+R10,10k,R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,1
+K1,SRD-12V,Relay_SPST_SANYOU_SRD_Series_Form_A,1
+D5,1N4007,D_DO-41_SOD81_P10.16mm_Horizontal,1
+J19,ESTOP-NC,PinHeader_1x02_P2.54mm_Vertical,1
+Q3,2N2222A,PinHeader_1x03_P2.54mm_Vertical,1
+R11,1k,R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,1
+R12,10k,R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,1
+J20,12V_MOT,TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal,1
+J18,12V_MOT,TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal,1
+all other parts unchanged from v1.2,,,
+U3,74AHCT125,DIP-14_W7.62mm_Socket,1
+R13,330R,R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,1
+C7,470-1000uF,CP_Radial_D10.0mm_P5.00mm,1
+C8,100nF,C_Disc_D5.0mm_W2.5mm_P2.50mm,1
+D6,3V6 zener (OPT),D_DO-35_SOD27_P7.62mm_Horizontal,1
+D7,1N4148,D_DO-35_SOD27_P7.62mm_Horizontal,1

@@ -1,0 +1,417 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-04T22:01:50",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning",
+        "exclusion"
+    ],
+    "kicad_version": "10.0.4",
+    "schematic_parity": [],
+    "source": "soma-carrier-v15.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Footprint 'TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal' does not match copy in library 'TerminalBlock_Phoenix'",
+            "items": [
+                {
+                    "description": "Footprint J2",
+                    "pos": {
+                        "x": 8.0,
+                        "y": 36.0
+                    },
+                    "uuid": "1b0ef07a-322d-41b8-9b28-d815dae26d8a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'Fuse_Blade_Mini_directSolder' does not match copy in library 'Fuse'",
+            "items": [
+                {
+                    "description": "Footprint F1",
+                    "pos": {
+                        "x": 17.0,
+                        "y": 64.0
+                    },
+                    "uuid": "1f84f70f-ae28-4a54-9f85-043594448f9b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'TO-220-3_Vertical' does not match copy in library 'Package_TO_SOT_THT'",
+            "items": [
+                {
+                    "description": "Footprint Q2",
+                    "pos": {
+                        "x": 12.0,
+                        "y": 74.0
+                    },
+                    "uuid": "461c3cbe-a154-4c67-bf23-bfda1e508ed7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal' does not match copy in library 'TerminalBlock_Phoenix'",
+            "items": [
+                {
+                    "description": "Footprint J1",
+                    "pos": {
+                        "x": 8.0,
+                        "y": 48.0
+                    },
+                    "uuid": "7b08f3ab-3ddb-4f02-b1bf-b6dc39dc4516"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal' does not match copy in library 'Resistor_THT'",
+            "items": [
+                {
+                    "description": "Footprint R5",
+                    "pos": {
+                        "x": 112.0,
+                        "y": 95.0
+                    },
+                    "uuid": "83819885-1eee-4c6a-8250-220b9a79fa46"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x22_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint U1A",
+                    "pos": {
+                        "x": 22.14,
+                        "y": 51.16
+                    },
+                    "uuid": "9822a6ab-4e99-4bc8-92fb-773e92a98d62"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x22_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint U1B",
+                    "pos": {
+                        "x": 22.14,
+                        "y": 28.3
+                    },
+                    "uuid": "a19bb4ff-51ca-44fe-a089-8d970aa66b3c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'D_DO-35_SOD27_P7.62mm_Horizontal' does not match copy in library 'Diode_THT'",
+            "items": [
+                {
+                    "description": "Footprint D6",
+                    "pos": {
+                        "x": 54.0,
+                        "y": 44.0
+                    },
+                    "uuid": "aacb8cb5-0b62-488c-bec3-6d3dbf82d8a1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x04_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J11",
+                    "pos": {
+                        "x": 44.0,
+                        "y": 95.0
+                    },
+                    "uuid": "b74d40ec-d318-4ba8-8a39-f519a15b99c1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x02_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J9",
+                    "pos": {
+                        "x": 30.0,
+                        "y": 95.0
+                    },
+                    "uuid": "ba4df6f5-dc26-4643-b8e3-fcd6fe9d958f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x05_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J13",
+                    "pos": {
+                        "x": 14.0,
+                        "y": 95.0
+                    },
+                    "uuid": "cd293c32-b4da-4854-a9b5-99185b024988"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'DIP-14_W7.62mm_Socket' does not match copy in library 'Package_DIP'",
+            "items": [
+                {
+                    "description": "Footprint U3",
+                    "pos": {
+                        "x": 109.0,
+                        "y": 46.0
+                    },
+                    "uuid": "df0e06f0-bb36-4b2f-8e4b-c4a0048e04c4"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x05_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J15",
+                    "pos": {
+                        "x": 64.0,
+                        "y": 64.0
+                    },
+                    "uuid": "f2f8034c-5e54-4d03-9929-1ea79a9226bd"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of JP1",
+                    "pos": {
+                        "x": 10.0,
+                        "y": 55.62
+                    },
+                    "uuid": "62be4a5c-2072-4ada-a6e1-c263578f7696"
+                },
+                {
+                    "description": "PCB text 'PWR-ON' on F.Silkscreen",
+                    "pos": {
+                        "x": 10.0,
+                        "y": 55.0
+                    },
+                    "uuid": "b731ce41-3769-44af-a98a-161338f3249e"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of Q2",
+                    "pos": {
+                        "x": 7.9,
+                        "y": 71.46
+                    },
+                    "uuid": "508e29b0-4cc4-4b3e-b194-5f7b5fe415e8"
+                },
+                {
+                    "description": "Segment of Q2 on F.Silkscreen",
+                    "pos": {
+                        "x": 8.74,
+                        "y": 76.57
+                    },
+                    "uuid": "8d714336-fad3-4d8b-ad17-8fbc7883e860"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PCB text 'SOMA BASE CARRIER v1.5' on F.Silkscreen",
+                    "pos": {
+                        "x": 60.0,
+                        "y": 108.0
+                    },
+                    "uuid": "60a2ac3c-8c26-45af-bda7-45b76c3c7708"
+                },
+                {
+                    "description": "PCB text 'BZ FLYBK' on F.Silkscreen",
+                    "pos": {
+                        "x": 80.0,
+                        "y": 108.0
+                    },
+                    "uuid": "67f68367-5954-450d-b948-81f575d3a718"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of C5 on F.Silkscreen",
+                    "pos": {
+                        "x": 87.87,
+                        "y": 78.37
+                    },
+                    "uuid": "d161627a-f18c-4bf4-b43b-c619ab9a085f"
+                },
+                {
+                    "description": "Reference field of U2",
+                    "pos": {
+                        "x": 87.0,
+                        "y": 78.6
+                    },
+                    "uuid": "db6f4eb2-b3a7-42f4-be9a-1d42253e7e18"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of U2",
+                    "pos": {
+                        "x": 87.0,
+                        "y": 78.6
+                    },
+                    "uuid": "db6f4eb2-b3a7-42f4-be9a-1d42253e7e18"
+                },
+                {
+                    "description": "Segment of C5 on F.Silkscreen",
+                    "pos": {
+                        "x": 87.87,
+                        "y": 75.63
+                    },
+                    "uuid": "e38f600c-29e3-48b6-b0b1-984694782a05"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of J19",
+                    "pos": {
+                        "x": 92.0,
+                        "y": 71.62
+                    },
+                    "uuid": "1895c347-2ea0-4745-9a48-d97009b3bd1d"
+                },
+                {
+                    "description": "Rectangle of D5 on F.Silkscreen",
+                    "pos": {
+                        "x": 88.36,
+                        "y": 68.53
+                    },
+                    "uuid": "31343fda-1a3b-4005-b03b-18529d2ca90e"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of U3",
+                    "pos": {
+                        "x": 106.67,
+                        "y": 42.19
+                    },
+                    "uuid": "58ab7137-eee6-4629-ab7a-d5222a7d3828"
+                },
+                {
+                    "description": "Rectangle of U3 on F.Silkscreen",
+                    "pos": {
+                        "x": 107.61,
+                        "y": 47.33
+                    },
+                    "uuid": "d2003e56-faa6-4758-b7e1-79919e9e3f79"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Footprint text of D6 (K)",
+                    "pos": {
+                        "x": 52.2,
+                        "y": 44.0
+                    },
+                    "uuid": "5e39dcb3-2c0f-4ca6-81d4-51cee60ceb8f"
+                },
+                {
+                    "description": "PTH pad 2 [RXA] of R1",
+                    "pos": {
+                        "x": 51.62,
+                        "y": 44.0
+                    },
+                    "uuid": "7e634c15-134d-427b-8817-8238e8487497"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        }
+    ]
+}

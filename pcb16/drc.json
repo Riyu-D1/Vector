@@ -1,0 +1,233 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-04T22:48:15",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning",
+        "exclusion"
+    ],
+    "kicad_version": "10.0.4",
+    "schematic_parity": [],
+    "source": "soma-carrier-v16.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Footprint 'PinHeader_1x05_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J15",
+                    "pos": {
+                        "x": 64.0,
+                        "y": 64.0
+                    },
+                    "uuid": "0c77215c-1cde-494d-9aa7-3846918e4aee"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x22_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint U1B",
+                    "pos": {
+                        "x": 22.14,
+                        "y": 28.3
+                    },
+                    "uuid": "0e139fe6-3a37-42c2-bcbe-f23782e768b4"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x04_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J11",
+                    "pos": {
+                        "x": 44.0,
+                        "y": 95.0
+                    },
+                    "uuid": "359708f9-06fb-4f0c-9205-eb8617d7f83d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'DIP-14_W7.62mm_Socket' does not match copy in library 'Package_DIP'",
+            "items": [
+                {
+                    "description": "Footprint U3",
+                    "pos": {
+                        "x": 109.0,
+                        "y": 46.0
+                    },
+                    "uuid": "42c710d4-53e5-457e-a9d5-311508c3df09"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x22_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint U1A",
+                    "pos": {
+                        "x": 22.14,
+                        "y": 51.16
+                    },
+                    "uuid": "475f02c1-c9b3-46cf-9845-f54e678a46f8"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x05_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J13",
+                    "pos": {
+                        "x": 14.0,
+                        "y": 95.0
+                    },
+                    "uuid": "5602a5a3-824a-4135-ba70-f93c299adc20"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal' does not match copy in library 'Resistor_THT'",
+            "items": [
+                {
+                    "description": "Footprint R5",
+                    "pos": {
+                        "x": 112.0,
+                        "y": 95.0
+                    },
+                    "uuid": "62b2b253-d792-40ee-84d5-418b351e86e7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x02_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J9",
+                    "pos": {
+                        "x": 30.0,
+                        "y": 95.0
+                    },
+                    "uuid": "6387d378-1a6e-45cf-8085-c6be78438406"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'Fuse_Blade_Mini_directSolder' does not match copy in library 'Fuse'",
+            "items": [
+                {
+                    "description": "Footprint F1",
+                    "pos": {
+                        "x": 17.0,
+                        "y": 64.0
+                    },
+                    "uuid": "63cccfb6-9908-4283-81f6-433e4847a8bb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'D_DO-35_SOD27_P7.62mm_Horizontal' does not match copy in library 'Diode_THT'",
+            "items": [
+                {
+                    "description": "Footprint D6",
+                    "pos": {
+                        "x": 54.0,
+                        "y": 44.0
+                    },
+                    "uuid": "9ef459ae-0ddf-4554-87f2-e5b0125d3430"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal' does not match copy in library 'TerminalBlock_Phoenix'",
+            "items": [
+                {
+                    "description": "Footprint J1",
+                    "pos": {
+                        "x": 8.0,
+                        "y": 48.0
+                    },
+                    "uuid": "be653a51-b466-413a-9c71-3006b214f358"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal' does not match copy in library 'TerminalBlock_Phoenix'",
+            "items": [
+                {
+                    "description": "Footprint J2",
+                    "pos": {
+                        "x": 8.0,
+                        "y": 36.0
+                    },
+                    "uuid": "edaaffeb-f031-434f-9095-c3be60447afd"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'TO-220-3_Vertical' does not match copy in library 'Package_TO_SOT_THT'",
+            "items": [
+                {
+                    "description": "Footprint Q2",
+                    "pos": {
+                        "x": 12.0,
+                        "y": 74.0
+                    },
+                    "uuid": "f08acaeb-ab66-42c5-8d13-c1fc52a0bd9f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

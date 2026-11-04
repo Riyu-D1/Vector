@@ -1,0 +1,54 @@
+ref,value,footprint,qty
+BZ1,5V active buzzer 12x9.5mm,Buzzer_12x9.5RM7.6,1
+C1,1000uF >=25V,CP_Radial_D10.0mm_P5.00mm,1
+C2,100nF >=25V (12V rail),C_Disc_D5.0mm_W2.5mm_P2.50mm,1
+C3,220uF >=10V,CP_Radial_D8.0mm_P3.50mm,1
+C4,100nF >=10V (5V rail),C_Disc_D5.0mm_W2.5mm_P2.50mm,1
+C5,100nF >=10V (U2 VCC=5V),C_Disc_D5.0mm_W2.5mm_P2.50mm,1
+C6,100nF >=6.3V (U2 VIO=3V3),C_Disc_D5.0mm_W2.5mm_P2.50mm,1
+C7,470-1000uF >=10V (5V strip bulk),CP_Radial_D10.0mm_P5.00mm,1
+C8,100nF >=10V (U3 on 5V),C_Disc_D5.0mm_W2.5mm_P2.50mm,1
+D1,1N5820,D_DO-201_P12.70mm_Horizontal,1
+D2,3mm LED (PWR),LED_D3.0mm,1
+D3,3mm LED (STAT),LED_D3.0mm,1
+D4,P6KE15A 15V unidirectional TVS (band toward pin 1),D_DO-201_P12.70mm_Horizontal,1
+D5,1N4007,D_DO-41_SOD81_P10.16mm_Horizontal,1
+D6,3V6 zener DO-35 - optional DNP (RXA clamp),D_DO-35_SOD27_P7.62mm_Horizontal,1
+D7,1N4148 (buzzer flyback),D_DO-35_SOD27_P7.62mm_Horizontal,1
+DSG+DST+DSV,DS18B20 TO-92 (legs on 1.5mm THT pads),TestPoint_THTPad_D1.5mm_Drill0.7mm,3
+F1,10A mini blade fuse,Fuse_Blade_Mini_directSolder,1
+H1-H4,M3 mounting hole (x4),MountingHole_3.2mm_M3_DIN965,4
+IR1,VS1838B IR receiver,PinHeader_1x03_P2.54mm_Vertical,1
+J1,12V_IN screw terminal MKDS 5.08,TerminalBlock_Phoenix_MKDS-1 5-2-5.08_1x02_P5.08mm_Horizontal,1
+J2,5V_IN screw terminal MKDS 5.08,TerminalBlock_Phoenix_MKDS-1 5-2-5.08_1x02_P5.08mm_Horizontal,1
+J3,Mini-360 buck module (pad order 1=+12V 2=GND 3=+5V 4=GND - verify module printing),PinHeader_1x04_P2.54mm_Vertical,1
+J4+J5,KK-254 3-pin servo bus A (Feetech half-duplex TTL): 1=GND 2=+12V 3=DATA,Molex_KK-254_AE-6410-03A_1x03_P2.54mm_Vertical,2
+J9,ESTOP button header 1x02,PinHeader_1x02_P2.54mm_Vertical,1
+J11,SSD1306 OLED socket 1x04 (I2C-1),PinHeader_1x04_P2.54mm_Vertical,1
+J12,GY-521/MPU6050 IMU socket 1x08 (I2C-1),PinHeader_1x08_P2.54mm_Vertical,1
+J13,KY-040 jog encoder socket 1x05,PinHeader_1x05_P2.54mm_Vertical,1
+J14,NeoPixel port 1x03,PinHeader_1x03_P2.54mm_Vertical,1
+J15,spare header 1x05,PinHeader_1x05_P2.54mm_Vertical,1
+J16,XT60-M vertical plug,AMASS_XT60-M_1x02_P7.20mm_Vertical,1
+J17,CAN bus KK-254 1x03 (1=GND 2=CANH 3=CANL),Molex_KK-254_AE-6410-03A_1x03_P2.54mm_Vertical,1
+J18+J20,12V_MOT screw terminal MKDS 5.08,TerminalBlock_Phoenix_MKDS-1 5-2-5.08_1x02_P5.08mm_Horizontal,2
+J19,estop loop NC jumper 1x02,PinHeader_1x02_P2.54mm_Vertical,1
+JP1,power-enable jumper 1x02 + shunt,PinHeader_1x02_P2.54mm_Vertical,1
+JP2,CAN termination jumper 1x02 + shunt,PinHeader_1x02_P2.54mm_Vertical,1
+K1,SRD-12VDC-SL-A relay (pins 1-2 coil 3=COM 5=NO - verify bottom view),Relay_SPST_SANYOU_SRD_Series_Form_A,1
+Q1+Q3,PN2222A TO-92 E-B-C (leads spread onto 2.54mm pads; pin1=E pin2=B pin3=C),PinHeader_1x03_P2.54mm_Vertical,2
+Q2,IRF4905 (tab = drain),TO-220-3_Vertical,1
+R1,1k (servo-bus RX coupling),R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,1
+R3+R4,330R,R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,2
+R5+R11,1k,R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,2
+R6,4.7k (DS18B20 pull-up),R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,1
+R7,30k,R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,1
+R8,6.8k,R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,1
+R9,120R (CAN termination via JP2),R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,1
+R10+R12,10k,R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,2
+R13,330R (NeoPixel DIN series),R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,1
+TP1,GND test pad,TestPoint_THTPad_D1.5mm_Drill0.7mm,1
+TP2,+12V test pad,TestPoint_THTPad_D1.5mm_Drill0.7mm,1
+U1A+U1B,ESP32-S3-DevKitC-1 on 2x 1x22 pin sockets (USB faces LEFT),PinHeader_1x22_P2.54mm_Vertical,2
+U2,TJA1051T/3 CAN transceiver,SOIC-8_3.9x4.9mm_P1.27mm,1
+U3,74AHCT125 DIP-14 + socket (NeoPixel 3V3->5V shifter),DIP-14_W7.62mm_Socket,1

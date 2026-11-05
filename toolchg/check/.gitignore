@@ -1,0 +1,13 @@
+# generated solver/build scratch - never committed (ARM_KNUCKLE_V5 rule 0.4)
+__pycache__/
+fea/*.msh
+fea/*.frd
+fea/*.dat
+fea/*.sta
+fea/*.cvg
+fea/*.12d
+fea/*.vtu
+fea/*.inp
+fea/*.geo
+fea/*.step
+fea/spooles.out

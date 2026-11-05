@@ -1,0 +1,69 @@
+nbody 10 njnt 8 nu 6 neq 10
+init tool pose err (slot2): 0.0 mm  pen (slot0): 0.0 mm
+== DOCK slot 2 (grip tool) ==
+   wp approach  q_arm [-32.7, 31.5, 20.8, -51.7, 32.7, -12.0]  err 0.005 rad
+   wp insert    q_arm [-31.0, 32.3, 18.4, -50.0, 31.0, -12.0]  err 0.005 rad
+   wp insert    q_arm [-30.0, 32.8, 16.7, -48.9, 30.0, -12.0]  err 0.005 rad
+   wp seat      q_arm [-29.5, 33.1, 15.9, -48.3, 29.5, -12.0]  err 0.006 rad
+SEAT    master-face to socket-mouth gap 1.41 mm at seat (want < 3)         PASS
+   wp approach  q_arm [-32.7, 31.5, 20.8, -51.7, 32.7, -12.0]  err 0.005 rad
+   wp insert    q_arm [-31.0, 32.3, 18.4, -50.0, 31.0, -12.0]  err 0.005 rad
+   wp insert    q_arm [-30.0, 32.8, 16.7, -48.9, 30.0, -12.0]  err 0.005 rad
+   wp seat      q_arm [-29.5, 33.1, 15.9, -48.3, 29.5, -12.0]  err 0.006 rad
+   wp lock      q_arm [-29.5, 33.1, 15.9, -48.3, 29.5, 48.0]  err 0.006 rad
+SEATED  tool still seated after lock twist: 0.2 mm, quat w 1.000           PASS
+   weld tool<->grip ON, tool<->world_2 OFF (locked)
+   wp approach  q_arm [-32.7, 31.6, 20.9, -51.3, 32.7, -12.0]  err 0.009 rad
+   wp insert    q_arm [-31.0, 32.4, 18.5, -49.7, 31.0, -12.0]  err 0.009 rad
+   wp insert    q_arm [-30.0, 33.0, 16.8, -48.6, 30.0, -12.0]  err 0.009 rad
+   wp seat      q_arm [-29.5, 33.3, 16.0, -48.0, 29.5, -12.0]  err 0.009 rad
+   wp lock      q_arm [-29.5, 33.3, 16.0, -48.0, 29.5, 48.0]  err 0.009 rad
+   wp lift      q_arm [-29.5, 28.7, 16.5, -44.0, 29.5, 48.0]  err 0.009 rad
+   wp lift      q_arm [-29.5, 24.3, 16.7, -39.7, 29.5, 48.0]  err 0.009 rad
+   wp lift      q_arm [-29.5, 20.0, 16.6, -35.3, 29.5, 48.0]  err 0.009 rad
+   wp clear     q_arm [-29.5, 14.4, 16.0, -29.1, 29.5, 48.0]  err 0.009 rad
+LIFT    tool lifted 35.6 mm with the arm (want ~35)                        PASS
+== UNDOCK slot 3 (return grip tool) ==
+   wp above     q_arm [-6.2, 9.2, 22.9, -30.8, 6.2, 48.0]  err 0.010 rad
+   wp drop      q_arm [-6.2, 15.6, 23.6, -37.9, 6.2, 48.0]  err 0.010 rad
+   wp drop      q_arm [-6.2, 20.6, 23.7, -43.0, 6.2, 48.0]  err 0.010 rad
+   wp drop      q_arm [-6.2, 25.8, 23.5, -48.0, 6.2, 48.0]  err 0.010 rad
+   wp seat      q_arm [-6.2, 31.0, 22.9, -52.7, 6.2, 48.0]  err 0.010 rad
+   weld tool<->world_3 ON, tool<->grip OFF (released)
+   wp above     q_arm [-6.2, 9.1, 22.7, -31.2, 6.2, 48.0]  err 0.004 rad
+   wp drop      q_arm [-6.2, 15.5, 23.4, -38.3, 6.2, 48.0]  err 0.004 rad
+   wp drop      q_arm [-6.2, 20.5, 23.5, -43.4, 6.2, 48.0]  err 0.004 rad
+   wp drop      q_arm [-6.2, 25.6, 23.3, -48.3, 6.2, 48.0]  err 0.005 rad
+   wp seat      q_arm [-6.2, 30.9, 22.8, -53.0, 6.2, 48.0]  err 0.005 rad
+   wp unlock    q_arm [-6.2, 30.9, 22.8, -53.0, 6.2, -12.0]  err 0.005 rad
+   wp back      q_arm [-6.3, 30.6, 23.7, -53.7, 6.3, -12.0]  err 0.005 rad
+   wp back      q_arm [-6.6, 30.1, 25.6, -55.1, 6.6, -12.0]  err 0.005 rad
+   wp retreat   q_arm [-7.1, 29.4, 28.3, -57.2, 7.1, -12.0]  err 0.005 rad
+PARKED  tool parked in slot 3: pose err 0.2 mm, quat w 1.000               PASS
+CLEAR   master retreated 12.7 mm from the socket mouth                     PASS
+== DOCK slot 0 (pen) ==
+   wp approach  q_arm [-59.2, 45.7, -14.5, -30.3, 59.2, -12.0]  err 0.008 rad
+   wp insert    q_arm [-57.5, 46.6, -16.4, -29.3, 57.5, -12.0]  err 0.008 rad
+   wp insert    q_arm [-56.4, 47.2, -17.7, -28.6, 56.4, -12.0]  err 0.008 rad
+   wp seat      q_arm [-55.9, 47.5, -18.3, -28.2, 55.9, -12.0]  err 0.008 rad
+SEAT    master-face to pen socket gap 2.48 mm at seat                      PASS
+   wp approach  q_arm [-59.2, 45.7, -14.5, -30.3, 59.2, -12.0]  err 0.008 rad
+   wp insert    q_arm [-57.5, 46.6, -16.4, -29.3, 57.5, -12.0]  err 0.008 rad
+   wp insert    q_arm [-56.4, 47.2, -17.7, -28.6, 56.4, -12.0]  err 0.008 rad
+   wp seat      q_arm [-55.9, 47.5, -18.3, -28.2, 55.9, -12.0]  err 0.008 rad
+   wp lock      q_arm [-55.9, 47.5, -18.3, -28.2, 55.9, 48.0]  err 0.008 rad
+   weld pen<->grip ON, pen<->world_0 OFF (locked)
+   wp approach  q_arm [-59.2, 45.8, -14.5, -30.3, 59.2, -12.0]  err 0.008 rad
+   wp insert    q_arm [-57.5, 46.6, -16.3, -29.3, 57.5, -12.0]  err 0.009 rad
+   wp insert    q_arm [-56.4, 47.2, -17.6, -28.6, 56.4, -12.0]  err 0.009 rad
+   wp seat      q_arm [-55.9, 47.5, -18.3, -28.2, 55.9, -12.0]  err 0.009 rad
+   wp lock      q_arm [-55.9, 47.5, -18.3, -28.2, 55.9, 48.0]  err 0.009 rad
+   wp lift      q_arm [-55.9, 44.6, -17.9, -25.7, 55.9, 48.0]  err 0.009 rad
+   wp lift      q_arm [-55.9, 41.8, -17.8, -23.0, 55.9, 48.0]  err 0.008 rad
+   wp lift      q_arm [-55.9, 39.2, -17.9, -20.3, 55.9, 48.0]  err 0.008 rad
+   wp clear     q_arm [-55.9, 35.7, -18.4, -16.3, 55.9, 48.0]  err 0.008 rad
+LIFT    pen lifted 33.8 mm with the arm                                    PASS
+FINAL   all qpos/xpos finite at end: True                                  PASS
+final arm q [-55.9, 35.7, -18.4, -16.3, 55.9, 48.0]
+tool at slot3 pose err 0.2 mm, pen lifted+carried 33.8 mm
+CHECKS PASS

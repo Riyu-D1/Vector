@@ -1,0 +1,18 @@
+# generated - never committed per ARM_KNUCKLE_V5 rule 0.4
+__pycache__/
+out/
+renders/scratch/
+mjcf_tc/meshes/
+*.stl
+*.step
+fea/spooles.out
+fea/*.msh
+fea/*.frd
+fea/*.dat
+fea/*.sta
+fea/*.cvg
+fea/*.12d
+fea/*.vtu
+fea/*.inp
+fea/*.geo
+fea/*.step

@@ -1,0 +1,209 @@
+<mujoco model="soma_arm_tc">
+  <compiler meshdir="meshes" angle="radian"/>
+  <option gravity="0 0 -9.81"/>
+  <default><joint damping="0.2" armature="0.01"/><geom contype="0" conaffinity="0"/></default>
+  <asset>
+    <mesh name="base_plate" file="base_plate.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="base_link" file="base_link.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="j1_cradle" file="j1_cradle.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="vendor_sts3250_j1" file="vendor_sts3250_j1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="base_reinf" file="base_reinf.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="yaw_limit" file="yaw_limit.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="link1" file="link1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="front_spacer_j2" file="front_spacer_j2.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="flange_j2" file="flange_j2.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy2_carrier" file="cy2_carrier.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy2_out_flange" file="cy2_out_flange.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy2_vendor_685" file="cy2_vendor_685.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy2_vendor_dowels" file="cy2_vendor_dowels.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy2_vendor_outpins" file="cy2_vendor_outpins.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="upper_out" file="upper_out.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="upper_back" file="upper_back.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="back_spacer_j2" file="back_spacer_j2.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="back_spacer_j3" file="back_spacer_j3.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="vendor_spring_j2" file="vendor_spring_j2.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="vendor_spring_j3" file="vendor_spring_j3.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy2_disc1" file="cy2_disc1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy2_disc2" file="cy2_disc2.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy2_front_ring" file="cy2_front_ring.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy2_housing" file="cy2_housing.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy2_hub" file="cy2_hub.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy2_mag_puck" file="cy2_mag_puck.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy2_pin_ring" file="cy2_pin_ring.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy2_vendor_6702a" file="cy2_vendor_6702a.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy2_vendor_6702b" file="cy2_vendor_6702b.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy2_vendor_6808" file="cy2_vendor_6808.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy2_vendor_as5600" file="cy2_vendor_as5600.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy2_vendor_magnet" file="cy2_vendor_magnet.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy2_vendor_motor" file="cy2_vendor_motor.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy2_vendor_ringpins" file="cy2_vendor_ringpins.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy3_disc1" file="cy3_disc1.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy3_disc2" file="cy3_disc2.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy3_front_ring" file="cy3_front_ring.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy3_housing" file="cy3_housing.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy3_hub" file="cy3_hub.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy3_mag_puck" file="cy3_mag_puck.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy3_pin_ring" file="cy3_pin_ring.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy3_vendor_6702a" file="cy3_vendor_6702a.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy3_vendor_6702b" file="cy3_vendor_6702b.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy3_vendor_6808" file="cy3_vendor_6808.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy3_vendor_as5600" file="cy3_vendor_as5600.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy3_vendor_magnet" file="cy3_vendor_magnet.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy3_vendor_motor" file="cy3_vendor_motor.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy3_vendor_ringpins" file="cy3_vendor_ringpins.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="front_spacer_j3" file="front_spacer_j3.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="flange_j3" file="flange_j3.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="dogleg_l" file="dogleg_l.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="dogleg_r" file="dogleg_r.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="fore_l2" file="fore_l2.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="fore_r2" file="fore_r2.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="w_j4_cradle" file="w_j4_cradle.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="vendor_sts3250_j4" file="vendor_sts3250_j4.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy3_carrier" file="cy3_carrier.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy3_out_flange" file="cy3_out_flange.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy3_vendor_685" file="cy3_vendor_685.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy3_vendor_dowels" file="cy3_vendor_dowels.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="cy3_vendor_outpins" file="cy3_vendor_outpins.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="w_link4" file="w_link4.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="vendor_sts3215_j5" file="vendor_sts3215_j5.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="w_link5" file="w_link5.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="vendor_sts3215_j6" file="vendor_sts3215_j6.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="tc_master" file="tc_master.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="tool_grip" file="tool_grip.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="tc_vendor_g" file="tc_vendor_g.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="tc_gear" file="tc_gear.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="tc_rack_u" file="tc_rack_u.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="tc_rack_d" file="tc_rack_d.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="tc_finger_u" file="tc_finger_u.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="tc_finger_d" file="tc_finger_d.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="tool_pen" file="tool_pen.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="tc_rack" file="tc_rack.stl" scale="0.001 0.001 0.001"/>
+  </asset>
+  <worldbody>
+  <body name="base" pos="0 0 0">
+    <geom name="g_base_plate" type="mesh" mesh="base_plate" mass="0.2938"/>
+    <geom name="g_base_link" type="mesh" mesh="base_link" mass="0.1855"/>
+    <geom name="g_j1_cradle" type="mesh" mesh="j1_cradle" mass="0.0791"/>
+    <geom name="g_vendor_sts3250_j1" type="mesh" mesh="vendor_sts3250_j1" mass="0.0750"/>
+    <geom name="g_base_reinf" type="mesh" mesh="base_reinf" mass="0.0208"/>
+    <body name="upper_base" pos="0 0 0">
+      <joint name="J1" type="hinge" pos="0.0000 0.0000 0.0808" axis="0.0000 0.0000 1.0000" range="-3.1400 3.1400"/>
+      <geom name="g_yaw_limit" type="mesh" mesh="yaw_limit" mass="0.0100"/>
+      <geom name="g_link1" type="mesh" mesh="link1" mass="0.0324"/>
+      <geom name="g_front_spacer_j2" type="mesh" mesh="front_spacer_j2" mass="0.0021"/>
+      <geom name="g_flange_j2" type="mesh" mesh="flange_j2" mass="0.0036"/>
+      <geom name="g_cy2_carrier" type="mesh" mesh="cy2_carrier" mass="0.0092"/>
+      <geom name="g_cy2_out_flange" type="mesh" mesh="cy2_out_flange" mass="0.0029"/>
+      <geom name="g_cy2_vendor_685" type="mesh" mesh="cy2_vendor_685" mass="0.0003"/>
+      <geom name="g_cy2_vendor_dowels" type="mesh" mesh="cy2_vendor_dowels" mass="0.0002"/>
+      <geom name="g_cy2_vendor_outpins" type="mesh" mesh="cy2_vendor_outpins" mass="0.0004"/>
+      <body name="upper" pos="0 0 0">
+        <joint name="J2" type="hinge" pos="-0.0200 0.0000 0.1435" axis="0.0000 1.0000 0.0000" range="-2.0944 1.2217"/>
+        <geom name="g_upper_out" type="mesh" mesh="upper_out" mass="0.0144"/>
+        <geom name="g_upper_back" type="mesh" mesh="upper_back" mass="0.0210"/>
+        <geom name="g_back_spacer_j2" type="mesh" mesh="back_spacer_j2" mass="0.0074"/>
+        <geom name="g_back_spacer_j3" type="mesh" mesh="back_spacer_j3" mass="0.0074"/>
+        <geom name="g_vendor_spring_j2" type="mesh" mesh="vendor_spring_j2" mass="0.0009"/>
+        <geom name="g_vendor_spring_j3" type="mesh" mesh="vendor_spring_j3" mass="0.0009"/>
+        <geom name="g_cy2_disc1" type="mesh" mesh="cy2_disc1" mass="0.0035"/>
+        <geom name="g_cy2_disc2" type="mesh" mesh="cy2_disc2" mass="0.0035"/>
+        <geom name="g_cy2_front_ring" type="mesh" mesh="cy2_front_ring" mass="0.0007"/>
+        <geom name="g_cy2_housing" type="mesh" mesh="cy2_housing" mass="0.0424"/>
+        <geom name="g_cy2_hub" type="mesh" mesh="cy2_hub" mass="0.0037"/>
+        <geom name="g_cy2_mag_puck" type="mesh" mesh="cy2_mag_puck" mass="0.0004"/>
+        <geom name="g_cy2_pin_ring" type="mesh" mesh="cy2_pin_ring" mass="0.0008"/>
+        <geom name="g_cy2_vendor_6702a" type="mesh" mesh="cy2_vendor_6702a" mass="0.0005"/>
+        <geom name="g_cy2_vendor_6702b" type="mesh" mesh="cy2_vendor_6702b" mass="0.0005"/>
+        <geom name="g_cy2_vendor_6808" type="mesh" mesh="cy2_vendor_6808" mass="0.0046"/>
+        <geom name="g_cy2_vendor_as5600" type="mesh" mesh="cy2_vendor_as5600" mass="0.0007"/>
+        <geom name="g_cy2_vendor_magnet" type="mesh" mesh="cy2_vendor_magnet" mass="0.0001"/>
+        <geom name="g_cy2_vendor_motor" type="mesh" mesh="cy2_vendor_motor" mass="0.0850"/>
+        <geom name="g_cy2_vendor_ringpins" type="mesh" mesh="cy2_vendor_ringpins" mass="0.0022"/>
+        <geom name="g_cy3_disc1" type="mesh" mesh="cy3_disc1" mass="0.0035"/>
+        <geom name="g_cy3_disc2" type="mesh" mesh="cy3_disc2" mass="0.0035"/>
+        <geom name="g_cy3_front_ring" type="mesh" mesh="cy3_front_ring" mass="0.0007"/>
+        <geom name="g_cy3_housing" type="mesh" mesh="cy3_housing" mass="0.0424"/>
+        <geom name="g_cy3_hub" type="mesh" mesh="cy3_hub" mass="0.0037"/>
+        <geom name="g_cy3_mag_puck" type="mesh" mesh="cy3_mag_puck" mass="0.0004"/>
+        <geom name="g_cy3_pin_ring" type="mesh" mesh="cy3_pin_ring" mass="0.0008"/>
+        <geom name="g_cy3_vendor_6702a" type="mesh" mesh="cy3_vendor_6702a" mass="0.0005"/>
+        <geom name="g_cy3_vendor_6702b" type="mesh" mesh="cy3_vendor_6702b" mass="0.0005"/>
+        <geom name="g_cy3_vendor_6808" type="mesh" mesh="cy3_vendor_6808" mass="0.0046"/>
+        <geom name="g_cy3_vendor_as5600" type="mesh" mesh="cy3_vendor_as5600" mass="0.0007"/>
+        <geom name="g_cy3_vendor_magnet" type="mesh" mesh="cy3_vendor_magnet" mass="0.0001"/>
+        <geom name="g_cy3_vendor_motor" type="mesh" mesh="cy3_vendor_motor" mass="0.0850"/>
+        <geom name="g_cy3_vendor_ringpins" type="mesh" mesh="cy3_vendor_ringpins" mass="0.0022"/>
+        <body name="fore" pos="0 0 0">
+          <joint name="J3" type="hinge" pos="-0.0200 0.0000 0.2702" axis="0.0000 1.0000 0.0000" range="-3.1416 0.5236"/>
+          <geom name="g_front_spacer_j3" type="mesh" mesh="front_spacer_j3" mass="0.0027"/>
+          <geom name="g_flange_j3" type="mesh" mesh="flange_j3" mass="0.0043"/>
+          <geom name="g_dogleg_l" type="mesh" mesh="dogleg_l" mass="0.0148"/>
+          <geom name="g_dogleg_r" type="mesh" mesh="dogleg_r" mass="0.0148"/>
+          <geom name="g_fore_l2" type="mesh" mesh="fore_l2" mass="0.0182"/>
+          <geom name="g_fore_r2" type="mesh" mesh="fore_r2" mass="0.0181"/>
+          <geom name="g_w_j4_cradle" type="mesh" mesh="w_j4_cradle" mass="0.0129"/>
+          <geom name="g_vendor_sts3250_j4" type="mesh" mesh="vendor_sts3250_j4" mass="0.0745"/>
+          <geom name="g_cy3_carrier" type="mesh" mesh="cy3_carrier" mass="0.0092"/>
+          <geom name="g_cy3_out_flange" type="mesh" mesh="cy3_out_flange" mass="0.0029"/>
+          <geom name="g_cy3_vendor_685" type="mesh" mesh="cy3_vendor_685" mass="0.0003"/>
+          <geom name="g_cy3_vendor_dowels" type="mesh" mesh="cy3_vendor_dowels" mass="0.0002"/>
+          <geom name="g_cy3_vendor_outpins" type="mesh" mesh="cy3_vendor_outpins" mass="0.0004"/>
+          <body name="wrist4" pos="0 0 0">
+            <joint name="J4" type="hinge" pos="0.0964 0.0000 0.2162" axis="0.0000 1.0000 0.0000" range="-1.2217 1.2217"/>
+            <geom name="g_w_link4" type="mesh" mesh="w_link4" mass="0.0087"/>
+            <geom name="g_vendor_sts3215_j5" type="mesh" mesh="vendor_sts3215_j5" mass="0.0550"/>
+            <body name="wrist5" pos="0 0 0">
+              <joint name="J5" type="hinge" pos="0.1270 0.0000 0.2238" axis="0.0000 0.0000 1.0000" range="-1.2217 1.2217"/>
+              <geom name="g_w_link5" type="mesh" mesh="w_link5" mass="0.0052"/>
+              <geom name="g_vendor_sts3215_j6" type="mesh" mesh="vendor_sts3215_j6" mass="0.0550"/>
+              <body name="grip" pos="0 0 0">
+                <joint name="J6" type="hinge" pos="0.1494 0.0000 0.1992" axis="1.0000 0.0000 0.0000" range="-3.1400 3.1400"/>
+                <geom name="g_tc_master" type="mesh" mesh="tc_master" mass="0.0054"/>
+                <site name="tcp" pos="0.2338 0 0.1992"/>
+                <site name="mst" pos="0.1651 0 0.1992"/>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </body>
+    <geom name="g_tc_rack" type="mesh" mesh="tc_rack" mass="0.1995"/>
+    <body name="tool" pos="-0.0262 -0.0570 -0.0892">
+      <freejoint name="tool_free"/>
+      <geom name="g_tool_grip" type="mesh" mesh="tool_grip" mass="0.0174"/>
+      <geom name="g_tc_vendor_g" type="mesh" mesh="tc_vendor_g" mass="0.0550"/>
+      <geom name="g_tc_gear" type="mesh" mesh="tc_gear" mass="0.0080"/>
+      <geom name="g_tc_rack_u" type="mesh" mesh="tc_rack_u" mass="0.0018"/>
+      <geom name="g_tc_rack_d" type="mesh" mesh="tc_rack_d" mass="0.0018"/>
+      <geom name="g_tc_finger_u" type="mesh" mesh="tc_finger_u" mass="0.0010"/>
+      <geom name="g_tc_finger_d" type="mesh" mesh="tc_finger_d" mass="0.0010"/>
+      <site name="tool_ref" pos="0.1654 0.0000 0.1992"/>
+    </body>
+    <body name="pen" pos="-0.0262 -0.1490 -0.0892">
+      <freejoint name="pen_free"/>
+      <geom name="g_tool_pen" type="mesh" mesh="tool_pen" mass="0.0215"/>
+      <site name="pen_ref" pos="0.1654 0.0000 0.1992"/>
+    </body>
+  </worldbody>
+  <equality>
+    <weld name="w_tool_world_0" body1="world" body2="tool" relpose="-0.0262 -0.1490 -0.0892 1 0 0 0" torquescale="500"/>
+    <weld name="w_tool_world_1" body1="world" body2="tool" relpose="-0.0262 -0.1030 -0.0892 1 0 0 0" torquescale="500"/>
+    <weld name="w_tool_world_2" body1="world" body2="tool" relpose="-0.0262 -0.0570 -0.0892 1 0 0 0" torquescale="500"/>
+    <weld name="w_tool_world_3" body1="world" body2="tool" relpose="-0.0262 -0.0110 -0.0892 1 0 0 0" torquescale="500"/>
+    <weld name="w_tool_grip" body1="grip" body2="tool" relpose="0.0000 -0.1480 0.0659 0.9135 -0.4067 0.0000 0.0000" torquescale="500" active="false"/>
+    <weld name="w_pen_world_0" body1="world" body2="pen" relpose="-0.0262 -0.1490 -0.0892 1 0 0 0" torquescale="500"/>
+    <weld name="w_pen_world_1" body1="world" body2="pen" relpose="-0.0262 -0.1030 -0.0892 1 0 0 0" torquescale="500"/>
+    <weld name="w_pen_world_2" body1="world" body2="pen" relpose="-0.0262 -0.0570 -0.0892 1 0 0 0" torquescale="500"/>
+    <weld name="w_pen_world_3" body1="world" body2="pen" relpose="-0.0262 -0.0110 -0.0892 1 0 0 0" torquescale="500"/>
+    <weld name="w_pen_grip" body1="grip" body2="pen" relpose="0.0000 -0.1480 0.0659 0.9135 -0.4067 0.0000 0.0000" torquescale="500" active="false"/>
+  </equality>
+  <actuator>
+    <position name="J1" joint="J1" kp="10.0" ctrlrange="-3.1400 3.1400" forcerange="-0.98 0.98"/>
+    <position name="J2" joint="J2" kp="80.0" ctrlrange="-2.0944 1.2217" forcerange="-3.50 3.50"/>
+    <position name="J3" joint="J3" kp="50.0" ctrlrange="-3.1416 0.5236" forcerange="-2.25 2.25"/>
+    <position name="J4" joint="J4" kp="15.0" ctrlrange="-1.2217 1.2217" forcerange="-0.98 0.98"/>
+    <position name="J5" joint="J5" kp="15.0" ctrlrange="-1.2217 1.2217" forcerange="-0.98 0.98"/>
+    <position name="J6" joint="J6" kp="8.0" ctrlrange="-3.1400 3.1400" forcerange="-0.98 0.98"/>
+  </actuator>
+</mujoco>

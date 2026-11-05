@@ -1,0 +1,3 @@
+/Users/deepakdiwan/Vector-wt/toolchg/toolchg/renders/scratch/con_bayonet.stl 0.16 0.50 0.72
+/Users/deepakdiwan/Vector-wt/toolchg/toolchg/renders/scratch/con_kinematic.stl 0.40 0.65 0.35
+/Users/deepakdiwan/Vector-wt/toolchg/toolchg/renders/scratch/con_magnetic.stl 0.72 0.30 0.42

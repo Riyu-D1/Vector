@@ -1,0 +1,607 @@
++ /Users/deepakdiwan/Vector-wt/cradlefix/.venv/bin/python -c import sys; sys.path.insert(0, '/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg')
+import p_toolchg as PW
+from build123d import export_step
+s = getattr(PW, 'tc_plate')()
+if len(list(s.solids())) > 1:
+    s = max(s.solids(), key=lambda x: x.volume)
+export_step(s, '/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_plate.step')
+print('vol', s.volume)
+
+vol 7444.214589234714
++ /Users/deepakdiwan/Vector-wt/cradlefix/.venv/bin/python -c import sys; sys.path.insert(0, '/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg')
+import p_toolchg as PW
+from build123d import export_step
+s = getattr(PW, 'tool_grip')()
+if len(list(s.solids())) > 1:
+    s = max(s.solids(), key=lambda x: x.volume)
+export_step(s, '/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_grip.step')
+print('vol', s.volume)
+
+vol 23479.6274661731
++ /Users/deepakdiwan/Vector-wt/cradlefix/.venv/bin/python -c import sys; sys.path.insert(0, '/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg')
+import p_toolchg as PW
+from build123d import export_step
+s = getattr(PW, 'tool_pen')()
+if len(list(s.solids())) > 1:
+    s = max(s.solids(), key=lambda x: x.volume)
+export_step(s, '/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_pen.step')
+print('vol', s.volume)
+
+vol 28983.73404044624
++ /Users/deepakdiwan/opt/anaconda3/bin/python3 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/gen_geo.py tc_master 1.5 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_master.step tc_master
+
++ /Users/deepakdiwan/opt/anaconda3/bin/python3 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fea/msh2tc.py /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_master.msh /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_master.inp tc_master
+  tc_master: NFIX=2807 NLOAD=434
+/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_master.inp: 28641 nodes 16932 C3D10 (0 reoriented) NFIX=2807 NLOAD=434
+  F=[0.0, 0.0, -5.7] N at TCP [149.4, 0.0, -17.0]
++ /Applications/FreeCAD.app/Contents/Resources/bin/ccx -i /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_master
+
+************************************************************
+
+CalculiX Version 2.23, Copyright(C) 1998-2025 Guido Dhondt
+CalculiX comes with ABSOLUTELY NO WARRANTY. This is free
+software, and you are welcome to redistribute it under
+certain conditions, see gpl.htm
+
+************************************************************
+
+You are using an executable made on Fri Nov  7 12:06:11 UTC 2025
+ Decascading the MPC's
+
+ Determining the structure of the matrix:
+ Using up to 1 cpu(s) for setting up the structure of the matrix.
+ number of equations
+ 76206
+ number of nonzero lower triangular matrix elements
+ 2773020
+
+ Using up to 1 cpu(s) for the stress calculation.
+
+ Using up to 1 cpu(s) for the symmetric stiffness/mass contributions.
+
+ Factoring the system of equations using the symmetric spooles solver
+ Using 1 cpu for spooles.
+
+ Using up to 1 cpu(s) for the stress calculation.
+
+
+  The numbers below are estimated upper bounds
+
+  number of:
+
+   nodes:        29078
+   elements:        23897
+   one-dimensional elements:            0
+   two-dimensional elements:            0
+   integration points per element:            4
+   degrees of freedom per node:            3
+   layers per element:            1
+
+   distributed facial loads:            0
+   distributed volumetric loads:            1
+   concentrated loads:            1
+   single point constraints:         9723
+   multiple point constraints:         1303
+   terms in all multiple point constraints:         7813
+   tie constraints:            0
+   dependent nodes tied by cyclic constraints:            0
+   dependent nodes in pre-tension constraints:            0
+
+   sets:            3
+   terms in all sets:        37105
+
+   materials:            1
+   constants per material and temperature:            2
+   temperature points per material:            1
+   plastic data points per material:            0
+
+   orientations:            0
+   amplitudes:            3
+   data points in all amplitudes:            3
+   print requests:            0
+   transformations:            0
+   property cards:            0
+
+
+ STEP            1
+
+ Static analysis was selected
+
+
+ Job finished
+
++ /Users/deepakdiwan/opt/anaconda3/bin/python3 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fea/analyze_tc.py /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_master.frd /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_master.inp /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_master
+/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_master.frd: 28641 nodes 16932 tets, 4 result blocks
+constrained 3241 (NFIX 2807 NLOAD 434); excluded-with-elements 8664
+step1: max|U| 0.001 mm (@(74.8, 1.2, 0.3)) | raw maxVM 1.26 | filtered 0.79 | patch 1.07 MPa
+    hot VM 0.79 at node 6311 (70.7, -4.1, -4.7)
+    hot VM 0.78 at node 6312 (70.7, -4.8, -4.9)
+    hot VM 0.72 at node 6541 (70.8, -2.1, -4.2)
+    hot VM 0.66 at node 6310 (70.7, -3.5, -4.5)
+    hot VM 0.65 at node 581 (70.8, 0.0, -4.0)
+wrote /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_master_step1.vtu
++ /Users/deepakdiwan/Vector-wt/fea/fea/.venv/bin/python /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/view_tc.py /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_master_step1.vtu tc_master
+/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/view_tc.py:22: PyVistaDeprecationWarning: Plotter.export_html is deprecated. Use plotter.trame.export_html(...) instead. Install via `pip install trame-pyvista`.
+  p.export_html(stem + ".html")
+wrote /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_master.html /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_master_iso.png /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_master_front.png
++ /Users/deepakdiwan/opt/anaconda3/bin/python3 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/gen_geo.py tc_plate 1.5 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_plate.step tc_plate
+
++ /Users/deepakdiwan/opt/anaconda3/bin/python3 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fea/msh2tc.py /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_plate.msh /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_plate.inp tc_plate
+  tc_plate: NFIX=15909 NLOAD=1214
+/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_plate.inp: 112152 nodes 69086 C3D10 (0 reoriented) NFIX=15909 NLOAD=1214
+  F=[0.0, 0.0, -5.7] N at TCP [149.4, 0.0, -17.0]
++ /Applications/FreeCAD.app/Contents/Resources/bin/ccx -i /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_plate
+
+************************************************************
+
+CalculiX Version 2.23, Copyright(C) 1998-2025 Guido Dhondt
+CalculiX comes with ABSOLUTELY NO WARRANTY. This is free
+software, and you are welcome to redistribute it under
+certain conditions, see gpl.htm
+
+************************************************************
+
+You are using an executable made on Fri Nov  7 12:06:11 UTC 2025
+ Decascading the MPC's
+
+ Determining the structure of the matrix:
+ Using up to 1 cpu(s) for setting up the structure of the matrix.
+ number of equations
+ 285093
+ number of nonzero lower triangular matrix elements
+ 10417086
+
+ Using up to 1 cpu(s) for the stress calculation.
+
+ Using up to 1 cpu(s) for the symmetric stiffness/mass contributions.
+
+ Factoring the system of equations using the symmetric spooles solver
+ Using 1 cpu for spooles.
+
+ Using up to 1 cpu(s) for the stress calculation.
+
+
+  The numbers below are estimated upper bounds
+
+  number of:
+
+   nodes:       113369
+   elements:        91114
+   one-dimensional elements:            0
+   two-dimensional elements:            0
+   integration points per element:            4
+   degrees of freedom per node:            3
+   layers per element:            1
+
+   distributed facial loads:            0
+   distributed volumetric loads:            1
+   concentrated loads:            1
+   single point constraints:        51369
+   multiple point constraints:         3643
+   terms in all multiple point constraints:        21853
+   tie constraints:            0
+   dependent nodes tied by cyclic constraints:            0
+   dependent nodes in pre-tension constraints:            0
+
+   sets:            3
+   terms in all sets:       155295
+
+   materials:            1
+   constants per material and temperature:            2
+   temperature points per material:            1
+   plastic data points per material:            0
+
+   orientations:            0
+   amplitudes:            3
+   data points in all amplitudes:            3
+   print requests:            0
+   transformations:            0
+   property cards:            0
+
+
+ STEP            1
+
+ Static analysis was selected
+
+
+ Job finished
+
++ /Users/deepakdiwan/opt/anaconda3/bin/python3 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fea/analyze_tc.py /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_plate.frd /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_plate.inp /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_plate
+/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_plate.frd: 112152 nodes 69086 tets, 4 result blocks
+constrained 17123 (NFIX 15909 NLOAD 1214); excluded-with-elements 43307
+step1: max|U| 0.001 mm (@(69.0, 7.9, -0.6)) | raw maxVM 0.71 | filtered 0.48 | patch 0.71 MPa
+    hot VM 0.48 at node 835 (73.5, -8.1, -0.7)
+    hot VM 0.48 at node 840 (73.9, -8.2, -0.7)
+    hot VM 0.46 at node 10 (74.0, -4.2, 0.7)
+    hot VM 0.45 at node 839 (73.1, -8.0, -0.6)
+    hot VM 0.45 at node 816 (73.7, -4.2, 0.7)
+wrote /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_plate_step1.vtu
++ /Users/deepakdiwan/Vector-wt/fea/fea/.venv/bin/python /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/view_tc.py /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_plate_step1.vtu tc_plate
+/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/view_tc.py:22: PyVistaDeprecationWarning: Plotter.export_html is deprecated. Use plotter.trame.export_html(...) instead. Install via `pip install trame-pyvista`.
+  p.export_html(stem + ".html")
+wrote /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_plate.html /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_plate_iso.png /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_plate_front.png
++ /Users/deepakdiwan/opt/anaconda3/bin/python3 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/gen_geo.py tc_plate 1.5 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_plate.step tc_plate
+
++ /Users/deepakdiwan/opt/anaconda3/bin/python3 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/msh2_extra.py /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_plate.msh /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/plate_1catch.inp plate_1catch
+  plate_1catch: NFIX=15909 NLOAD=323
+/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/plate_1catch.inp: 112152 nodes 69086 C3D10 NFIX=15909 NLOAD=323
+  F=[0.0, 0.0, -5.7] N at ref [149.4, 0.0, -17.0]
++ /Applications/FreeCAD.app/Contents/Resources/bin/ccx -i /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/plate_1catch
+
+************************************************************
+
+CalculiX Version 2.23, Copyright(C) 1998-2025 Guido Dhondt
+CalculiX comes with ABSOLUTELY NO WARRANTY. This is free
+software, and you are welcome to redistribute it under
+certain conditions, see gpl.htm
+
+************************************************************
+
+You are using an executable made on Fri Nov  7 12:06:11 UTC 2025
+ Decascading the MPC's
+
+ Determining the structure of the matrix:
+ Using up to 1 cpu(s) for setting up the structure of the matrix.
+ number of equations
+ 287766
+ number of nonzero lower triangular matrix elements
+ 10512477
+
+ Using up to 1 cpu(s) for the stress calculation.
+
+ Using up to 1 cpu(s) for the symmetric stiffness/mass contributions.
+
+ Factoring the system of equations using the symmetric spooles solver
+ Using 1 cpu for spooles.
+
+ Using up to 1 cpu(s) for the stress calculation.
+
+
+  The numbers below are estimated upper bounds
+
+  number of:
+
+   nodes:       112478
+   elements:        91114
+   one-dimensional elements:            0
+   two-dimensional elements:            0
+   integration points per element:            4
+   degrees of freedom per node:            3
+   layers per element:            1
+
+   distributed facial loads:            0
+   distributed volumetric loads:            1
+   concentrated loads:            1
+   single point constraints:        48696
+   multiple point constraints:          970
+   terms in all multiple point constraints:         5815
+   tie constraints:            0
+   dependent nodes tied by cyclic constraints:            0
+   dependent nodes in pre-tension constraints:            0
+
+   sets:            3
+   terms in all sets:       154404
+
+   materials:            1
+   constants per material and temperature:            2
+   temperature points per material:            1
+   plastic data points per material:            0
+
+   orientations:            0
+   amplitudes:            3
+   data points in all amplitudes:            3
+   print requests:            0
+   transformations:            0
+   property cards:            0
+
+
+ STEP            1
+
+ Static analysis was selected
+
+
+ Job finished
+
++ /Users/deepakdiwan/opt/anaconda3/bin/python3 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fea/analyze_tc.py /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/plate_1catch.frd /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/plate_1catch.inp /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/plate_1catch
+/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/plate_1catch.frd: 112152 nodes 69086 tets, 4 result blocks
+constrained 16232 (NFIX 15909 NLOAD 323); excluded-with-elements 40110
+step1: max|U| 0.035 mm (@(70.2, -12.0, -11.5)) | raw maxVM 11.89 | filtered 11.89 | patch 8.66 MPa
+    hot VM 11.89 at node 5971 (73.1, 0.4, 1.2)
+    hot VM 11.26 at node 6211 (73.4, -14.9, -6.6)
+    hot VM 11.02 at node 6207 (73.4, -15.3, -7.2)
+    hot VM 10.87 at node 20730 (72.5, -16.3, -9.6)
+    hot VM 10.83 at node 20470 (72.5, 3.0, 0.7)
+wrote /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/plate_1catch_step1.vtu
++ /Users/deepakdiwan/Vector-wt/fea/fea/.venv/bin/python /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/view_tc.py /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/plate_1catch_step1.vtu plate_1catch
+/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/view_tc.py:22: PyVistaDeprecationWarning: Plotter.export_html is deprecated. Use plotter.trame.export_html(...) instead. Install via `pip install trame-pyvista`.
+  p.export_html(stem + ".html")
+wrote /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/plate_1catch.html /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/plate_1catch_iso.png /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/plate_1catch_front.png
++ /Users/deepakdiwan/opt/anaconda3/bin/python3 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/gen_geo.py tool_pen 1.5 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_pen.step tool_pen
+
++ /Users/deepakdiwan/opt/anaconda3/bin/python3 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/msh2_extra.py /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_pen.msh /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_pen.inp tool_pen
+  tool_pen: NFIX=1209 NLOAD=1508
+/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_pen.inp: 136383 nodes 84908 C3D10 NFIX=1209 NLOAD=1508
+  F=[0.0, 5.0, 0.0] N at ref [149.4, 0.0, -17.0]
++ /Applications/FreeCAD.app/Contents/Resources/bin/ccx -i /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_pen
+
+************************************************************
+
+CalculiX Version 2.23, Copyright(C) 1998-2025 Guido Dhondt
+CalculiX comes with ABSOLUTELY NO WARRANTY. This is free
+software, and you are welcome to redistribute it under
+certain conditions, see gpl.htm
+
+************************************************************
+
+You are using an executable made on Fri Nov  7 12:06:11 UTC 2025
+ Decascading the MPC's
+
+ Determining the structure of the matrix:
+ Using up to 1 cpu(s) for setting up the structure of the matrix.
+ number of equations
+ 401004
+ number of nonzero lower triangular matrix elements
+ 15320052
+
+ Using up to 1 cpu(s) for the stress calculation.
+
+ Using up to 1 cpu(s) for the symmetric stiffness/mass contributions.
+
+ Factoring the system of equations using the symmetric spooles solver
+ Using 1 cpu for spooles.
+
+ Using up to 1 cpu(s) for the stress calculation.
+
+
+  The numbers below are estimated upper bounds
+
+  number of:
+
+   nodes:       137894
+   elements:       110652
+   one-dimensional elements:            0
+   two-dimensional elements:            0
+   integration points per element:            4
+   degrees of freedom per node:            3
+   layers per element:            1
+
+   distributed facial loads:            0
+   distributed volumetric loads:            1
+   concentrated loads:            1
+   single point constraints:         8151
+   multiple point constraints:         4525
+   terms in all multiple point constraints:        27145
+   tie constraints:            0
+   dependent nodes tied by cyclic constraints:            0
+   dependent nodes in pre-tension constraints:            0
+
+   sets:            3
+   terms in all sets:       172533
+
+   materials:            1
+   constants per material and temperature:            2
+   temperature points per material:            1
+   plastic data points per material:            0
+
+   orientations:            0
+   amplitudes:            3
+   data points in all amplitudes:            3
+   print requests:            0
+   transformations:            0
+   property cards:            0
+
+
+ STEP            1
+
+ Static analysis was selected
+
+
+ Job finished
+
++ /Users/deepakdiwan/opt/anaconda3/bin/python3 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fea/analyze_tc.py /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_pen.frd /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_pen.inp /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_pen
+/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_pen.frd: 136383 nodes 84908 tets, 4 result blocks
+constrained 2717 (NFIX 1209 NLOAD 1508); excluded-with-elements 6226
+step1: max|U| 0.023 mm (@(148.0, -5.5, -17.0)) | raw maxVM 0.78 | filtered 0.78 | patch 0.50 MPa
+    hot VM 0.78 at node 1080 (76.0, 17.8, -13.1)
+    hot VM 0.74 at node 1037 (76.0, -17.9, -13.7)
+    hot VM 0.74 at node 34496 (90.6, -9.3, -15.1)
+    hot VM 0.72 at node 34500 (90.6, -9.4, -15.9)
+    hot VM 0.71 at node 34499 (90.6, -9.5, -16.6)
+wrote /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_pen_step1.vtu
++ /Users/deepakdiwan/Vector-wt/fea/fea/.venv/bin/python /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/view_tc.py /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_pen_step1.vtu tool_pen
+/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/view_tc.py:22: PyVistaDeprecationWarning: Plotter.export_html is deprecated. Use plotter.trame.export_html(...) instead. Install via `pip install trame-pyvista`.
+  p.export_html(stem + ".html")
+wrote /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_pen.html /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_pen_iso.png /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_pen_front.png
++ /Users/deepakdiwan/opt/anaconda3/bin/python3 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/gen_geo.py tool_grip 1.5 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_grip.step tool_grip
+
++ /Users/deepakdiwan/opt/anaconda3/bin/python3 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/msh2_extra.py /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_grip.msh /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_grip.inp tool_grip
+  tool_grip: NFIX=13653 NLOAD=34666
+/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_grip.inp: 127268 nodes 71322 C3D10 NFIX=13653 NLOAD=34666
+  F=[0.0, 0.0, -5.7] N at ref [149.4, 0.0, -17.0]
++ /Applications/FreeCAD.app/Contents/Resources/bin/ccx -i /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_grip
+
+************************************************************
+
+CalculiX Version 2.23, Copyright(C) 1998-2025 Guido Dhondt
+CalculiX comes with ABSOLUTELY NO WARRANTY. This is free
+software, and you are welcome to redistribute it under
+certain conditions, see gpl.htm
+
+************************************************************
+
+You are using an executable made on Fri Nov  7 12:06:11 UTC 2025
+ Decascading the MPC's
+
+ Determining the structure of the matrix:
+ Using up to 1 cpu(s) for setting up the structure of the matrix.
+ number of equations
+ 236853
+ number of nonzero lower triangular matrix elements
+ 8282934
+
+ Using up to 1 cpu(s) for the stress calculation.
+
+ Using up to 1 cpu(s) for the symmetric stiffness/mass contributions.
+
+ Factoring the system of equations using the symmetric spooles solver
+ Using 1 cpu for spooles.
+
+ Using up to 1 cpu(s) for the stress calculation.
+
+
+  The numbers below are estimated upper bounds
+
+  number of:
+
+   nodes:       161937
+   elements:       107141
+   one-dimensional elements:            0
+   two-dimensional elements:            0
+   integration points per element:            4
+   degrees of freedom per node:            3
+   layers per element:            1
+
+   distributed facial loads:            0
+   distributed volumetric loads:            1
+   concentrated loads:            1
+   single point constraints:       144957
+   multiple point constraints:       103999
+   terms in all multiple point constraints:       623989
+   tie constraints:            0
+   dependent nodes tied by cyclic constraints:            0
+   dependent nodes in pre-tension constraints:            0
+
+   sets:            3
+   terms in all sets:       190963
+
+   materials:            1
+   constants per material and temperature:            2
+   temperature points per material:            1
+   plastic data points per material:            0
+
+   orientations:            0
+   amplitudes:            3
+   data points in all amplitudes:            3
+   print requests:            0
+   transformations:            0
+   property cards:            0
+
+
+ STEP            1
+
+ Static analysis was selected
+
+
+ Job finished
+
++ /Users/deepakdiwan/opt/anaconda3/bin/python3 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fea/analyze_tc.py /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_grip.frd /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_grip.inp /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_grip
+/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_grip.frd: 127268 nodes 71322 tets, 4 result blocks
+constrained 48319 (NFIX 13653 NLOAD 34666); excluded-with-elements 68729
+step1: max|U| 7.940 mm (@(137.1, 32.0, 5.4)) | raw maxVM 28.73 | filtered 28.73 | patch 4.91 MPa
+    hot VM 28.73 at node 79 (110.0, 12.5, -52.0)
+    hot VM 28.46 at node 25257 (110.1, 12.5, -52.2)
+    hot VM 26.16 at node 1929 (110.0, 13.1, -52.0)
+    hot VM 25.50 at node 21857 (109.4, 13.2, -52.0)
+    hot VM 25.03 at node 34144 (86.3, -11.1, -52.0)
+wrote /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_grip_step1.vtu
++ /Users/deepakdiwan/Vector-wt/fea/fea/.venv/bin/python /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/view_tc.py /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_grip_step1.vtu tool_grip
+/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/view_tc.py:22: PyVistaDeprecationWarning: Plotter.export_html is deprecated. Use plotter.trame.export_html(...) instead. Install via `pip install trame-pyvista`.
+  p.export_html(stem + ".html")
+wrote /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_grip.html /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_grip_iso.png /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tool_grip_front.png
++ /Users/deepakdiwan/opt/anaconda3/bin/python3 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/gen_geo.py tc_rack 2.0 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_rack.step tc_rack
+
++ /Users/deepakdiwan/opt/anaconda3/bin/python3 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/msh2_extra.py /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_rack.msh /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_rack.inp tc_rack
+  tc_rack: NFIX=10775 NLOAD=492
+/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_rack.inp: 200062 nodes 113104 C3D10 NFIX=10775 NLOAD=492
+  F=[0.0, 0.0, -1.2] N at ref [145.0, -57.0, 110.0]
++ /Applications/FreeCAD.app/Contents/Resources/bin/ccx -i /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_rack
+
+************************************************************
+
+CalculiX Version 2.23, Copyright(C) 1998-2025 Guido Dhondt
+CalculiX comes with ABSOLUTELY NO WARRANTY. This is free
+software, and you are welcome to redistribute it under
+certain conditions, see gpl.htm
+
+************************************************************
+
+You are using an executable made on Fri Nov  7 12:06:11 UTC 2025
+ Decascading the MPC's
+
+ Determining the structure of the matrix:
+ Using up to 1 cpu(s) for setting up the structure of the matrix.
+ number of equations
+ 566391
+ number of nonzero lower triangular matrix elements
+ 20167950
+
+ Using up to 1 cpu(s) for the stress calculation.
+
+ Using up to 1 cpu(s) for the symmetric stiffness/mass contributions.
+
+ Factoring the system of equations using the symmetric spooles solver
+ Using 1 cpu for spooles.
+
+ Using up to 1 cpu(s) for the stress calculation.
+
+
+  The numbers below are estimated upper bounds
+
+  number of:
+
+   nodes:       200557
+   elements:       164502
+   one-dimensional elements:            0
+   two-dimensional elements:            0
+   integration points per element:            4
+   degrees of freedom per node:            3
+   layers per element:            1
+
+   distributed facial loads:            0
+   distributed volumetric loads:            1
+   concentrated loads:            1
+   single point constraints:        33801
+   multiple point constraints:         1477
+   terms in all multiple point constraints:         8857
+   tie constraints:            0
+   dependent nodes tied by cyclic constraints:            0
+   dependent nodes in pre-tension constraints:            0
+
+   sets:            3
+   terms in all sets:       237475
+
+   materials:            1
+   constants per material and temperature:            2
+   temperature points per material:            1
+   plastic data points per material:            0
+
+   orientations:            0
+   amplitudes:            3
+   data points in all amplitudes:            3
+   print requests:            0
+   transformations:            0
+   property cards:            0
+
+
+ STEP            1
+
+ Static analysis was selected
+
+
+ Job finished
+
++ /Users/deepakdiwan/opt/anaconda3/bin/python3 /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fea/analyze_tc.py /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_rack.frd /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_rack.inp /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_rack
+/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_rack.frd: 200062 nodes 113104 tets, 4 result blocks
+constrained 11267 (NFIX 10775 NLOAD 492); excluded-with-elements 28179
+step1: max|U| 0.000 mm (@(143.8, -36.1, 109.8)) | raw maxVM 0.01 | filtered 0.01 | patch 0.01 MPa
+    hot VM 0.01 at node 85921 (146.4, 13.0, 4.6)
+    hot VM 0.01 at node 3245 (143.0, 13.0, 5.0)
+    hot VM 0.01 at node 3827 (147.0, 13.0, 5.0)
+    hot VM 0.01 at node 85917 (143.7, 13.0, 4.7)
+    hot VM 0.01 at node 70682 (147.0, 12.3, 4.7)
+wrote /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_rack_step1.vtu
++ /Users/deepakdiwan/Vector-wt/fea/fea/.venv/bin/python /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/view_tc.py /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_rack_step1.vtu tc_rack
+/Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/view_tc.py:22: PyVistaDeprecationWarning: Plotter.export_html is deprecated. Use plotter.trame.export_html(...) instead. Install via `pip install trame-pyvista`.
+  p.export_html(stem + ".html")
+wrote /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_rack.html /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_rack_iso.png /Users/deepakdiwan/Vector-wt/toolchgfix/toolchg/fix_fea/tc_rack_front.png
+fea check done

@@ -149,10 +149,17 @@ def _catch(ph):
                y_dir=(0.0, math.cos(p0), math.sin(p0)))
     # outer edge 0.4 into the ring wall -> fused body, not tangent contact
     prof = pl * Polygon((a0, T.TC_RING_RIN + 0.4),
-                        (a0 + 2.2, T.TC_CATCH_R),
+                        (a0 + 1.2, T.TC_CATCH_R),
                         (a1, T.TC_CATCH_R), (a1, T.TC_RING_RIN + 0.4),
                         align=None)
-    return revolve(prof, axis=ROLL_AX, revolution_arc=T.TC_CATCH_ARC)
+    s = revolve(prof, axis=ROLL_AX, revolution_arc=T.TC_CATCH_ARC)
+    # corner fillet behind the +a face: chamfers the face/bore corner the
+    # single-catch fault peaks at; stops at r17.6 (0.3 clear of lug r17.3)
+    fprof = pl * Polygon((a1, T.TC_RING_RIN + 0.4),
+                         (a1, T.TC_RING_RIN - 0.6),
+                         (a1 + 1.4, T.TC_RING_RIN - 0.6),
+                         align=None)
+    return s + revolve(fprof, axis=ROLL_AX, revolution_arc=T.TC_CATCH_ARC)
 
 def tc_plate():
     s = _ring_floor()
@@ -165,7 +172,7 @@ def tc_plate():
     # key notch in the groove floor (bottom phase)
     kw = T.TC_KEY_W / 2
     s = s - box(g0 + 0.25, g1 - 0.25, -kw, kw,
-                T.H_AX - T.TC_DOCK_R - T.TC_KEY_D, T.H_AX - T.TC_DOCK_R + 0.05)
+                T.H_AX - T.TC_DOCK_R - 0.5, T.H_AX - T.TC_DOCK_R + T.TC_KEY_D)
     # detent plunger bore (radial, through the ring wall)
     s = s - rcyl(T.TC_DET_A, T.TC_DET_PH, T.TC_DET_D,
                  T.TC_RING_RIN - 0.5, T.TC_RING_ROUT + 1)

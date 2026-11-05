@@ -69,19 +69,24 @@ mass, and all-loads-in-material capture.
 
 ## Task 3 — parametric CAD (11 parts, all watertight)
 
-`build_toolchg.py`: tc_master 7.3 cm³, tc_plate 6.8, tool_grip 22.8,
-tool_pen 28.3, tc_vendor_g 42.8 (servo proxy), tc_gear 1.5,
-tc_rack_u/d 2.4 ea, tc_finger_u/d 1.3 ea, tc_rack 157.0 (4 slots,
+`build_toolchg.py`: tc_master 7.3 cm³, tc_plate 7.4, tool_grip 23.5,
+tool_pen 29.0, tc_vendor_g 42.8 (servo proxy), tc_gear 1.5,
+tc_rack_u/d 2.4 ea, tc_finger_u/d 1.3 ea, tc_rack 156.3 (4 slots,
 46 mm pitch). Print orientation: coupling pair drawn along the a-axis —
 print −a face down (the −a lead chamfers double as support-free ramps);
 tool_grip back-face down; tool_pen plate-face down; tc_rack flat on its
-base (z=0). Min wall ≥1.8 mm and ≤45° overhangs are designed-in
-(chamfered leads, ring cutters instead of through-cones); not verified
-by a slicer pass `[U bench]`. The gripper is a NEW copy (`tool_grip` +
+base (z=0). Min wall ≥1.8 mm is designed-in; D11 measured suspended
+flat-down (support-needed) areas on 7 of 11 parts — tc_plate ~2865 mm²
+(incl. ~1040 mm² socket-floor ceiling inside the bore), tool_pen ~2892,
+tool_grip ~2825, tc_vendor_g ~1840, tc_master ~403 (incl. ~267 mm² lug −a
+bearing faces, which print on support — a surface-quality risk exactly
+where capture loads bear — bench item), tc_finger_u/d ~160 ea,
+tc_rack 0 mm². Slicer pass not
+verified `[U bench]`. The gripper is a NEW copy (`tool_grip` +
 `tc_*` vendor set) — product `w_grip_frame`/vendor files untouched.
-Note: `tool_grip` inherits two ~1 mm³ detached slivers present in the
-shipped `w_grip_frame` STL — confirmed identical in the original, left
-as-is (product file).
+Note: `tool_grip` inherits two detached slivers measured 10.80 + 33.79
+= **44.6 mm³** present in the shipped `w_grip_frame` STL (10.80 + 33.66
+there) — confirmed inherited, left as-is (product file).
 
 ## Task 4a — FEM (PASS vs [U] material data)
 
@@ -178,9 +183,8 @@ signature, J6 sublimit respected when J5 < 0.
 |---|---|---|---|
 | STS3215 serial servo | 1 per powered tool | tool body | ~£7 `[U]` |
 | Pogo pins Ø~1 mm | 5 per tool | socket floor ↔ spigot face | `[U]` |
-| Steel ball Ø5 + compression spring ~Ø4×8 + M3 grub | 1 set | master detent | `[U]` |
+| Steel ball Ø4 + compression spring ~Ø3.2×8 + M4 grub/plunger (or one commercial M4 ball plunger) | 1 set | master detent | `[U]` |
 | M2/M3 heat-set inserts + screws | ~10 | master↔horn, tool↔servo | `[U]` |
-| Steel dowel Ø3 × 10 | 2 | tool-plate keying | `[U]` |
 | PETG-CF | ~200 cm³ | all prints | `[U]` |
 
 No magnets in the built design (concept C rejected).

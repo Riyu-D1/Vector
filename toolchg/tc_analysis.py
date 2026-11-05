@@ -39,11 +39,12 @@ def pv(cm3):
     return cm3 * RHO         # cm3*1000 mm3 * g/mm3 / 1000 -> kg
 
 # volumes from build_toolchg printout (cm3), centroids in W mm
-MASTER_V, MASTER_C = 7.2, np.array([69.0, 0.0, -17.0])
-GRIP_V, GRIP_C = 22.9, np.array([95.0, 0.0, -30.0])
-RACK_V, RACK_C = 2.4, np.array([131.0, 0.0, -17.0])
-FING_V, FING_C = 1.3, np.array([142.0, 0.0, -17.0])
-GEAR_V, GEAR_C = 1.5, np.array([131.0, 0.0, -17.0])
+# (D12 re-measured on the fixed geometry: 7.33/23.52/2.35/1.27/1.53)
+MASTER_V, MASTER_C = 7.33, np.array([69.0, 0.0, -17.0])
+GRIP_V, GRIP_C = 23.52, np.array([95.0, 0.0, -30.0])
+RACK_V, RACK_C = 2.35, np.array([131.0, 0.0, -17.0])
+FING_V, FING_C = 1.27, np.array([142.0, 0.0, -17.0])
+GEAR_V, GEAR_C = 1.53, np.array([131.0, 0.0, -17.0])
 SV_M, SV_C = 0.055, np.array([102.0, 0.0, -33.0])     # STS3215 + plug
 GEAR_M = 0.008
 parts_ts = [

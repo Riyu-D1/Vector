@@ -57,10 +57,10 @@ TC_RING_RIN = 18.2         # [D] bore (clears lug r17.3 by 0.9)
 TC_RING_ROUT = 23.0        # [D] OD
 TC_CATCH_A = (69.0, 72.2)  # [D] catch band (3.2)
 TC_CATCH_R = 13.2          # [D] catch inner radius (clears spigot r13 by 0.2)
-TC_CATCH_ARC = 60.0        # [D] catch angular width (3 catches -> 60 deg gaps)
+TC_CATCH_ARC = 75.0        # [D] catch angular width (3 catches -> 45 deg gaps)
 # catch centre phases in the SOCKET b,h frame; gaps between them centred at
 # 58/178/298.  Entry roll -12 deg puts the lugs dead centre in the gaps
-# (14 deg margin each side), twist +60 deg then centres them under the
+# (6.5 deg margin each side), twist +60 deg then centres them under the
 # catches for maximum capture.
 TC_CATCH_PH = (118.0, 238.0, 358.0)
 TC_ENTRY_REL = -12.0       # [D] master roll offset: lugs -> gap centres
@@ -73,10 +73,10 @@ TC_FLOOR_A = (76.0, 78.4)  # [D] socket floor (2.4)
 
 # ---------- dock groove on the ring OD (rack holds the tool here) ----------
 TC_DOCK_A = (72.25, 77.25)  # [D] groove band (5.0 for a 4.0 rack plate +-0.5)
-TC_DOCK_R = 20.0           # [D] groove floor r -> ring wall 1.8 under it
+TC_DOCK_R = 20.6           # [D] groove floor r -> ring wall 2.4 under it
 TC_KEY_PH = 270.0          # [D] anti-rotation notch phase (keel-down)
 TC_KEY_W = 4.0             # [D] notch width along arc (mm at r20)
-TC_KEY_D = 1.5             # [D] notch depth into groove floor
+TC_KEY_D = 1.2             # [D] notch depth into groove floor
 
 # ---------- detent (spring plunger in the ring wall) ----------
 TC_DET_A = 74.0            # [D] radial spring plunger position (groove zone)
@@ -119,8 +119,8 @@ TCP_W_TC = (A_TCP_TC, 0.0, H_AX)    # TCP in W
 # ---------- rack (world frame, on the table) ----------
 # Rack plate plane is normal to the tool axis. Dock = groove band.
 RACK_PLATE_T = 4.0         # [D] fork plate thickness (fits groove 4.5)
-RACK_SLOT_W = 40.5         # [D] slot opening width (groove floor Ø40 + 0.5)
-RACK_SEAT_R = 20.3         # [D] slot floor radius (groove floor r20 + 0.3)
+RACK_SLOT_W = 41.7         # [D] slot opening width (groove floor Ø41.2 + 0.5)
+RACK_SEAT_R = 20.9         # [D] slot floor radius (groove floor r20.6 + 0.3)
 RACK_N_SLOTS = 4           # [D]
 RACK_SLOT_PITCH = 46.0     # [D] slot spacing along the rail
 RACK_KEY = (2.5, 1.4)      # [D] tab on slot floor: (width, height) into notch
@@ -141,4 +141,5 @@ PAYLOAD = 0.5              # kg at TCP (close) / 0.41 full reach [S final2]
 PEN_D = 8.5                # [D] pen bore (8 mm marker/pointer + 0.5)
 PEN_TIP_A = A_TCP_TC       # pen tip aligned with the grip-tool TCP
 PEN_BODY_R = 9.5           # [D] pen holder tube OD r (wall ~3 vs bore)
-PEN_SET_D = 3.0            # [D] M3 set-screw insert for the pen
+PEN_SET_D = 3.0            # [D] M3 grub self-tap pilot for the pen (not a
+                           # heat-set insert; an insert would need ~Ø4.3)

@@ -1,0 +1,114 @@
+===== A) solids / volume / mass =====
+tc_master     solids=1 vols_mm3=['7332.40']
+    bbox 13.1 x 32.2 x 33.1  vol 7.33 cm3  print-mass 5.8 g
+tc_plate      solids=1 vols_mm3=['7444.21']
+    bbox 9.4 x 46.0 x 46.0  vol 7.44 cm3  print-mass 5.9 g
+tool_grip     solids=3 vols_mm3=['10.80', '33.79', '23479.63']
+    bbox 68.1 x 64.0 x 60.4  vol 23.52 cm3  print-mass 18.5 g
+tool_pen      solids=1 vols_mm3=['28983.73']
+    bbox 79.0 x 46.0 x 46.0  vol 28.98 cm3  print-mass 22.8 g
+tc_vendor_g   solids=1 vols_mm3=['42754.90']
+    bbox 49.3 x 24.7 x 45.2  vol 42.75 cm3  print-mass 33.6 g
+tc_gear       solids=1 vols_mm3=['1526.81']
+    bbox 6.0 x 18.0 x 18.0  vol 1.53 cm3  print-mass 1.2 g
+tc_rack_u     solids=1 vols_mm3=['2352.71']
+    bbox 6.0 x 36.0 x 12.0  vol 2.35 cm3  print-mass 1.8 g
+tc_rack_d     solids=1 vols_mm3=['2352.71']
+    bbox 6.0 x 36.0 x 12.0  vol 2.35 cm3  print-mass 1.8 g
+tc_finger_u   solids=1 vols_mm3=['1267.52']
+    bbox 14.4 x 4.0 x 25.2  vol 1.27 cm3  print-mass 1.0 g
+tc_finger_d   solids=1 vols_mm3=['1267.52']
+    bbox 14.4 x 4.0 x 25.2  vol 1.27 cm3  print-mass 1.0 g
+tc_rack       solids=1 vols_mm3=['156255.03']
+    bbox 44.0 x 202.0 x 118.0  vol 156.26 cm3  print-mass 122.8 g
+w_grip_frame STL bodies=3 small-vols=['10.80', '33.66']
+===== B) wall sections (BRep probe segments) =====
+-- tc_master
+ spigot wall a70 ph0 : 3.60-13.00 (9.40)
+ lug band a74.1 ph70 : -12.40-1.35 (13.75)
+ lug axial r14 ph70: 62.70-68.70 (6.00) 72.40-75.80 (3.40)
+ lug axial r15 ph70: 62.70-68.70 (6.00) 72.40-75.80 (3.40)
+ lug axial r16 ph70: 72.40-75.80 (3.40)
+ lug axial r17 ph70: 72.91-75.18 (2.27)
+ plate axial r14 ph0: 62.70-68.70 (6.00)
+ plate axial r7 ph45: 69.70-75.80 (6.10)
+ plate axial r10 ph45: 62.70-67.00 (4.30) 69.70-75.80 (6.10)
+ plate axial r14 ph45: 62.70-68.70 (6.00)
+-- tc_plate
+ ring wall a70 ph0: 13.92-23.00 (9.08)
+ groove floor a74.75 ph0: 18.20-20.60 (2.40)
+ groove floor a74.75 ph270-6: 35.10-37.52 (2.42)
+ groove floor a74.75 ph270-3: 35.17-36.41 (1.23)
+ groove floor a74.75 ph270+0: 35.20-36.40 (1.20)
+ groove floor a74.75 ph270+3: 35.17-36.41 (1.23)
+ groove floor a74.75 ph270+6: 35.10-37.52 (2.42)
+ groove floor a72.60 ph270: 34.60-36.40 (1.80)
+ groove floor a74.75 ph270: 35.20-36.40 (1.20)
+ groove floor a76.90 ph270: 17.00-27.10 (10.10) 28.90-36.40 (7.50)
+ floor a-axial r5: 76.00-78.40 (2.40)
+ catch axial r13.5 ph118: 70.12-72.20 (2.08) 76.00-78.40 (2.40)
+ catch axial r14.0 ph118: 70.01-72.20 (2.19) 76.00-78.40 (2.40)
+ catch axial r15.0 ph118: 69.79-72.20 (2.41) 76.00-78.40 (2.40)
+ catch axial r16.0 ph118: 69.57-72.20 (2.63) 76.00-78.40 (2.40)
+ catch axial r17.0 ph118: 69.35-72.20 (2.85) 76.00-78.40 (2.40)
+ catch axial r17.5 ph118: 69.24-72.20 (2.96) 76.00-78.40 (2.40)
+ detent zone a-axial r19 ph110: 69.00-71.90 (2.90) 76.10-78.40 (2.30)
+ detent bore radial a74 ph110: 
+-- tool_grip
+ neck radial a79.5 ph0: -0.00-16.50 (16.50)
+ neck radial a79.5 ph270: 17.00-27.70 (10.70) 39.30-45.00 (5.70)
+ keel a95 down-axial: 52.40-54.40 (2.00)
+ cheek b-axial a95 h-40: 
+ cheek b-axial a110 h-40: 
+ cage top a110 down-axial: 52.40-54.40 (2.00)
+-- tool_pen
+ barrel radial a120 ph0: 4.25-9.50 (5.25)
+ barrel radial a136 ph0: 4.25-9.50 (5.25)
+ barrel radial a136 ph120: -10.51--5.19 (5.32)
+ neck radial a79.5 ph0: 4.25-16.50 (12.25)
+ bore a-axial: 76.00-78.40 (2.40)
+-- tc_rack (world frame)
+ rack z-axial x145 y-11: 100.00-118.00 (18.00)
+ rack z-axial x145 y+12: 
+ rack z-axial x145 y+34: 100.00-118.00 (18.00)
+ rack z-axial x145 y+58: 
+ rack z-axial x145 y+80: 100.00-118.00 (18.00)
+ rack z-axial x145 y+102: 
+ rack z-axial x145 y+126: 100.00-118.00 (18.00)
+ rack z-axial x145 y+148: 
+ rack z-axial x145 y+171: 100.00-118.00 (18.00)
+ rack base z-axial x145 y-160: 2.00-92.25 (90.25)
+ cradle plate z-axial x177 y-80 from z50: 50.00-92.00 (42.00)
+ fork plate x-axial slot-edge yk-20.4 z110: 143.00-147.00 (4.00) 175.00-179.00 (4.00)
+ key tab z-axial at slot k2 centre: 88.00-90.50 (2.50)
+ key tab z-axial from below seat: 86.00-90.50 (4.50)
+===== C) overhang (STATUS orientations) =====
+tc_master(-a dn) support-area(>45)   862.1 mm2 nfaces 1493  flat-down(>75)  831.3 mm2  max overhang height 13.1
+tc_plate(-a dn) support-area(>45)  2305.4 mm2 nfaces 1833  flat-down(>75) 2300.0 mm2  max overhang height 9.4
+tool_grip(-a dn) support-area(>45)  5764.5 mm2 nfaces 2840  flat-down(>75) 5741.5 mm2  max overhang height 68.1
+tool_pen(-a dn) support-area(>45)  2336.6 mm2 nfaces 2583  flat-down(>75) 2319.2 mm2  max overhang height 79.0
+tc_vendor_g(-a dn) support-area(>45)  1118.1 mm2 nfaces   10  flat-down(>75) 1118.1 mm2  max overhang height 49.3
+tc_gear(-a dn) support-area(>45)   254.4 mm2 nfaces  124  flat-down(>75)  254.4 mm2  max overhang height 6.0
+tc_rack_u(-a dn) support-area(>45)   392.1 mm2 nfaces 1127  flat-down(>75)  392.1 mm2  max overhang height 6.0
+tc_rack_d(-a dn) support-area(>45)   392.1 mm2 nfaces 1127  flat-down(>75)  392.1 mm2  max overhang height 6.0
+tc_finger_u(-a dn) support-area(>45)   100.8 mm2 nfaces    4  flat-down(>75)  100.8 mm2  max overhang height 14.4
+tc_finger_d(-a dn) support-area(>45)   100.8 mm2 nfaces    4  flat-down(>75)  100.8 mm2  max overhang height 14.4
+tool_grip(+h dn) support-area(>45)  3340.7 mm2 nfaces 1254  flat-down(>75) 2866.4 mm2  max overhang height 60.4
+tool_grip(-h dn) support-area(>45)  3362.9 mm2 nfaces 1069  flat-down(>75) 2904.7 mm2  max overhang height 60.4
+tc_rack(-z dn) support-area(>45)     0.0 mm2 nfaces    0  flat-down(>75)    0.0 mm2  max overhang height 0.0
+===== D) coupling clearances (independent measure) =====
+ master lug outer r verts a73-75.3: max 17.30 (claim 17.3)
+ plate bore/groove-band verts a74.1+-0.2: min 18.20 (claim 18.2)
+ spigot OD verts a69-72: max 10.10 (claim 13.0)
+ catch inner verts a69.5-72.2: min 13.20 (claim 13.2)
+ lug span @r15 ph70: 62.70-68.70 (6.00) 72.40-75.80 (3.40) (claim lug -a face 72.4)
+ catch span @r15 ph118: 69.79-72.20 (2.41) 76.00-78.40 (2.40) (claim catch face 72.2)
+ spigot tip @r5: 62.70-75.80 (13.10) (claim tip 75.8)
+ socket floor @r5: 76.00-78.40 (2.40) (claim floor face 76.0)
+ horn PCD 14.0 ang (45.0, 135.0, 225.0, 315.0) hole 3.4 cb (6.2, 2.0) recess (7.0, 2.2)
+ TC_CB_A 67.0 == GF_CB_A 67.0
+ pogo bore r9 ph30:  (empty = bore present)
+ pogo bore r9 ph150:  (empty = bore present)
+ pogo bore r11 ph210:  (empty = bore present)
+ pogo bore r11 ph270:  (empty = bore present)
+ pogo bore r11 ph330:  (empty = bore present)

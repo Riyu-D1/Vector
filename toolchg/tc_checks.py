@@ -108,7 +108,24 @@ DOCK = Pos((DOCK_X0, DOCK_Y, T.RACK_AXIS_Z - T.H_AX))
 g = DOCK * GRIP
 v = vinter(g, RACK)
 print("  docked tool vs rack inter %.2f mm3" % v)
-check("C5 tool seats in rack", v < 40.0, "%.2f mm3" % v)
+check("C5 tool seats in rack", v < 0.5, "%.2f mm3" % v)
+# key engagement (F1/D12): the slot-2 RACK_KEY tab box mapped into the
+# plate frame must sit inside the notch void (~0 mm3), and a tab widened
+# past the notch width must hit the plate walls - the void has to be a
+# real bounded pocket at TC_KEY_PH, not just absent geometry.
+tx0 = T.RACK_PLATE_X - T.RACK_PLATE_T / 2 + 0.4 - DOCK_X0
+tx1 = T.RACK_PLATE_X + T.RACK_PLATE_T / 2 - 0.4 - DOCK_X0
+tab = PW.box(tx0, tx1, -T.RACK_KEY[0] / 2, T.RACK_KEY[0] / 2,
+             T.H_AX - T.RACK_SEAT_R, T.H_AX - T.RACK_SEAT_R + T.RACK_KEY[1])
+vt = vinter(tab, PLATE)
+kw2 = T.TC_KEY_W / 2 + 0.6
+wide = PW.box(tx0, tx1, -kw2, kw2,
+              T.H_AX - T.TC_DOCK_R - 0.05, T.H_AX - T.TC_DOCK_R + T.TC_KEY_D)
+vw = vinter(wide, PLATE)
+print("  key tab vs plate %.2f mm3 ; widened tab vs walls %.2f mm3"
+      % (vt, vw))
+check("C5 key tab engages notch void", vt < 0.5 and vw > 1.0,
+      "tab %.2f, widened %.2f mm3" % (vt, vw))
 # drop-in: tool 3 mm above seat must clear the slot sides
 g2 = Pos((0, 0, 3.0)) * g
 v2 = vinter(g2, RACK)

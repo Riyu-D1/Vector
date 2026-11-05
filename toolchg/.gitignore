@@ -16,3 +16,14 @@ fea/*.vtu
 fea/*.inp
 fea/*.geo
 fea/*.step
+fix_fea/spooles.out
+fix_fea/*.msh
+fix_fea/*.frd
+fix_fea/*.dat
+fix_fea/*.sta
+fix_fea/*.cvg
+fix_fea/*.12d
+fix_fea/*.vtu
+fix_fea/*.inp
+fix_fea/*.geo
+fix_fea/*.step

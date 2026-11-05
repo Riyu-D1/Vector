@@ -1,0 +1,9 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.9.12, pytest-7.1.1, pluggy-1.0.0
+rootdir: /Users/deepakdiwan/Vector-wt/toolchgfix/software/robot-os, configfile: pytest.ini
+plugins: anyio-4.12.1
+collected 13 items
+
+tests/test_toolchange.py .............                                   [100%]
+
+============================== 13 passed in 1.97s ==============================

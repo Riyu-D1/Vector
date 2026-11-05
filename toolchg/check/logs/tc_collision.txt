@@ -1,0 +1,30 @@
+== A) J4/J5/J6 sweeps, gripper tool mounted (step 2.5 deg) ==
+SWEEP  J4 swept -70..+70: min bbox gap 0.0, min z 0.0  (rack-zone hits at 18 poses - informational) PASS
+SWEEP  J5 swept -70..+70: min bbox gap 0.0, min z 0.0                           PASS
+SWEEP  J6 swept -180..+180: min bbox gap 0.0, min z 0.0                         PASS
+== J6 x J5 grid (sublimit applied when J5 < 0) ==
+GRID   J6 x J5 grid: 0 arm collisions, 0 rack-zone hits (informational)         PASS
+== named/corner poses ==
+POSE   home        q=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0] tcp=[234.0, 0.0, 199.0] z_min 0.0 clean PASS
+POSE   stow        q=[0.0, 70.0, -160.0, 70.0, 0.0, 0.0] tcp=[288.0, 0.0, 334.0] z_min 0.0 clean PASS
+POSE   wrist-flex  q=[0.0, 45.0, -45.0, 70.0, 70.0, 0.0] tcp=[193.0, 100.0, 110.0] z_min 0.0 clean PASS
+CORNER J4-70 J5-70 J6-110 clean                                                 PASS
+CORNER J4-70 J5-70 J6+110 clean                                                 PASS
+CORNER J4-70 J5+70 J6-180 clean                                                 PASS
+CORNER J4-70 J5+70 J6+180 clean                                                 PASS
+CORNER J4+70 J5-70 J6-110 clean                                                 PASS
+CORNER J4+70 J5-70 J6+110 clean                                                 PASS
+CORNER J4+70 J5+70 J6-180 clean                                                 PASS
+CORNER J4+70 J5+70 J6+180 clean                                                 PASS
+== Monte-Carlo 800 wrist poses (tool mounted) ==
+MC     800 poses: min bbox gap 0.0, min z 0.0, arm hits 0, rack-zone 640        PASS
+== B) dock and undock paths (all slots) ==
+DOCK   slot 0: min bbox gap 0.0, max master<->tool engagement 0 mm3             PASS
+UNDOCK slot 0: min bbox gap 0.0, max master<->tool engagement 0 mm3             PASS
+DOCK   slot 1: min bbox gap 0.0, max master<->tool engagement 0 mm3             PASS
+UNDOCK slot 1: min bbox gap 0.0, max master<->tool engagement 0 mm3             PASS
+DOCK   slot 2: min bbox gap 0.0, max master<->tool engagement 0 mm3             PASS
+UNDOCK slot 2: min bbox gap 0.0, max master<->tool engagement 0 mm3             PASS
+DOCK   slot 3: min bbox gap 0.0, max master<->tool engagement 0 mm3             PASS
+UNDOCK slot 3: min bbox gap 0.0, max master<->tool engagement 0 mm3             PASS
+CHECKS PASS

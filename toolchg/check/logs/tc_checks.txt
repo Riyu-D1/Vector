@@ -1,0 +1,32 @@
+  entry da=  6.0 inter     0.00 mm3
+  entry da=  3.0 inter     0.00 mm3
+  entry da=  1.0 inter     0.00 mm3
+  entry da=  0.3 inter     0.00 mm3
+  entry da=  0.0 inter     0.00 mm3
+PASS C1 entry sweep clean                                 worst 0.00 mm3
+  twist T=   0 inter     0.00 mm3
+  twist T=  10 inter     0.00 mm3
+  twist T=  20 inter     0.00 mm3
+  twist T=  30 inter     0.00 mm3
+  twist T=  36 inter     0.00 mm3
+  twist T=  42 inter     0.00 mm3
+  twist T=  48 inter     0.00 mm3
+  twist T=  54 inter     0.00 mm3
+  twist T=  60 inter     0.00 mm3
+PASS C2 twist sweep within allowance                      worst 0.00 mm3
+  lock pullout da= -0.5 inter     24.6 mm3
+  lock pullout da= -1.0 inter     72.1 mm3
+  lock pullout da= -2.0 inter    153.4 mm3
+  lock pullout da= -4.0 inter    134.3 mm3
+  entry pullout worst      0.0 mm3
+PASS C3 lugs captured at lock                             lock pull 153.4 mm3, entry pull 0.00 mm3
+  ball inter entry 0.00  lock 0.00 mm3
+PASS C4 detent ball clear at entry                        0.00
+  docked tool vs rack inter 8.40 mm3
+PASS C5 tool seats in rack                                8.40 mm3
+  +3mm above seat inter 0.00 mm3
+  master 5.8 g   grip-tool 79.8 g   pen-tool 22.2 g
+  J6-side total (master+grip tool) 85.6 g  vs budget 234 g
+PASS C6 mass budget                                       informational
+
+ALL CHECKS DONE

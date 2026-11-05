@@ -1,0 +1,17 @@
+stock J6-out: 0.1018 kg, centroid [ 0.0513  0.     -0.008 ] m
+tool-swap J6-out: 0.0949 kg, centroid [ 0.0495  0.     -0.0118] m
+finger-swap J6-out while gripping: 0.1076 kg
+
+== TOOL SWAP (each tool has its servo) ==
+  AB (horiz)  J2 3.249->3.284  J3 1.756->1.800  J4 0.828->0.880  worst ratio 1.17 (J2)
+  home        J2 1.756->1.800  J3 1.756->1.800  J4 0.828->0.880  worst ratio 1.12 (J4)
+  reach       J2 3.120->3.155  J3 1.827->1.870  J4 0.835->0.886  worst ratio 1.13 (J4)
+
+== FINGER SWAP (arm keeps grip mech) ==
+  AB (horiz)  J2 3.249->3.325  J3 1.756->1.825  J4 0.828->0.891  worst ratio 1.19 (J2)
+  home        J2 1.756->1.825  J3 1.756->1.825  J4 0.828->0.891  worst ratio 1.14 (J4)
+  reach       J2 3.120->3.195  J3 1.827->1.896  J4 0.835->0.897  worst ratio 1.14 (J4)
+
+== max_payload (80%% derated) ==
+stock reach-pose max payload 0.412 kg (limit J2)
+tool-swap: d_tau_J2 -0.0229 Nm -> d_payload +0.006 kg

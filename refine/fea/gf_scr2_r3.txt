@@ -1,0 +1,9 @@
+gf_scr2.frd: 74558 nodes 38966 tets, 4 result blocks
+constrained 10069 (NFIX 1072 NLOAD 8997); excluded-with-elements 12644
+step1: max|U| 0.553 mm (@(125.1, -20.1, -39.4)) | raw maxVM 12.38 | filtered 12.38 | patch 6.72 MPa
+    hot VM 12.38 @n7278 (67.3, 12.5, -25.1) | sig_n(z) -11.75 VM_in-layer 4.86
+    hot VM 12.29 @n25401 (67.3, -12.5, -25.1) | sig_n(z) -11.78 VM_in-layer 4.56
+    hot VM 10.18 @n642 (67.0, 12.5, -25.5) | sig_n(z) -10.19 VM_in-layer 1.17
+    hot VM 10.17 @n2920 (67.0, -12.5, -25.5) | sig_n(z) -10.19 VM_in-layer 1.10
+    hot VM 9.15 @n37197 (97.4, -14.4, -12.0) | sig_n(z) -0.02 VM_in-layer 9.09
+    raw-max VM 12.38 @n7278 (67.3, 12.5, -25.1) | sig_n -11.75 VM_in-layer 4.86

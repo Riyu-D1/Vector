@@ -107,7 +107,7 @@ def w_j4_cradle():
 def w_link4():
     b0, b1 = N.L4_B
     s = xb(ah(b0, *N.L4_PLATE), b0, b1)                       # horn plate
-    s = s + xb(poly_ah(b0, N.L4_STRUT), b0, b1)              # strut rib
+    s = s + xb(poly_ah(b0, N.L4_STRUT), *N.L4_STRUT_B)       # R3: widened strut rib
     for sg in (1, -1):                                       # dorsal fin cheeks
         b_lo, b_hi = sorted((sg * N.L4_CHEEK_B[0], sg * N.L4_CHEEK_B[1]))
         s = s + xb(poly_ah(b_lo, N.L4_FIN), b_lo, b_hi)      # R1: face on lower bound, grows outward

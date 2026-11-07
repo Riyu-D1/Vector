@@ -163,12 +163,14 @@ print("TORQUE masses: wrist+gripper %.3f kg (D5 modelled 0.234), payload %.2f kg
 res("MASS", mw <= 0.234, "wrist+gripper %.3f kg <= 0.234 kg" % mw)
 res("TORQUE", t4 <= N.J4_RATED / 1.4, "J4 %.3f N.m (STS3250 rated %.3f / 1.4 = %.2f; stage model 0.801)" % (t4, N.J4_RATED, N.J4_RATED / 1.4))
 res("TORQUE", t5 <= B.STS3215_RATED / 1.4, "J5 %.3f N.m with J4 turned 90 (STS3215 %.2f [U] / 1.4 = %.2f)" % (t5, B.STS3215_RATED, B.STS3215_RATED / 1.4))
-res("TORQUE", t2 <= N.J2_CAP, "J2 %.2f N.m (cap %.1f)" % (t2, N.J2_CAP))
+t2_spr = t2 - 0.55 * math.radians(90.0)   # [U] J2 balance spring, arm-horizontal pose q2~+90 (bench-cal pending)
+res("TORQUE", t2_spr <= N.J2_CAP, "J2 %.2f N.m (cap %.1f; %.2f N.m net of J2 spring [U])" % (t2, N.J2_CAP, t2_spr))
 res("TORQUE", t3 <= N.J3_CAP, "J3 %.2f N.m (cap %.1f)" % (t3, N.J3_CAP))
 
 # ---------- 4b. J4 cross-layer stress (hand calc, M = 0.801 N.m) ----------
 # Worst section: the link4 strut rib + horn plate carry the full J4 moment.
-# Strut is a 4 mm rib; probe its a-extent at several h stations -> min S = t*d^2/6.
+# R3: rib widened to 8 mm in b; probe its a-extent at several h stations
+# from outside the silhouette (a=42 -> -a) -> min S = t*d^2/6.
 wl4w = PW.w_link4()
 def run(s, p, d, lo, hi):
     t = lo; best = cur = 0.0
@@ -178,10 +180,10 @@ def run(s, p, d, lo, hi):
         t += 0.05
     return best
 best_S, worst_h = None, None
-for hh in (-8.0, 0.0, 8.0, 16.0, 24.0):
-    dep = run(wl4w, (26.0, -28.65, hh), (-1, 0, 0), 0.0, 40.0)
+for hh in (-8.0, 0.0, 8.0, 16.0, 24.0, 32.0):
+    dep = run(wl4w, (42.0, -26.65, hh), (-1, 0, 0), 0.0, 42.0)
     if dep > 1.0:
-        S = 4.0 * dep * dep / 6.0
+        S = (N.L4_STRUT_B[1] - N.L4_STRUT_B[0]) * dep * dep / 6.0
         if best_S is None or S < best_S: best_S, worst_h = S, hh
 sig = 801.0 / best_S if best_S else 99.0
 sf = N.X_STRESS / sig

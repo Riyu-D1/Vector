@@ -73,8 +73,16 @@ L4_PLATE = (-15.0, 15.0, -15.0, 15.0, 5.0)      # horn plate a-h profile
 # Re-profiled as a clean 6-point tapered rib over the same envelope
 # (a 5..40, h -13..38.2, b -30.65..-26.65): plate-side weld a 5..15,
 # rib-box weld a 16+.
-L4_STRUT = ((5.0, -13.0), (14.0, -4.0), (40.0, 38.2),
-            (36.0, 38.2), (14.0, 4.0), (8.0, -4.0))   # rib silhouette a-h, b = L4_B
+# R3: scrann/pilot FEA showed the strut is the ONLY horn->fin load path and
+# its ~9 mm plate-edge weld is a re-entrant notch (in-layer VM ~80-105 MPa at
+# cl 1.5-0.8, not converged -> notch indication, plus a CONVERGED 6.4 mm
+# tail deflection at the 0.5 kg wrench -> J4-axis compliance ~5.5 deg).
+# Widen the weld to h -11..+13 at the plate edge (exits sit in the plate
+# corner radius) and widen the rib in b (L4_STRUT_B: -22.65 inner face keeps
+# 2.65 mm clear of the cradle -b end at -20).
+L4_STRUT = ((5.0, -13.0), (14.0, -13.0), (40.0, 38.2),
+            (36.0, 38.2), (14.0, 12.0), (8.0, -8.0))   # rib silhouette a-h, b = L4_STRUT_B
+L4_STRUT_B = (-30.65, -22.65)                       # R3: 8 mm rib (was plate 4 mm)
 L4_CHEEK_B = (12.51, 14.91)                     # fin cheeks +-b (case b +-12.36 + clr)
 # fin a-h outline: full height a<=61.05; tail above h 7.5 only (clears the grip-plug
 # roll tube: plug sweeps r 24.2 about h -17 -> reaches h +7.2 at a 61.2..66)
@@ -149,7 +157,7 @@ M_GEAR = B.M_GEAR; M_RACK = B.M_RACK
 PAYLOAD6 = 0.5                   # [stage] kg at TCP
 J2_CAP = 3.0; J3_CAP = 2.0       # [stage] N.m printed-disc caps
 J4_RATED = STS3250_RATED
-X_STRESS = 25.0                  # [U] PETG-CF cross-layer MPa
+X_STRESS = 25.0                  # [U] PETG-CF in-layer allowable MPa (order/STRESS_SANITY.md: TDS 35 XY/29 Z -> design 25 in-layer / 12.5 cross-layer)
 
 # ---------- ROM ----------
 ROM_STEP = 5.0                   # finer than B's 10 (fin edge cases)

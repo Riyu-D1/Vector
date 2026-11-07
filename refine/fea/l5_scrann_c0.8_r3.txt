@@ -1,0 +1,9 @@
+l5_scrann_c0.8.frd: 157355 nodes 89312 tets, 4 result blocks
+constrained 8495 (NFIX 3165 NLOAD 5330); excluded-with-elements 20634
+step1: max|U| 0.717 mm (@(64.7, 12.9, -54.4)) | raw maxVM 46.61 | filtered 46.61 | patch 15.93 MPa
+    hot VM 46.61 @n6502 (36.2, -12.5, -6.2) | sig_n(x) +0.98 VM_in-layer 38.72
+    hot VM 46.06 @n6525 (36.2, 12.5, -6.2) | sig_n(x) +1.79 VM_in-layer 41.40
+    hot VM 32.91 @n12738 (29.6, -12.5, -6.5) | sig_n(x) -6.66 VM_in-layer 35.01
+    hot VM 32.47 @n19481 (29.6, 12.5, -6.5) | sig_n(x) -6.31 VM_in-layer 34.32
+    hot VM 29.25 @n27 (36.2, 12.5, -6.2) | sig_n(x) +3.37 VM_in-layer 26.40
+    raw-max VM 46.61 @n6502 (36.2, -12.5, -6.2) | sig_n +0.98 VM_in-layer 38.72

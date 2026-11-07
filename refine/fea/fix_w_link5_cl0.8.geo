@@ -1,0 +1,12 @@
+SetFactory("OpenCASCADE");
+Merge "/Users/deepakdiwan/Vector-wt/refine/refine/out/fix_w_link5.step";
+Mesh.ElementOrder = 2;
+Mesh.HighOrderOptimize = 2;
+Mesh.CharacteristicLengthMax = 0.8;
+Mesh.CharacteristicLengthMin = 0.2;
+Mesh.CharacteristicLengthFromCurvature = 1;
+Mesh.MinimumElementsPerTwoPi = 14;
+Mesh 3;
+Mesh.MshFileVersion = 2.2;
+Save "fix_w_link5_cl0.8.msh";
+Exit;

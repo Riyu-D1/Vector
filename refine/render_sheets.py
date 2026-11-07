@@ -66,12 +66,33 @@ for nm, s_, f_ in pairs:
 grid(rows, "SOMA D6 wrist refinement - changed parts (stock vs R-fix)", 
      os.path.join(REN, "sheet1_parts.png"))
 
-# ---- sheet 2: FEA ----
-grid([[("tool_grip STOCK F9: VM 28.7 MPa, SF 0.87", FEA + "/stock_tool_grip_iso.png"),
-        ("tool_grip R-FIXED: VM 8.1 MPa, SF 3.1", FEA + "/fix_tool_grip_iso.png")],
-       [("w_grip_frame STOCK: mechanism (garbage 793 MPa)", FEA + "/stock_w_grip_frame_iso.png"),
-        ("w_grip_frame R-FIXED: VM 14.1 MPa, SF 1.8", FEA + "/fix_w_grip_frame_iso.png")]],
-     "CalculiX von Mises, same wrench F=(0,0,-5.7)N at TCP (filtered nodal, scale varies)",
+# ---- sheet 2: FEA (R3 horn-mount models) ----
+def fea_shot(vtu, png, warp=25.0, vmax=None):
+    g = pv.read(vtu)
+    p = pv.Plotter(off_screen=True, window_size=(720, 560))
+    kw = {} if vmax is None else {"clim": (0, vmax)}
+    p.add_mesh(g.warp_by_vector("DISP", factor=warp), scalars="VM",
+               cmap="jet", smooth_shading=False, **kw)
+    p.camera_position = "iso"; p.set_background("white")
+    p.screenshot(png); p.close()
+
+for tag, vtu, vm in (("l4_old", FEA + "/l4_scrann_step1.vtu", None),
+                     ("l4_r3", FEA + "/l4r3_scrann_step1.vtu", 30.0),
+                     ("l5_r3", FEA + "/l5_scrann_step1.vtu", 50.0),
+                     ("gf_r3", FEA + "/gf_scrann_step1.vtu", 30.0)):
+    png = FEA + "/%s_iso.png" % tag
+    if not os.path.exists(png):
+        fea_shot(vtu, png, vmax=vm)
+
+grid([[("w_link4 R2 strut, screw BC: VM ~93 MPa, |U| 6.3 mm FAIL",
+        FEA + "/l4_old_iso.png"),
+       ("w_link4 R3 widened strut: VM 14.9 MPa, |U| 0.63 mm PASS",
+        FEA + "/l4_r3_iso.png")],
+      [("w_link5 screw+annulus: junction ~31-47 MPa (notch)",
+        FEA + "/l5_r3_iso.png"),
+       ("w_grip_frame screw+annulus: ~13 MPa, layer-normal compr. PASS",
+        FEA + "/gf_r3_iso.png")]],
+     "CalculiX von Mises - realistic horn-mount BCs (screws+annulus+pilot), ~0.5 kg class wrench",
      os.path.join(REN, "sheet2_fea.png"))
 
 # ---- sheet 3: wrist assembly context (world pose) ----

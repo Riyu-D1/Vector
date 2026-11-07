@@ -1,0 +1,9 @@
+l4_scr2.frd: 63341 nodes 33845 tets, 4 result blocks
+constrained 5806 (NFIX 633 NLOAD 5173); excluded-with-elements 6850
+step1: max|U| 6.523 mm (@(66.0, 14.9, 24.0)) | raw maxVM 93.28 | filtered 93.28 | patch 8.35 MPa
+    hot VM 93.28 @n33405 (15.2, -30.2, 5.9) | sig_n(y) +13.65 VM_in-layer 97.06
+    hot VM 92.15 @n2186 (15.3, -30.6, 6.1) | sig_n(y) +7.08 VM_in-layer 94.33
+    hot VM 91.38 @n33399 (18.9, -30.2, 11.6) | sig_n(y) +7.70 VM_in-layer 95.02
+    hot VM 87.10 @n2181 (18.8, -30.6, 11.5) | sig_n(y) +4.39 VM_in-layer 89.31
+    hot VM 83.13 @n33398 (18.9, -29.5, 11.6) | sig_n(y) +11.88 VM_in-layer 88.68
+    raw-max VM 93.28 @n33405 (15.2, -30.2, 5.9) | sig_n +13.65 VM_in-layer 97.06

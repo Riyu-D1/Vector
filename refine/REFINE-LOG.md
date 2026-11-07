@@ -271,6 +271,30 @@ Reconciliation of prior claims (same model, heavier refined wrist):
   J2 travel to q2>=0 via the existing torque_ok gate; then the sprung
   bound ~0.58 kg governs the forward workspace.
 
+## 8b. Main links / joint mounts / bearing supports — evidence audit
+
+This pass focused on the wrist; the rest of the arm is covered by prior
+stage evidence (read, not re-run):
+- cyclo4: J2/J3 printed-disc pin contact, Hertz solver — p0 33-38 MPa,
+  equiv 20-23 vs 50 bearing allowable -> SF 2.21/2.56 at design torque;
+  SF-2 bounds J2 3.65 / J3 3.64 N.m nominal (tol scatter SF ~1.0-2.2).
+  Caps J2 3.0 / J3 2.0 chosen for enforcement margin.
+- cad3: housing + bolt-hole FEA ran (pipeline cad3/fea/); 6803 bearing
+  cavity in back_spacer; J2/J3 joint hand checks incl. single-bolt worst
+  case (needs >=2 pilots engaged — build torque check).
+- lighten: every lightened main-link variant FAILED the SF>=2 +
+  deflection-growth gate -> 0.0 g adopted. The main links are already at
+  their evidenced safe mass — no further lightening is justified.
+- final2: full-assembly collision/ROM gates PASS (with documented
+  collision-family exceptions unchanged by this pass).
+- order/STRESS_SANITY.md: housing->base bolts, out-flange M3+dowel and
+  ring-pin conformal-contact hand checks; actions carried to the
+  build-stage list (torque all 6 pilots evenly; dowels are load-carrying).
+
+No evidence-backed stiffness/weight change is available for the main
+links beyond what stages D2-D13 already applied — the new finding this
+pass is on the wrist side (w_link4 J4 mount, section 7), now fixed.
+
 ## 9. Remaining risks + build-stage tests (updated)
 
 Still [U] / unverified:

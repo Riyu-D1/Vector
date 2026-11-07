@@ -1,0 +1,11 @@
+# regenerable FEA intermediates (rebuilt by run_refinefea.py)
+*.msh
+*.inp
+*.frd
+*.vtu
+*.dat
+*.sta
+*.cvg
+*.12d
+*.htm
+*.html

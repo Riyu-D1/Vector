@@ -303,13 +303,16 @@ Still [U] / unverified:
   derate is embedded in the 0.43 factor, not separately measured.
 - w_link5 plate/cage junction: in-layer ~25-30 MPa at the 0.5 kg wrench
   (notch, mesh-dependent; 46.6 at cl=0.8 still rising). Cannot be filleted
-  inside (J6 case pocket is 0.15 mm away). Conditional limit: the junction
-  sits AT the in-layer allowable at 0.5 kg — OK with margin only at
-  <=~0.4 kg-equivalent wrench; recommend an epoxy/CA fillet on the
-  plate-cheek T-junction at assembly + the dwell test below.
+  inside (J6 case pocket is 0.15 mm away). ~~Conditional limit + epoxy/CA
+  fillet recommendation~~ — FIXED IN R4 (section 10/11): widened plate,
+  buried cheek flat, external longerons -> filtered 9.27 MPa in-layer at
+  the 0.5 kg wrench, SF ~2.7. Residual ring-edge sigma_n bounded ~1.5 SF,
+  see R1 in section 11.
 - w_link4 fin-tailwall top corner: sig_n +15.0 MPa layer-normal TENSION vs
   12.5 allowable at the 0.5 kg wrench (same T-notch class, unloaded tail;
-  ~7.5 MPa at 0.25 kg). Same epoxy-fillet recommendation.
+  ~7.5 MPa at 0.25 kg). ~~Epoxy-fillet recommendation~~ — FIXED IN R4:
+  the 0.13 mm membrane is deleted; an external lap collar carries the
+  tail (tail-region sigma_n +3.2 max, SF ~3.9).
 - J2 spring torque curve unverified (bench cal required); sprung payload
   numbers are conditional on it.
 - FEA: linear-static isotropic; no anisotropy/weld-line/contact; RB load
@@ -335,5 +338,196 @@ Build-stage tests (required before the rating above is claimed on hardware):
    directions of J2 (incl. backward flop q2<0).
 7. Cable bend/fit physical check at J4/J5/J6/g; re-verify the J6 sublimit
    behaviour when J5<0.
-8. Epoxy fillets on the l5 plate-cheek and l4 tailwall T-junctions
-   (assembly step, not a design change).
+8. ~~Epoxy fillets on the l5 plate-cheek and l4 tailwall T-junctions~~ —
+   SUPERSEDED by R4: both junctions are now printable geometry (section
+   10+); no adhesive reinforcement is part of the accepted design.
+
+---
+
+# R4 PASS — printable-geometry repair of the two R3 open junctions (2026-11-07)
+
+R3 left two wrist junctions relying on a recommended epoxy/CA fillet:
+the w_link5 plate↔cheek T-junction (31.2 -> 46.6 MPa, rising with mesh)
+and the w_link4 fin↔tailwall corner (+15.0 MPa layer-NORMAL tension vs
+the 12.5 MPa assumed cross-layer allowable).  R4 replaces both with
+printed geometry; no adhesive is load-carrying in the accepted design.
+
+## 10. R4 root causes + geometry changes
+
+Probed the built solids at the R3 hotspot coordinates:
+
+- w_link5 (36.2, +-12.5, -6.2): the cheek band (b 12.51..14.91) met the
+  plate over only ~1 mm in b (plate edge +-13.5) with a ~0.25 mm ligament
+  under the pocket roof - a ~1 mm-wide T-junction with a re-entrant
+  inside corner.  The J6 pocket wall sits flush at b=12.51, so NO
+  internal fillet could ever fit there; the fix had to be external.
+- w_link4 (65.9, -11.8, 24.0): the tailwall survived the J5 pocket cut
+  only as a ~0.13 mm membrane at a 65.87..66.0 - a b-normal butt T-notch
+  at its top corner.  Anything between the cheeks at a<65.87 is pocketed
+  away, so the membrane could not be thickened either.
+
+w_link5 (print up-direction = a; changes in ap7.py L5_* / p_wrist7.py):
+- Plate widened b +-13.5 -> +-16.41 (full cheek width + a 1.5 mm ledge
+  per side) and extended a 37.6 -> 41.5.
+- Cheek top edge runs flat at h=-3.0 for a 28..40 (0.85 mm below the
+  plate top): the cheek welds into the plate over an ~11 x 2.4 mm
+  volumetric band per side (~5x the old footprint), and every polygon
+  vertex in the weld zone is buried in plate material.
+- External longeron ribs (L5_GUSSET trapezoid a 28..46 x h -3..-13,
+  b band 12.3..16.41) merge into the cheek outer faces AND the plate
+  ledges - a second, external load path: plate -> ledge -> longeron ->
+  cheek outer face, capping the cheek edge where it exits the plate.
+- Front relief cuts widened to |b| 10..17 so the cradle-sweep clearance
+  is unchanged by the wider plate.
+- Iteration note: the first R4 mesh pass caught the flat's exposed end
+  vertex at (40,+-12.5,-2.15) reading +19..+24 MPa layer-normal (a)
+  tension (weld-end + vertex notch, converged ~22).  v2 lowers the flat
+  to -3.0 under the plate and buries that vertex; all numbers below are
+  the v2 solids.
+
+w_link4 (print up-direction = b):
+- L4_TAILWALL deleted - it could only ever build as the 0.13 mm membrane.
+- External tail COLLAR: two side plates (L4_COLSIDE) lapping the cheek
+  outer faces through their full thickness, plus a back plate
+  (L4_COLBACK a 66.0..66.7, b +-16.41, h 4..27) closing the tail and
+  tying both cheek tips.  Lap/shear transfer replaces the b-normal butt;
+  no b-normal T-junction remains on the cheek inner faces.
+- Mid rib enlarged and reshaped (a,h) box (16,32,12,17.8) -> tapered
+  polygon L4_RIBMID reaching a~4 in the plate's interior: buries the
+  strut silhouette's (14,12) vertex and the old rib weld-end (~26,11)
+  and moves the rib's own -a end off the plate-face edge zone (the
+  square end still read ~12.4 MPa in-layer at cl0.8 - the tapered tip
+  sits in the low-stress plate interior).
+
+Interfaces unchanged: horn PCD/holes, servo pockets, cheek b bands,
+cable channels, ROM stops, rack/finger geometry, J5-yaw gap >=0.75 mm,
+roll-tube clearance a>61.  Printability unchanged: all features are
+a-h or b-plate profiles in the same build orientations; overhang scan
+all PASS (Bambu A1, PETG-CF).
+
+## 11. R4 FEA - before/after (fea/run_r4fea.py; same deck convention as R3)
+
+Rebuilt decks on the R4 solids: 6 horn BCs (face / ann+pilot / screws /
+screw+pilot / screws+ann+pilot / 2-screw fault bound), payload-scaled
+wrenches _p25/_p38/_p50 (payload force + fixed carried stack ~0.11/0.20/
+0.23 kg, moment-matched at the pocket floor), mesh convergence at cl
+3.0/1.5/0.8, self-weight included via deck density.  Analyzer reports
+raw max, filtered (excludes patch-adjacent), patch-region max, |U|,
+layer-normal sigma_n, in-layer VM.  Actual outputs: fea/*_r4.txt.
+
+w_link5 (layer axis = a):
+
+| BC case | filtered VM | sigma_n(a) | in-layer VM | max|U| |
+|---|---|---|---|---|
+| face    | 5.51  | +5.0        | 1.8   | 0.17 mm |
+| ann     | 9.40  | +0.2        | 9.4   | 0.35 mm |
+| screw   | 13.10 | +9.1        | 10.1  | 0.41 mm |
+| scpilot | 13.07 | +9.1        | 10.1  | 0.41 mm |
+| scrann  | 9.27  | +0.2        | 9.2   | 0.34 mm |
+| scr2    | 18.64 | -19.9 compr | 12.9  | 0.63 mm |
+
+scrann payload sweep (filtered): 0.25 kg -> 5.96 | 0.38 kg -> 7.69 |
+0.50 kg -> 9.27 MPa.  scrann convergence: 8.41 / 9.27 / 11.33 MPa at
+cl 3.0/1.5/0.8 - saturating, not a runaway notch.
+
+w_link4 (layer axis = b):
+
+| BC case | filtered VM | sigma_n(b) | in-layer VM | max|U| |
+|---|---|---|---|---|
+| face    | 6.40 (tail collar zone, sigma_n +3.25) | | 0.21 mm |
+| ann     | 8.11  | -0.8        | 8.4   | 0.37 mm |
+| screw   | 8.12  | -0.8        | 8.4   | 0.39 mm |
+| scpilot | 8.12  | -0.8        | 8.4   | 0.38 mm |
+| scrann  | 8.11  | -0.8        | 8.4   | 0.36 mm |
+| scr2    | 8.13  | -0.8        | 8.5   | 0.46 mm |
+
+scrann payload sweep (filtered): 0.25 kg -> 5.34 | 0.38 kg -> 6.78 |
+0.50 kg -> 8.11 MPa.  scrann convergence: 6.25 / 8.11 / 9.98 MPa at
+cl 3.0/1.5/0.8 - saturating (deltas +1.9,+1.9, bounded ~11-12); the
+cl0.8 peak sits on the fin cheek face (in-layer 10.3), NOT on a weld
+line - the junction features are no longer the controlling corners.
+
+Before -> after at the two R3 open junctions (design BC = scrann,
+0.5 kg-equivalent wrench):
+
+| junction | R3 result | R4 result | margin |
+|---|---|---|---|
+| l5 plate-cheek (36.2,+-12.5,-6.2) | 31.2 MPa VM cl1.5 (in-layer 25.3); 46.6 at cl0.8 still rising | filtered 9.27, in-layer 9.2, sigma_n +0.2 | in-layer SF ~2.7 vs 25 MPa |
+| l4 fin-tailwall (65.9,-11.8,24.0) | sigma_n(b) +14.98 tension | collar lap path: tail-region sigma_n +3.25 max | cross-layer SF ~3.8 vs 12.5 MPa |
+
+Safety-factor accounting (design allowables from section 6 - NOT
+datasheet strength): in-layer SF2 needs filtered in-layer <= 12.5 MPa;
+cross-layer SF2 needs tensile sigma_n <= 6.25 MPa at the worst node.
+- w_link5: in-layer max ~9.4-10.1 (all BCs except the scr2 fault bound)
+  -> SF ~2.5-2.7 PASS.  sigma_n <= ~9 MPa -> see residual R1 below.
+- w_link4: in-layer max ~8.4-10.5 (all BCs, incl. cl0.8) -> SF ~2.4-3.0
+  PASS.  sigma_n <= +3.3 tensile -> cross-layer SF ~3.8 PASS.
+- No double-counted deratings: allowables 25/12.5 are the design values;
+  SF is quoted against them directly.  Datasheet 35/29 MPa would give
+  higher nominal margins but is a lab-specimen value, not part
+  validation (section 9 [U] stands).
+
+Residuals + honest bounds:
+- R1 (l5): the worst layer-normal reading is at the rigid annulus BC
+  boundary (r~10 about the horn, plate top fibre): sigma_n(a) +8.4 MPa
+  at the 0.5 kg wrench (cl0.8), ~+5-6 at 0.38, ~+4 at 0.25.  This is
+  plate bending tension at the idealised clamp edge - a real horn's
+  compliant flange spreads it - but treating it as real: cross-layer SF
+  ~1.5 at 0.5 kg-equivalent, >=2 below ~0.30 kg-equivalent.  Mitigation
+  is a build setting (solid infill + full perimeters in the plate band
+  lifts local inter-layer strength well above the generic 12.5 MPa
+  assumption) + droop test 2 below.  Disclosed, not silently passed.
+- R2 (l5): scr2 2-screw fault bound reads filtered 18.6 / in-layer 12.9
+  / sigma_n -19.9 (bearing COMPRESSION at the surviving screw pair) -
+  fault bound only, disclosed.
+- R3 (both): patch-region maxima sit inside the constraint/load sets by
+  construction; raw vs filtered deltas are convention, not new physics.
+- |U|: l5 0.34 mm, l4 0.36 mm at the 0.5 kg wrench (converged) - stiffer
+  than R3 (0.70 / 0.63); the max-|U| nodes are the cage tip / collar top
+  corner, not the junctions.
+
+## 12. Mass + assembled loads after R4
+
+R4 volumes: w_link4 19.8 cm3 (was 17.1), w_link5 8.6 cm3 (was 7.54).
+Measured mass at the project convention (rho x 0.6): wrist+gripper
+0.234 kg (gate 0.234 PASS, ~1 g margin).  gravity_up1.py wrist plastic
+masses updated to the measured values (wrist4 22.7->28.1 g, wrist5
+8.5->6.6 g, grip 15.9->13.4 g); centroids unchanged (D6 parts_AB,
+sub-mm drift, <0.005 N.m effect).  asm_loads.py re-run on the new
+masses - checks/asm_loads_out.txt:
+
+- Unsprung: 0.25 kg all joints OK; 0.38 kg J2 3.00 fractionally OVER
+  the 3.0 cap (+0.2 g on the wrist4 mass tipped it); 0.50 kg J2 3.46
+  OVER (backward flop); workspace-wide bound 0.380 kg
+  (J2-limited) - identical to R3 within report precision.
+- Named poses: Q_WORST 0.430 unsprung / 0.581 sprung (J3); close-in
+  0.790 (J4); AB-level 0.406 unsprung / 0.581 sprung; stow 0.587/0.740.
+- Level-tool reach table: 0.5 kg OK to ~0.30-0.34 m; 0.432 at 0.36 m.
+- The wrist structural results above are INDEPENDENT of these caps:
+  torque-cap compliance is not structural proof, and vice versa.
+
+## 13. R4 status of the [U] items + build-stage tests
+
+- Epoxy/CA fillet reliance: REMOVED from the accepted design (was test
+  #8 and the two section-9 bullets).  Both junctions now carry load
+  through printed lap/shear geometry, verified by the decks above.
+- Still [U]: PETG-CF allowables are TDS-derived design values (not
+  measured on this part/printer); the residual R1 ring-edge sigma_n is
+  a model-boundary reading bounded at ~1.5 SF - the honest claim is
+  "junction fixed; ring-edge residual bounded and mitigated by print
+  density, pending the droop test".
+- J2 spring torque curve still unverified -> all spring-assisted
+  payload numbers remain conditional on bench calibration.
+- FEA caveats unchanged: linear-static isotropic, no anisotropy/weld
+  lines/contact; re-entrant corners reported as indications.
+
+Build-stage tests (updated):
+1-7. Unchanged from section 9 (screw stacks, droop test now vs the
+   0.36 mm l4 prediction, 24 h 0.38 kg dwell incl. the new collar/longeron
+   zones, spring bench cal, cyclo4 run-in, torque caps, cable check).
+8. Print-density mitigation for residual R1: print the l5 plate band
+   (a 20..45) at 100% infill / full perimeters and note the observed
+   ring-edge region in the dwell inspection.
+9. Junction visual + pull check on the first printed set: l4 collar lap
+   faces and l5 longeron/ledge welds free of print voids (the welds are
+   the load path; voids there defeat the fix).

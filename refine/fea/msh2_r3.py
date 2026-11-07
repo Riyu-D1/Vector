@@ -57,7 +57,18 @@ def _holes(axis_pts):
     return f
 
 
+def _payload(name):
+    """trailing _pNN suffix -> payload share multiplier.
+    Decks carry a ~0.5 kg-class wrench = payload force + fixed carried
+    stack; the suffix scales ONLY the payload share."""
+    for tag, kg in (("_p25", 0.25), ("_p38", 0.38), ("_p50", 0.5)):
+        if name.endswith(tag):
+            return name[: -len(tag)], kg
+    return name, 0.5
+
+
 def gf_case(name, P):
+    name, pay = _payload(name)
     a, b, h = P[:, 0], P[:, 1], P[:, 2]
     r = np.hypot(b, h + 17.0)                      # roll axis (0,-17)
     holes = _holes([(O45, -17.0 + O45), (O45, -17.0 - O45),
@@ -75,10 +86,11 @@ def gf_case(name, P):
         "scr2": top2(b, h) & (a >= 62.65) & (a <= 67.0),
     }[name]
     load = a >= 120.0
-    return fix, load, [((137.4, 0.0, -17.0), (0.0, 0.0, -6.0))]
+    return fix, load, [((137.4, 0.0, -17.0), (0.0, 0.0, -(9.81 * pay + 1.1)))]
 
 
 def l5_case(name, P):
+    name, pay = _payload(name)
     a, b, h = P[:, 0], P[:, 1], P[:, 2]
     holes = _holes([(30.6 + O45, O45), (30.6 + O45, -O45),
                     (30.6 - O45, O45), (30.6 - O45, -O45)])
@@ -98,10 +110,11 @@ def l5_case(name, P):
     # J6 pocket floor patch (keel web top h~-52.4 under the case)
     load = (h >= -52.55) & (h <= -52.2) & (a >= 17.0) & (a <= 64.5) \
         & (np.abs(b) <= 12.4)
-    return fix, load, [((113.7, 0.0, -30.0), (0.0, 0.0, -6.87))]
+    return fix, load, [((113.7, 0.0, -30.0), (0.0, 0.0, -(9.81 * pay + 1.965)))]
 
 
 def l4_case(name, P):
+    name, pay = _payload(name)
     a, b, h = P[:, 0], P[:, 1], P[:, 2]
     holes = _holes([(O45, O45), (O45, -O45), (-O45, O45), (-O45, -O45)])
     shank = holes(a, h) & (b >= -28.65) & (b <= -26.6)
@@ -121,7 +134,7 @@ def l4_case(name, P):
     # faces where the J5 case sits (case face at -2.0, pocket floor -1.4)
     load = (h >= -1.5) & (h <= 0.0) & (a >= 20.0) & (a <= 61.0) \
         & (np.abs(b) <= 12.4)
-    return fix, load, [((106.0, 0.0, -5.0), (0.0, 0.0, -7.16))]
+    return fix, load, [((106.0, 0.0, -5.0), (0.0, 0.0, -(9.81 * pay + 2.255)))]
 
 
 CASES = {"gf": gf_case, "l5": l5_case, "l4": l4_case}

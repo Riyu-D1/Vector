@@ -76,23 +76,23 @@ def fea_shot(vtu, png, warp=25.0, vmax=None):
     p.camera_position = "iso"; p.set_background("white")
     p.screenshot(png); p.close()
 
-for tag, vtu, vm in (("l4_old", FEA + "/l4_scrann_step1.vtu", None),
-                     ("l4_r3", FEA + "/l4r3_scrann_step1.vtu", 30.0),
-                     ("l5_r3", FEA + "/l5_scrann_step1.vtu", 50.0),
-                     ("gf_r3", FEA + "/gf_scrann_step1.vtu", 30.0)):
+for tag, vtu, vm in (("l4_r4", FEA + "/l4_scrann_step1.vtu", 20.0),
+                     ("l4_r4c", FEA + "/l4_scrann_c0.8_step1.vtu", 20.0),
+                     ("l5_r4", FEA + "/l5_scrann_step1.vtu", 20.0),
+                     ("l5_r4c", FEA + "/l5_scrann_c0.8_step1.vtu", 20.0)):
     png = FEA + "/%s_iso.png" % tag
     if not os.path.exists(png):
         fea_shot(vtu, png, vmax=vm)
 
-grid([[("w_link4 R2 strut, screw BC: VM ~93 MPa, |U| 6.3 mm FAIL",
-        FEA + "/l4_old_iso.png"),
-       ("w_link4 R3 widened strut: VM 14.9 MPa, |U| 0.63 mm PASS",
-        FEA + "/l4_r3_iso.png")],
-      [("w_link5 screw+annulus: junction ~31-47 MPa (notch)",
-        FEA + "/l5_r3_iso.png"),
-       ("w_grip_frame screw+annulus: ~13 MPa, layer-normal compr. PASS",
-        FEA + "/gf_r3_iso.png")]],
-     "CalculiX von Mises - realistic horn-mount BCs (screws+annulus+pilot), ~0.5 kg class wrench",
+grid([[("w_link4 R4 (collar+rib): scrann filtered 8.1 MPa, |U| 0.36 mm PASS",
+        FEA + "/l4_r4_iso.png"),
+       ("w_link4 R4 cl0.8 filtered 10.0 MPa (was R3 ~15 tail notch)",
+        FEA + "/l4_r4c_iso.png")],
+      [("w_link5 R4 (wide plate+longeron): scrann filtered 9.3 MPa PASS",
+        FEA + "/l5_r4_iso.png"),
+       ("w_link5 R4 cl0.8 ~11.3 MPa (was R3 46.6 still-rising notch)",
+        FEA + "/l5_r4c_iso.png")]],
+     "CalculiX von Mises - realistic horn-mount BCs (screws+annulus+pilot), 0.5 kg class wrench",
      os.path.join(REN, "sheet2_fea.png"))
 
 # ---- sheet 3: wrist assembly context (world pose) ----

@@ -1,37 +1,37 @@
 pose set: 27648 grid + 2000 MC + 5 named = 29653
 
 ===== spring OFF =====
-payload 0.25 kg:  J2 2.50(OK) J3 1.26(OK) J4 0.49(OK) J5 0.31(OK) J6 0.01(OK)
-payload 0.38 kg:  J2 3.00(OK) J3 1.60(OK) J4 0.66(OK) J5 0.44(OK) J6 0.01(OK)
-payload 0.50 kg:  J2 3.46(OVER) J3 1.91(OK) J4 0.82(OK) J5 0.56(OK) J6 0.01(OK)
-    J2 worst(0.5kg) 3.463 N.m at q deg [0.0, -90.0, -114.0, 20.0, 0.0, 0.0]
+payload 0.25 kg:  J2 2.50(OK) J3 1.26(OK) J4 0.48(OK) J5 0.31(OK) J6 0.01(OK)
+payload 0.38 kg:  J2 3.00(OVER) J3 1.60(OK) J4 0.66(OK) J5 0.44(OK) J6 0.01(OK)
+payload 0.50 kg:  J2 3.46(OVER) J3 1.91(OK) J4 0.82(OK) J5 0.55(OK) J6 0.01(OK)
+    J2 worst(0.5kg) 3.464 N.m at q deg [0.0, -90.0, -114.0, 20.0, 0.0, 0.0]
     J3 worst(0.5kg) 1.911 N.m at q deg [0.0, -48.0, -156.0, 20.0, 0.0, 0.0]
-    J4 worst(0.5kg) 0.825 N.m at q deg [0.0, -90.0, -162.0, 68.0, 0.0, 0.0]
-    J5 worst(0.5kg) 0.555 N.m at q deg [-81.0, 21.0, -79.0, -37.0, 70.0, 68.0]
+    J4 worst(0.5kg) 0.823 N.m at q deg [0.0, -108.0, -114.0, 38.0, 0.0, 0.0]
+    J5 worst(0.5kg) 0.554 N.m at q deg [-81.0, 21.0, -79.0, -37.0, 70.0, 68.0]
     workspace-wide bound 0.380 kg (lim J2) at [0.0, -90.0, -114.0, 20.0, 0.0, 0.0]
 
 ===== spring ON (J2, k=0.55, q2>0) =====
-payload 0.25 kg:  J2 2.50(OK) J3 1.26(OK) J4 0.49(OK) J5 0.31(OK) J6 0.01(OK)
-payload 0.38 kg:  J2 3.00(OK) J3 1.60(OK) J4 0.66(OK) J5 0.44(OK) J6 0.01(OK)
-payload 0.50 kg:  J2 3.46(OVER) J3 1.91(OK) J4 0.82(OK) J5 0.56(OK) J6 0.01(OK)
-    J2 worst(0.5kg) 3.463 N.m at q deg [0.0, -90.0, -114.0, 20.0, 0.0, 0.0]
+payload 0.25 kg:  J2 2.50(OK) J3 1.26(OK) J4 0.48(OK) J5 0.31(OK) J6 0.01(OK)
+payload 0.38 kg:  J2 3.00(OVER) J3 1.60(OK) J4 0.66(OK) J5 0.44(OK) J6 0.01(OK)
+payload 0.50 kg:  J2 3.46(OVER) J3 1.91(OK) J4 0.82(OK) J5 0.55(OK) J6 0.01(OK)
+    J2 worst(0.5kg) 3.464 N.m at q deg [0.0, -90.0, -114.0, 20.0, 0.0, 0.0]
     J3 worst(0.5kg) 1.911 N.m at q deg [0.0, -48.0, -156.0, 20.0, 0.0, 0.0]
-    J4 worst(0.5kg) 0.825 N.m at q deg [0.0, -90.0, -162.0, 68.0, 0.0, 0.0]
-    J5 worst(0.5kg) 0.555 N.m at q deg [-81.0, 21.0, -79.0, -37.0, 70.0, 68.0]
+    J4 worst(0.5kg) 0.823 N.m at q deg [0.0, -108.0, -114.0, 38.0, 0.0, 0.0]
+    J5 worst(0.5kg) 0.554 N.m at q deg [-81.0, 21.0, -79.0, -37.0, 70.0, 68.0]
     workspace-wide bound 0.380 kg (lim J2) at [0.0, -90.0, -114.0, 20.0, 0.0, 0.0]
 
 ===== named poses (spring ON | OFF) =====
 pose                    payload J2 J3 J4 N.m -> bound
-Q_WORST(+70/-70)       spr=1 p=0.50 | J2 2.584 J3 1.798 J4 0.820 J5 0.000 | bound 0.581 kg (J3)
-Q_WORST(+70/-70)       spr=0 p=0.50 | J2 3.256 J3 1.798 J4 0.820 J5 0.000 | bound 0.430 kg (J2)
-Q_CLOSE(+30/-150/+90)  spr=1 p=0.50 | J2 1.169 J3 0.681 J4 0.759 J5 0.000 | bound 0.788 kg (J4)
-Q_CLOSE(+30/-150/+90)  spr=0 p=0.50 | J2 1.457 J3 0.681 J4 0.759 J5 0.000 | bound 0.788 kg (J4)
-AB-level(+90/-90)      spr=1 p=0.50 | J2 2.486 J3 1.798 J4 0.820 J5 0.000 | bound 0.581 kg (J3)
-AB-level(+90/-90)      spr=0 p=0.50 | J2 3.350 J3 1.798 J4 0.820 J5 0.000 | bound 0.406 kg (J2)
-home                   spr=1 p=0.50 | J2 1.798 J3 1.798 J4 0.820 J5 0.000 | bound 0.581 kg (J3)
-home                   spr=0 p=0.50 | J2 1.798 J3 1.798 J4 0.820 J5 0.000 | bound 0.581 kg (J3)
-stow                   spr=1 p=0.50 | J2 2.065 J3 1.278 J4 0.804 J5 0.000 | bound 0.739 kg (J4)
-stow                   spr=0 p=0.50 | J2 2.736 J3 1.278 J4 0.804 J5 0.000 | bound 0.587 kg (J2)
+Q_WORST(+70/-70)       spr=1 p=0.50 | J2 2.585 J3 1.798 J4 0.819 J5 0.000 | bound 0.581 kg (J3)
+Q_WORST(+70/-70)       spr=0 p=0.50 | J2 3.257 J3 1.798 J4 0.819 J5 0.000 | bound 0.430 kg (J2)
+Q_CLOSE(+30/-150/+90)  spr=1 p=0.50 | J2 1.167 J3 0.678 J4 0.757 J5 0.000 | bound 0.790 kg (J4)
+Q_CLOSE(+30/-150/+90)  spr=0 p=0.50 | J2 1.455 J3 0.678 J4 0.757 J5 0.000 | bound 0.790 kg (J4)
+AB-level(+90/-90)      spr=1 p=0.50 | J2 2.487 J3 1.798 J4 0.819 J5 0.000 | bound 0.581 kg (J3)
+AB-level(+90/-90)      spr=0 p=0.50 | J2 3.351 J3 1.798 J4 0.819 J5 0.000 | bound 0.406 kg (J2)
+home                   spr=1 p=0.50 | J2 1.798 J3 1.798 J4 0.819 J5 0.000 | bound 0.581 kg (J3)
+home                   spr=0 p=0.50 | J2 1.798 J3 1.798 J4 0.819 J5 0.000 | bound 0.581 kg (J3)
+stow                   spr=1 p=0.50 | J2 2.064 J3 1.277 J4 0.802 J5 0.000 | bound 0.740 kg (J4)
+stow                   spr=0 p=0.50 | J2 2.736 J3 1.277 J4 0.802 J5 0.000 | bound 0.587 kg (J2)
 
 ===== max payload vs forward reach, level tool (spring OFF | ON) =====
 spring OFF:
@@ -58,11 +58,11 @@ reach x m  max kg    lim jt pose deg (q2,q3,q4)
 0.28       0.695     J2     [35.0, -13.0, -22.0]
 0.29       0.660     J2     [37.0, -18.0, -20.0]
 0.30       0.626     J3     [35.0, -25.0, -10.0]
-0.31       0.595     J2     [37.0, -33.0, -5.0]
+0.31       0.594     J2     [37.0, -33.0, -5.0]
 0.32       0.565     J3     [37.0, -43.0, 5.0]
 0.33       0.534     J2     [40.0, -55.0, 15.0]
 0.34       0.499     J2     [45.0, -68.0, 23.0]
-0.35       0.465     J2     [52.0, -70.0, 18.0]
+0.35       0.464     J2     [52.0, -70.0, 18.0]
 0.36       0.432     J2     [60.0, -83.0, 23.0]
 spring ON:
 reach x m  max kg    lim jt pose deg (q2,q3,q4)

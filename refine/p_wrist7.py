@@ -112,10 +112,14 @@ def w_link4():
         b_lo, b_hi = sorted((sg * N.L4_CHEEK_B[0], sg * N.L4_CHEEK_B[1]))
         s = s + xb(poly_ah(b_lo, N.L4_FIN), b_lo, b_hi)      # R1: face on lower bound, grows outward
     s = s + box(20.0, 61.05, -N.L4_CHEEK_B[1], N.L4_CHEEK_B[1], -1.4, -0.05)   # fin bottom web
-    ta0, ta1, th0, th1 = N.L4_TAILWALL
-    s = s + box(ta0, ta1, -N.L4_CHEEK_B[1], N.L4_CHEEK_B[1], th0, th1)          # fin tail wall (clears w6 sweep)
+    for sg in (1, -1):                                       # R4: tail collar sides
+        c_lo, c_hi = sorted((sg * N.L4_COLB[0], sg * N.L4_COLB[1]))
+        s = s + xb(poly_ah(c_lo, N.L4_COLSIDE), c_lo, c_hi)  # lap the cheek outer faces
+    ta0, ta1, tb0, tb1, th0, th1 = N.L4_COLBACK
+    s = s + box(ta0, ta1, tb0, tb1, th0, th1)                # collar back plate (closes tail)
     for ra0, ra1, rh0, rh1 in N.L4_RIBS:                                       # ribs strut -> fin -b cheek
         s = s + box(ra0, ra1, b0, -12.7, rh0, rh1)
+    s = s + xb(poly_ah(b0, N.L4_RIBMID), b0, -12.7)       # R4v3: tapered mid rib
     s = s - pocket("j5")                                     # case + plug + horn (open top slot)
     s = s - horn_holes((0, 0), "b", b0, b1, b0 - 1, b0 + B.HORN_CB[1],
                        b1 - B.HORN_RECESS[1], b1 + 1)
@@ -126,11 +130,14 @@ def w_link5():
     h0, h1 = N.L5_TOP
     s = extrude(ab(h0, *N.L5_PLATE), amount=h1 - h0, dir=(0, 0, 1))            # horn plate
     for sg in (1, -1):                                                       # D7: front b-corner reliefs (cradle sweep clearance)
-        lo, hi2 = sorted((sg * 10.0, sg * 15.0))
+        lo, hi2 = sorted((sg * 10.0, sg * 17.0))             # R4: cut past the wider plate edge
         s = s - box(N.L5_PLATE[0] - 1.0, 28.2, lo, hi2, h0 - 1.0, h1 + 1.0)
     for sg in (1, -1):
         b_lo, b_hi = sorted((sg * N.L5_CHEEK_B[0], sg * N.L5_CHEEK_B[1]))
         s = s + xb(poly_ah(b_lo, N.L5_CAGE), b_lo, b_hi)     # R1: face on lower bound, grows outward
+    for sg in (1, -1):                                       # R4: under-plate gusset ribs
+        g_lo, g_hi = sorted((sg * N.L5_GUS_B[0], sg * N.L5_GUS_B[1]))
+        s = s + xb(poly_ah(g_lo, N.L5_GUSSET), g_lo, g_hi)
     s = s + box(N.L5_CAGE[1][0], 64.7, -N.L5_CHEEK_B[1], N.L5_CHEEK_B[1], N.L5_BOTTOM - 2.0, N.L5_BOTTOM)  # keel web
     a0, a1, bh0, bh1 = N.L5_BACK
     s = s + box(a0, a1, -N.L5_CHEEK_B[1], N.L5_CHEEK_B[1], bh0, bh1)            # back-bottom wall

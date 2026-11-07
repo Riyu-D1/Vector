@@ -84,6 +84,19 @@ L4_STRUT = ((5.0, -13.0), (14.0, -13.0), (40.0, 38.2),
             (36.0, 38.2), (14.0, 12.0), (8.0, -8.0))   # rib silhouette a-h, b = L4_STRUT_B
 L4_STRUT_B = (-30.65, -22.65)                       # R3: 8 mm rib (was plate 4 mm)
 L4_CHEEK_B = (12.51, 14.91)                     # fin cheeks +-b (case b +-12.36 + clr)
+# R4: the R3 tailwall could only exist for a > 65.87 (the j5 case pocket cuts
+# every |-b| < 12.51 feature up to a 65.87), so it built as a ~0.13 mm
+# transverse membrane -> +15 MPa layer-NORMAL (b) tension at its top corner
+# vs the 12.5 MPa allowable at the 0.5 kg wrench (T-notch, BC-insensitive).
+# Replaced by an external tail COLLAR: side plates that overlap the cheek
+# outer faces through their whole thickness (the pocket trims the inner
+# intrusion back to 12.51) + a back plate that closes the tail and ties the
+# cheek tail tips.  Lap/shear joint over ~50x the membrane weld area; no
+# b-normal T-junction remains on the cheek inner faces.
+L4_COLSIDE = ((59.0, 4.0), (59.0, 26.0), (61.0, 34.6), (62.2, 33.2),
+              (64.9, 26.8), (66.6, 24.6), (66.6, 4.0))    # collar side a-h
+L4_COLB = (12.3, 16.41)                                 # collar plate b band
+L4_COLBACK = (66.0, 66.7, -16.41, 16.41, 4.0, 27.0)     # a0,a1,b0,b1,h0,h1
 # fin a-h outline: full height a<=61.05; tail above h 7.5 only (clears the grip-plug
 # roll tube: plug sweeps r 24.2 about h -17 -> reaches h +7.2 at a 61.2..66)
 # R-fix: bottom edge -0.1 -> -1.0 so the cheek sinks ~0.9 mm into the bottom
@@ -91,21 +104,51 @@ L4_CHEEK_B = (12.51, 14.91)                     # fin cheeks +-b (case b +-12.36
 L4_FIN = ((20.0, -1.0), (20.0, 10.0), (23.0, 22.0), (28.0, 32.0), (36.0, 37.8),
           (56.0, 37.8), (61.0, 34.0), (63.0, 30.0), (64.5, 26.0), (66.0, 24.0),
           (66.0, 20.0), (61.05, 7.5), (61.05, -1.0))
-L4_TAILWALL = (65.72, 66.0, 7.5, 24.0)          # a0,a1,h0,h1 tail wall between cheeks
-L4_RIBS = ((26.0, 42.0, 32.0, 37.8),            # shoulder rib a0,a1,h0,h1 (b -30.65..-12.7)
-           (16.0, 32.0, 12.0, 17.8))            # mid rib    a0,a1,h0,h1
+# R4: L4_TAILWALL deleted - replaced by the external tail collar above.
+L4_RIBS = ((26.0, 42.0, 32.0, 37.8),)           # shoulder rib a0,a1,h0,h1 (b -30.65..-12.7)
+# R4v3 mid rib: polygon with a tapered -a end reaching into the plate's
+# interior (a~4-6 sits near the horn clamp centre, low free-edge stress);
+# buries the strut (14,12) vertex and the old rib weld-end (~26,11).  The
+# square -a end of the v2 box read ~12.4 MPa in-layer at cl0.8.
+L4_RIBMID = ((4.0, 11.0), (10.0, 8.0), (31.0, 8.0),
+             (31.0, 16.0), (10.0, 16.0), (4.0, 13.0))   # a-h polygon, b -30.65..-12.7
 
 # ---------- w_link5: J5 horn plate + J6 ventral keel cage [D] ----------
-L5_PLATE = (23.6, 37.6, -13.5, 13.5, 4.0)       # J5 horn plate a0,a1,b0,b1,r, h L5_TOP
+# R4: the plate cheek weld was a ~1 mm T-junction (plate edge +-13.5 vs cheek
+# band 12.51..14.91) with a sharp inside corner at (+-12.51, -6.15); the J6
+# pocket wall sits flush at 12.51 -> no internal fillet possible.  Widened
+# the plate to +-16.41 (full cheek width + a 1.5 mm ledge past each cheek),
+# extended it a 37.6->41.5 so the cheek flat's end vertex is buried in plate
+# material (R4 mesh run showed the exposed vertex was itself a ~+19-24 MPa
+# a-tension notch), and ran the cheek top flat 0.85 below the plate top
+# (weld ~11x2.4 mm per side, fully inside the plate band).  External
+# longeron ribs on the cheek outer faces pick up the ledges and run 4 mm
+# past the plate's +a edge: the weld line ends shed the cheek top-fibre
+# a-tension gradually instead of at one corner.  Plate top (-2.15)
+# unchanged -> the J5-yaw/fin-web gap stays 0.75.
+L5_PLATE = (23.6, 41.5, -16.41, 16.41, 4.0)     # J5 horn plate a0,a1,b0,b1,r, h L5_TOP
 L5_TOP = (-6.15, -2.15)                          # plate h (face -2.0, 0.15 under)
 L5_CHEEK_B = (12.51, 14.91)
+# R4: external longeron ribs under the plate ledges (outer face of each
+# cheek); top edge penetrates into the plate band -> volumetric weld (no
+# tangent contact, cf. F9c).  The rib bypasses the inside corner and caps
+# the cheek edge where it exits the plate: load flows plate -> ledge ->
+# rib -> cheek outer face over a 28..46 instead of one weld-end vertex.
+L5_GUSSET = ((28.0, -3.0), (46.0, -3.0), (44.5, -9.0), (28.0, -13.0))
+L5_GUS_B = (12.3, 16.41)                                  # gusset/longeron b band
 # keel cheek a-h outline; for a > 61.05 only h < -41.4 exists (clears the grip-plug
 # roll tube r 24.2 about h -17 -> h -41.2..+7.2 at a 61.2+)
 # R-fix: bottom edge -52.4 -> -54.0 sinks the cheek 1.6 mm into the keel web
 # (stock: zero-volume tangent butt face at -52.4).
+# R4: top edge runs flat 0.85 under the plate top a 28..40 (was a 33..37.6 at
+# -2.15; the exposed flat-end vertex was the R4-mesh hotspot) and the
+# a 40..61.05 edge is raised ~2-5 mm -> the cheek top underlaps the widened
+# plate for the full weld run and every polygon corner in the weld zone is
+# buried.  a <= 61.05, h <= -2.15 -> clear of the fin (>=0.75 mm vertical)
+# and the grip-plug roll tube (a > 61 unchanged).
 L5_CAGE = ((14.5, -26.0), (14.5, -47.0), (17.0, -54.0), (58.0, -54.0),
            (64.7, -44.0), (64.7, -41.4), (61.05, -41.4), (61.05, -10.0),
-           (40.0, -5.0), (37.6, -2.15), (33.0, -2.15), (21.0, -15.5),
+           (40.0, -3.0), (28.0, -3.0), (21.0, -15.5),
            (21.0, -24.0))                                           # D7: cheek top-front corner cut below the cradle/J4-case sweep footprint
 L5_BOTTOM = -52.4                                # cage bottom (case -52.27 + clr)
 L5_BACK = (14.5, 16.65, -52.4, -40.0)            # back-bottom wall a0,a1,h0,h1 (below plug)

@@ -83,3 +83,63 @@ FEA mapping:  -h -> standard deck (l5_scrann) | +h -> _up | +-a -> _axp/_axn
               +-b -> _lat | deck applies full-magnitude axis-pure wrench
               (envelope component <=1.0 by construction) -> conservative
               bound, not a pose-matched load.""")
+
+# ===================== R6: pose-matched FORCE + MOMENT wrenches =====================
+# The l5 deck loads the part with a single force at ref (113.7,0,-30) via a
+# rigid-body patch on the J6 pocket floor.  Here the actual gravity wrench
+# of the carried stack is built from the corrected mass model: the force is
+# (m_stack + m_pay) * 9.81 * g-hat and the moment about the deck ref point
+# is sum (r_i - r_ref) x (m_i * 9.81 * g-hat).  The residual between the
+# true wrench and the deck's single-force model shows how faithful the
+# idealisation is at each pose.
+
+REF = np.array([113.7, 0.0, -30.0])     # deck ref point (W frame)
+# carried stack: (mass kg, W-frame COM mm) - from mass_r5.py (AB - 223.1,0,89.5)
+STACK = [
+    ("j6 servo",  0.05500, (41.53,   0.00, -29.59)),
+    ("gf",        0.01379, (98.52,  -0.03, -26.09)),
+    ("g servo",   0.05500, (95.53,   0.00, -29.59)),
+    ("gear",      0.00800, (119.70,  0.00, -17.00)),
+    ("rack_u",    0.01200, (119.90, -12.99, -3.28)),
+    ("rack_d",    0.01200, (119.90,  12.99, -30.72)),
+    ("finger_u",  0.00097, (131.08,   3.00, -16.62)),
+    ("finger_d",  0.00097, (131.08,  -3.00, -17.38)),
+    ("tool_grip", 0.01939, (100.19, -0.01, -23.81)),
+]
+TCP = np.array([137.4, 0.0, -17.0])     # payload point (W frame, J6->TCP)
+
+
+def wrench(q, pay):
+    """pose-matched gravity wrench of stack + payload on the l5:
+    returns (F N, M N.mm about REF, equiv application point mm)."""
+    g = g_wrench(q)
+    F = np.zeros(3)
+    M = np.zeros(3)
+    for _, m, com in STACK:
+        f = np.asarray(com) - REF
+        Fi = m * 9.81 * g
+        F += Fi
+        M += np.cross(f, Fi)
+    Fi = pay * 9.81 * g
+    F += Fi
+    M += np.cross(TCP - REF, Fi)
+    # equivalent application point: r_eq = ref + F x M / |F|^2
+    r_eq = REF + np.cross(F, M) / (F @ F)
+    return F, M, r_eq
+
+
+print("\n== pose-matched wrenches at pay=0.50 kg (stack %.3f kg + payload) =="
+      % sum(m for _, m, _ in STACK))
+print("%-28s %-20s %-22s %s" % ("pose", "F (a,b,h) N", "M (a,b,h) N.mm",
+                              "r_eq - ref"))
+for nm, qd in NAMED.items():
+    F, M, r_eq = wrench([math.radians(x) for x in qd], 0.50)
+    print("%-28s (%+.2f,%+.2f,%+.2f)  (%+6.0f,%+6.0f,%+6.0f)  (%+.1f,%+.1f,%+.1f)"
+          % (nm, F[0], F[1], F[2], M[0], M[1], M[2],
+             r_eq[0] - REF[0], r_eq[1] - REF[1], r_eq[2] - REF[2]))
+print("""
+Reading: the deck applies F only (no moment) at the fixed REF; a faithful
+wrench needs F applied at r_eq.  |r_eq - ref| is the application-point
+error - the residual couple the deck misses.  The direction-matched entry
+patches (pocket floor + bearing wall for lateral) approximate case bearing
+better than the old floor-only patch.""")

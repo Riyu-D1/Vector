@@ -24,7 +24,9 @@ Corrections applied here:
        l4     16.77 cc -> 13.18 g @ (252.33,-15.10,101.83)  [wrist4](was 19.79 cc;
              filleted windows; collar-window cut reverted after its
              rim reached sigma_n +9.6 tensile at (66.4,+-11.4,22))
-       l5      8.64 cc ->  6.79 g @ (259.19, -0.13, 59.47)  [wrist5]
+       l5     13.78 cc -> 10.83 g @ (260.78, -0.08, 55.10)  [wrist5]
+             (R6 cage fix: closed window skins 1.0 mm + outer-face
+             bottom longeron + aft-end rib, r3 recess fillets; was 8.64 cc)
        gf     17.54 cc -> 13.79 g @ (321.62, -0.03, 63.41)  [grip] (R5 window
              REVERTED - it put sigma_n +-28 MPa at the existing (67,+-12.5,-25)
              notch; gf stays at R3/R4 geometry)
@@ -40,7 +42,7 @@ import numpy as np
 PLASTIC = [
     ("fore",   0.01279, (209.07,   8.62,  89.42)),   # cradle 16.27 cc
     ("wrist4", 0.01318, (252.33, -15.10, 101.83)),   # l4 16.77 cc (filleted; collar window reverted)
-    ("wrist5", 0.00679, (259.19,  -0.13,  59.47)),   # l5 8.64 cc
+    ("wrist5", 0.01083, (260.78,  -0.08,  55.10)),   # l5 13.78 cc (R6 cage fix)
     ("grip",   0.01379, (321.62,  -0.03,  63.41)),   # gf 17.54 cc (window reverted)
 ]
 RHO6 = 1.31e-3 * 0.6          # g/mm3 effective (60 % infill convention)

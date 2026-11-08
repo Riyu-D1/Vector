@@ -67,34 +67,42 @@ def _payload(name):
     return name, 0.5
 
 
+# R6: direction table - axis-pure bounds plus pose-matched combined
+# gravity directions (wrist5-frame components of g, from pose_wrenches.py /
+# checks/pose_wrenches_r6.txt envelope scans):
+#   _lat   +b axis-pure lateral bound (b-symmetric part -> one sign)
+#   _roll  max-|b| pose family (folded+rolled): g=(+.34,+.94,0)
+#   _comb  max 3-axis mix, +h:   g=(-.47,+.814,+.342)
+#   _comb2 max 3-axis mix, -h:   g=(-.47,+.814,-.342)
+#   _flop  backward-flop family: g=(+.17,0,+.98)
+#   _axp/_axn  +-a axial bounds   _up  +h inverted bound
+# A trailing 'f' on a direction tag (e.g. _latf) keeps the legacy
+# floor-only entry patch (strict entry-concentration sensitivity).
+L5_DIRS = {"_lat": (0.0, 1.0, 0.0), "_axp": (1.0, 0.0, 0.0),
+           "_axn": (-1.0, 0.0, 0.0), "_up": (0.0, 0.0, 1.0),
+           "_roll": (0.342, 0.94, 0.0), "_comb": (-0.47, 0.814, 0.342),
+           "_comb2": (-0.47, 0.814, -0.342), "_flop": (0.17, 0.0, 0.98)}
+
+
 def _wrench_dir(name):
-    """R5: trailing direction suffix -> force unit vector applied at the
-    RB ref node, scaled by the case force magnitude.  Default = -z
-    (keel-down gravity wrench, the R3/R4 convention).  The wrist hangs
-    in every orientation across the workspace, so the gravity wrench on
-    the horn plate decomposes into a/h and b components whose envelope
-    is bounded by these cases:
-      _lat  +y   (lateral bound, b-symmetric part so one sign suffices)
-      _axp  +x   (axial pull toward TCP - pose family with the keel
-                  pitched up)
-      _axn  -x   (axial push)
-      _up   +z   (inverted-pose bound: the plate pulls AWAY from the
-                  horn flange - pure screw-tension path; pair with the
-                  "screw" support case which the flange-unload fault
-                  already models)"""
-    for tag, d in (("_lat", (0.0, 1.0, 0.0)), ("_axp", (1.0, 0.0, 0.0)),
-                   ("_axn", (-1.0, 0.0, 0.0)), ("_up", (0.0, 0.0, 1.0))):
+    """trailing direction suffix -> force unit vector at the RB ref node,
+    scaled by the case force magnitude.  Default = -z (keel-down gravity
+    wrench, the R3/R4 convention).  Returns (case_root, dir, floor_only)."""
+    floor_only = False
+    if any(name.endswith(t + "f") for t in L5_DIRS):
+        floor_only = True
+        name = name[:-1]
+    for tag, d in L5_DIRS.items():
         if name.endswith(tag):
-            return name[: -len(tag)], d
-    return name, (0.0, 0.0, -1.0)
+            return name[: -len(tag)], d, floor_only
+    return name, (0.0, 0.0, -1.0), floor_only
 
 
 def _grav_for(d):
-    """self-weight direction follows the wrench's dominant axis sign
-    (inverted pose pulls the case upward); lat/ax keep -z."""
-    if d == (0.0, 0.0, 1.0):
-        return (0.0, 0.0, 1.0)
-    return (0.0, 0.0, -1.0)
+    """R6: self-weight acts along the wrench direction itself - the gravity
+    field that produces the distal-mass wrench loads the part the same
+    way (pose-matched).  Replaces the R5 '-z except _up' approximation."""
+    return d
 
 
 def gf_case(name, P):
@@ -120,7 +128,8 @@ def gf_case(name, P):
 
 
 def l5_case(name, P):
-    name, d = _wrench_dir(name)          # R5: direction suffix is outer
+    case_tag = name                            # full tag incl dir/payload
+    name, d, floor_only = _wrench_dir(name)   # R6: dir + entry-patch flag
     name, pay = _payload(name)
     a, b, h = P[:, 0], P[:, 1], P[:, 2]
     holes = _holes([(30.6 + O45, O45), (30.6 + O45, -O45),
@@ -141,8 +150,48 @@ def l5_case(name, P):
     # J6 pocket floor patch (keel web top h~-52.4 under the case)
     load = (h >= -52.55) & (h <= -52.2) & (a >= 17.0) & (a <= 64.5) \
         & (np.abs(b) <= 12.4)
+    # R6: direction-matched empty-pocket entry - a snug case (0.15 mm/side
+    # clearance) pressed +-b bears on that SIDE WALL over the case length,
+    # not only the floor.  Wall band = pocket side face on the push side;
+    # still empty-pocket (no case stiffness credit) and the full wrench is
+    # applied either way.  *_latf keeps the floor-only patch as the strict
+    # entry-concentration sensitivity.
+    if not floor_only and d[1] > 0.3:
+        load = load | ((b >= 11.8) & (a >= 17.0) & (a <= 62.0)
+                       & (h >= -52.0) & (h <= -8.0))
+    elif not floor_only and d[1] < -0.3:
+        load = load | ((b <= -11.8) & (a >= 17.0) & (a <= 62.0)
+                       & (h >= -52.0) & (h <= -8.0))
     F = tuple(f * (9.81 * pay + 1.965) for f in d)
+    # R6: for pose-matched cases (_roll/_comb/_comb2/_flop) the force is
+    # applied at the true mass-weighted COM of the carried stack + payload
+    # (pose_wrenches.py:wrench -> r_eq), so the transmitted moment matches
+    # the actual gravity wrench; the legacy ref (113.7,-30) understates it
+    # ~12 % at p50 and is kept for the axis-pure bounds + _latf sensitivity.
+    POSE_DIRS = ("roll", "comb", "comb2", "flop")
+    tag = next((t for t in POSE_DIRS if case_tag.endswith("_" + t) or
+                case_tag.endswith("_" + t + "f")), None)
+    if tag is not None:
+        com = _stack_com(pay)
+        return fix, load, [((com[0], 0.0, com[2]), F)], _grav_for(d)
     return fix, load, [((113.7, 0.0, -30.0), F)], _grav_for(d)
+
+
+# carried stack + payload COM (W frame) as a function of payload kg -
+# masses/COMs from mass_r5.py converted to W (AB - 223.1,0,89.5); payload
+# applied at the TCP point (137.4,0,-17).
+_L5_STACK = [(0.05500, (41.53, 0.00, -29.59)), (0.01379, (98.52, -0.03, -26.09)),
+             (0.05500, (95.53, 0.00, -29.59)), (0.00800, (119.70, 0.00, -17.00)),
+             (0.01200, (119.90, -12.99, -3.28)), (0.01200, (119.90, 12.99, -30.72)),
+             (0.00097, (131.08, 3.00, -16.62)), (0.00097, (131.08, -3.00, -17.38)),
+             (0.01939, (100.19, -0.01, -23.81))]
+
+
+def _stack_com(pay):
+    sx = sum(m * c[0] for m, c in _L5_STACK) + pay * 137.4
+    sz = sum(m * c[2] for m, c in _L5_STACK) - pay * 17.0
+    M = sum(m for m, _ in _L5_STACK) + pay
+    return (sx / M, 0.0, sz / M)
 
 
 def l4_case(name, P):

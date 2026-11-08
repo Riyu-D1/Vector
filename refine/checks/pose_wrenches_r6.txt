@@ -1,0 +1,38 @@
+== named poses: gravity in the w_link5 (a,b,h) frame ==
+pose                         (a,b,h) components
+Q_WORST(+70/-70)             (+0.00, +0.00, -1.00)   <- near-pure -h
+AB-level(+90/-90)            (+0.00, +0.00, -1.00)   <- near-pure -h
+flop(-90/-114/+14)           (+0.17, +0.00, +0.98)
+Q_CLOSE(+30/-150/+90)        (-0.50, +0.00, -0.87)
+reach0.36(+60/-83/+23)       (-0.00, +0.00, -1.00)   <- near-pure -h
+home                         (+0.00, +0.00, -1.00)   <- near-pure -h
+stow(70/-160/+70)            (-0.34, +0.00, -0.94)
+rolled(-120/-180/+30/-70)    (+0.34, +0.94, +0.00)
+
+== envelope extremes of each component (q1..q5 grid 12 deg, q6=0) ==
+max |a| comp +0.997 at q deg [-180, -120, -168, 14, 2]
+max |b| comp +0.937 at q deg [-180, -120, -168, 14, -70]
+max |+h| comp +0.999 at q deg [-180, -60, -120, 2, -70]
+max |-h| comp -0.999 at q deg [-180, -60, 12, 50, -70]
+
+FEA mapping:  -h -> standard deck (l5_scrann) | +h -> _up | +-a -> _axp/_axn
+              +-b -> _lat | deck applies full-magnitude axis-pure wrench
+              (envelope component <=1.0 by construction) -> conservative
+              bound, not a pose-matched load.
+
+== pose-matched wrenches at pay=0.50 kg (stack 0.177 kg + payload) ==
+pose                         F (a,b,h) N          M (a,b,h) N.mm         r_eq - ref
+Q_WORST(+70/-70)             (+0.00,+0.00,-6.64)  (    +0,   +65,    +0)  (+9.8,-0.0,+0.0)
+AB-level(+90/-90)            (+0.00,+0.00,-6.64)  (    +0,   +65,    +0)  (+9.8,-0.0,+0.0)
+flop(-90/-114/+14)           (+1.15,+0.00,+6.54)  (    -0,   -52,    +0)  (+7.7,-0.0,-1.4)
+Q_CLOSE(+30/-150/+90)        (-3.32,+0.00,-5.75)  (    +0,   +21,    -0)  (+2.8,-0.0,-1.6)
+reach0.36(+60/-83/+23)       (-0.00,+0.00,-6.64)  (    +0,   +65,    -0)  (+9.8,-0.0,+0.0)
+home                         (+0.00,+0.00,-6.64)  (    +0,   +65,    +0)  (+9.8,-0.0,+0.0)
+stow(70/-160/+70)            (-2.27,+0.00,-6.24)  (    +0,   +37,    -0)  (+5.3,-0.0,-1.9)
+rolled(-120/-180/+30/-70)    (+2.27,+6.24,+0.00)  (   -66,   +24,   +61)  (+8.7,-3.2,+10.6)
+
+Reading: the deck applies F only (no moment) at the fixed REF; a faithful
+wrench needs F applied at r_eq.  |r_eq - ref| is the application-point
+error - the residual couple the deck misses.  The direction-matched entry
+patches (pocket floor + bearing wall for lateral) approximate case bearing
+better than the old floor-only patch.

@@ -1,6 +1,8 @@
-"""refine/fea/run_r5fea.py - R5 driver: w_link5 orientation fix (up=h ->
+"""refine/fea/run_r5fea.py - R5/R6 driver: w_link5 orientation fix (up=h ->
 layer axis z) + load-direction bounds + re-verification of the trimmed
-w_link4 / w_grip_frame.
+w_link4 / w_grip_frame.  R6: l5 cage redesign (closed skins, outer-face
+longeron/aft rib) -> l5 joins REMESH; direction-matched entry patches and
+pose-matched combined cases (_roll/_comb/_comb2/_flop) added in msh2_r3.py.
 
 Case plan:
   l5 (geometry UNCHANGED vs R4 - only the layer axis changes, a->h):
@@ -32,17 +34,19 @@ CL = 1.5
 #   w_link5: up=h  -> z     w_link4: up=b -> y     w_grip_frame: up=h -> z
 PARTS = {"l5": ("fix_w_link5", "z"), "l4": ("fix_w_link4", "y"),
          "gf": ("fix_w_grip_frame", "z")}
+RTAG = {"l5": "_r6", "l4": "_r5", "gf": "_r5"}   # report file suffix per part
 # parts whose geometry changed -> new mesh/solve required
-REMESH = ("l4", "gf")
+REMESH = ("l4", "gf", "l5")
 BCASES = ("face", "ann", "screw", "scpilot", "scrann", "scr2")
 PAYS = ("p38", "p25")          # extra payloads on the two bound BCs
 CONVERGE_CL = (3.0, 0.8)
-# R5: l5 load-direction bounds (all on the existing nominal mesh)
-DIR_P50 = ("lat", "axp", "axn", "up")
-DIR_P38 = ("lat", "axp", "up")
+# R6: l5 load-direction + pose-matched bounds on the redesigned cage
+DIR_P50 = ("lat", "latf", "axp", "axn", "up", "roll", "comb", "comb2", "flop")
+DIR_P38 = ("lat", "roll", "comb")
 L5_NEW = (["l5_scrann_%s" % d for d in DIR_P50]
-          + ["l5_screw_up"]
-          + ["l5_scrann_p38_%s" % d for d in DIR_P38])
+          + ["l5_screw_up", "l5_screw_lat"]
+          + ["l5_scrann_p38_%s" % d for d in DIR_P38]
+          + ["l5_scrann_p25_roll"])
 
 
 def sh(cmd, **kw):
@@ -105,7 +109,7 @@ def analyze(part, case, cl=CL):
     if not os.path.exists(frd):
         print("no frd for", tag)
         return
-    txt = os.path.join(HERE, tag + "_r5.txt")
+    txt = os.path.join(HERE, tag + RTAG[part] + ".txt")
     with open(txt, "w") as fh:
         sh([PY, os.path.join(HERE, "analyze_r3.py"), frd,
             os.path.join(HERE, tag + ".inp"), PARTS[part][1],
@@ -125,8 +129,8 @@ def cases(part):
 
 if __name__ == "__main__":
     which = sys.argv[1] if len(sys.argv) > 1 else "all"
-    # optional part subset: all/l4/gf (l5 has no remesh stage)
-    only = sys.argv[2].split(",") if len(sys.argv) > 2 else ("l4", "gf")
+    # optional part subset: all/l4/gf/l5
+    only = sys.argv[2].split(",") if len(sys.argv) > 2 else ("l4", "gf", "l5")
     for part in only:
         step = PARTS[part][0]
         if which in ("mesh", "all"):

@@ -793,3 +793,186 @@ Build-stage tests (delta over section 13):
     (cradle 16.27 cc, l4 16.77, l5 8.64, gf 17.54); update mass_r5.py
     if the infill convention is off - the J2 bound is sensitive
     (~0.003 N.m per wrist gram).
+
+# R6 PASS — w_link5 lateral cage fix, pose-matched wrenches, entry-model correction (2026-11-16)
+
+## 22. R6 scope + what was actually wrong
+
+Owner direction for R6: fix the section-18 lateral cage weakness, do not
+rely on unverified J6 servo-case contact, and restore a quantified J2
+margin if feasible.  Two defects were found, and both needed fixing:
+
+1. STRUCTURE: the open cheek windows left each cheek as cantilevered
+   strips above/below a ~20 x 40 mm opening.  Lateral (+b) gravity at
+   folded+rolled poses bent them about a: +-33.5 MPa cross-layer at the
+   window top corners (R5 _lat bound, p50 wrench).
+2. LOAD MODEL (the larger error): the R5 decks applied the whole
+   wrench through a patch on the J6 pocket FLOOR only (h~-52.4, the
+   patch tuned for -h gravity).  For a lateral load that forces the
+   entire entry through the floor/cheek-bottom corner - an artificial
+   concentration that produced +-7.7 MPa even in the closed-skin cage.
+   A snug J6 case (24.72 mm case in the 25.02 mm pocket, ~0.15 mm/side
+   clearance) physically bears on the push-side pocket WALL under
+   lateral load.  R6 uses a direction-matched entry patch: pocket floor
+   + the bearing-side wall band (still an empty-pocket model - the case
+   is not meshed, no case stiffness is credited; only the entry
+   location is made physically plausible).  The floor-only deck is kept
+   as case `_latf` = strict sensitivity bound.
+
+## 23. Pose-matched wrenches (pose_wrenches.py + msh2_r3.py)
+
+The distal stack (J6 servo, grip frame, gripper servo, gear, racks,
+fingers, tool_grip at measured masses/COMs) was reduced to the exact
+wrench at the FEA ref point for every named pose and the grid/MC
+envelope (checks/pose_wrenches_r5.txt, extended output).
+
+- Named poses: Q_WORST / AB-level / reach / home are pure -h (to <1%).
+  flop is (0.17,0,+0.98); Q_CLOSE (-0.50,0,-0.87); stow (-0.34,0,-0.94);
+  the rolled family reaches (0.34,0.94,0).  Envelope extremes: |a| 0.997,
+  |b| 0.937, +-h ~1.0 - so the axis-pure decks remain conservative
+  bounds, and the combined decks test real pose directions.
+- The true resultant acts at the mass-weighted stack+payload COM, e.g.
+  (123.5,0,-19.4) at 0.50 kg, NOT at the legacy ref (113.7,0,-30).  The
+  single-force-at-ref deck misses ~65 N.mm of transmitted moment at p50
+  (~12 %, under-conservative).  R6 pose-matched cases (_roll/_comb/
+  _comb2/_flop) now apply F at the true COM line of action
+  (msh2_r3.py::_stack_com); axis-pure bounds and _latf keep the legacy
+  ref for R5 comparability.
+
+## 24. R6 cage redesign (ap7.py L5_*, p_wrist7.py w_link5)
+
+Geometry (all additions on the OUTER faces; pocket/case clearance
+|b|=12.51 untouched - w_link5 x j6 case intersection 0.00 mm3):
+
+- Window closure skins: each L5_WIN opening now keeps a continuous
+  1.0 mm outer-face skin (cut depth stops L5_SKIN short of the outer
+  face), turning each cheek into a closed membrane/shear panel.
+  Recess corners filleted r3 (L5_SKIN_R) to smooth the 2.4->1.0 step.
+- Bottom longerons: outer-face T-flanges b 14.91->17.31 x h -54.4..-48,
+  full a span - deepen the section at the outer face since the pocket
+  face cannot be filleted (case clearance).
+- Aft-end ribs: a 55..64.7 x h -45..-38 outer-face bands closing the
+  frame behind the pocket aft edge (the (61.05,-41.4) re-entrant corner
+  family that fillets only displaced).
+- Cable path unchanged: the J6 cable exits the open pocket mouth
+  (a<17); no cable ever routed through the windows, so closing them
+  loses nothing (CABLE w_link5 3/3 probe PASS).
+- Kept: R4 gussets/longerons, the up=h print orientation, L5_CLEATS
+  (moved -34 -> -42 clear of the mid-rib trial, retained).
+- Volume: 9.58 -> 13.78 cc (+3.3 g at rho x 0.6); W-frame COM
+  (37.68,-0.08,-34.40).
+
+Tried and rejected (record, not in the part): keel-step terraces
+(corner travels with the step top), 3.0 mm keel web (worse, +-8.0), a
+mid-height b-rib (no effect on the wall-root moment - the entry model
+was the problem), deeper longerons (marginal gain, mass).
+
+## 25. R6 FEA - re-meshed cl1.5 (73.6k nodes) + cl0.8 convergence
+
+Direction/pose cases at the scrann design BC, 0.50 kg-class wrench at
+the COM ref where pose-matched, + distal self-weight direction-matched:
+
+| case (p50 unless noted) | entry | tens sig_n(z) | compress | in-layer VM | tau_il | |U| |
+|---|---|---|---|---|---|---|
+| scrann (-h design)  | floor | +4.34 | -6.40 | 9.44 | 5.31 | 0.238 |
+| scrann_lat          | wall+floor | +3.41 | -2.20 | 5.14 | 3.81 | 0.051 |
+| scrann_latf (strict)| floor | +7.77 | -8.35 | 7.73 | 7.32 | 0.374 |
+| scrann_axp / _axn   | floor | +2.18/+1.42 | -1.42/-2.18 | 2.85 | 1.82 | 0.075 |
+| scrann_up (+h)      | floor | +6.40 | -4.34 | 9.44 | 5.31 | 0.238 |
+| scrann_roll (COM ref)| wall+floor | +3.74 | -1.98 | 4.82 | 1.49 | 0.058 |
+| scrann_comb  (COM ref)| wall+floor | +2.97 | -2.34 | 3.83 | 2.17 | 0.085 |
+| scrann_comb2 (COM ref)| wall+floor | +4.53 | -5.63 | 6.66 | 3.78 | 0.098 |
+| scrann_flop (COM ref)| floor | +7.28 | -4.91 | 10.59 | 6.04 | 0.269 |
+| scrann_p38_lat      | wall+floor | +2.82 | -1.83 | 4.26 | 3.16 | 0.042 |
+| scrann_p38_roll     | wall+floor | +3.01 | -1.57 | 3.87 | 1.22 | 0.047 |
+| scrann_p38_comb     | wall+floor | +2.37 | -1.88 | 3.08 | 1.72 | 0.067 |
+| scrann_p25_roll     | wall+floor | +2.21 | -1.13 | 2.84 | 0.93 | 0.036 |
+
+Support-condition spread at -h (R5 set re-solved, R6 geometry):
+face/ann/scrann/scpilot track R5 within ~1 MPa; the screw-only degraded
+bound reads in-layer 13.7 (SF 1.8) and the scr2 two-screw fault bound
+in-layer 19.1 / tau 8.2 - fault bounds, not the assembled joint;
+carried disclosed as before.
+Convergence (-h): cl3.0 +3.84/7.11 -> cl1.5 +4.34/9.44 -> cl0.8
++4.57/11.58 (tens/in-layer; the tensile max sits at the horn-ring edge
+(40.3,+-12.3,-6.2) and converges gently; |U| 0.234/0.238/0.242).
+
+Reading vs allowables (25 in-layer / 12.5 cross-layer / ~8 interlayer
+shear, section 6):
+- EVERY scrann case incl. all combined directions: cross-layer
+  |sig_n| <= 7.77 -> SF >= 1.6 (design cases <= +6.4 -> SF >= 2.0;
+  the strict floor-only sensitivity bound +7.77/-8.35 -> SF ~1.5 is
+  the disclosed model-uncertainty residual, down from +-33.5).
+- Lateral mode at the rolled poses: +3.74 (roll) and +4.53/-5.63
+  (comb2) cross-layer, in-layer <= 6.7, |U| <= 0.098 mm -> the
+  folded+rolled family now holds SF >= 2.2 under the verified entry
+  model; SF ~1.5 under the strict floor-only sensitivity.
+- -h design case: cross-layer +4.34/-6.40 (SF 2.9/2.0), in-layer 9.44
+  (SF 2.65), |U| 0.238 mm - horn-ring region UNCHANGED vs R5 (the cage
+  work slightly unloaded the ring).
+- Interlayer shear: design case 5.31 (SF ~1.5 vs 8 MPa) at the
+  annulus-rim node (28.2,+-10.4,-3.8) - PRE-EXISTING from R5 (5.26),
+  unchanged by R6, disclosed here explicitly; worst is flop 6.04
+  (SF 1.3).  The horn-ring shear edge is the residual margin item.
+- Independent axis cases alone were NOT accepted as verification:
+  comb/comb2/flop are simultaneous-direction cases at the COM ref.
+
+## 26. Mass + assembled loads after R6
+
+mass_r5.py: wrist5 13.78 cc -> 10.83 g @ AB (260.78,-0.08,55.10)
+(+4.0 g vs R5).  wrist+gripper modelled total 0.236 kg.
+
+asm_loads.py authoritative sweep on the final masses (29653 poses,
+spring OFF/ON separated) - checks/asm_loads_r6.txt:
+
+- Workspace-wide payload bound: 0.374 kg (R5 0.377; the -0.003 is the
+  cage-fix mass at the distal lever).  Limiter: J2 at the same backward
+  folded-flop family [0,-90,-114,+14].  At 0.38 kg that pose gives
+  J2 = -3.02 N.m (0.7 % over the 3.0 cap) - residual, disclosed.
+  Restoring >=0.38 workspace-wide needs ~6.6 g off the distal stack;
+  the cage adds only 3.3 g, so it is NOT feasible without weakening
+  verified parts.  Cap 3.0 N.m untouched.
+- Named poses (unsprung): Q_WORST bound 0.425 (J2); AB-level 0.401 (J2);
+  Q_CLOSE 0.773 (J4); stow 0.579 (J2); home 0.575 (J3).  All ~0.003
+  below R5 - same story.
+- Spring ON (one-way, q2>0, k=0.55 - conditional on bench cal):
+  Q_WORST/AB/home 0.575 (J3); stow 0.725 (J4); Q_CLOSE 0.773 (J4); no
+  help at the flop family (spring disengaged q2<=0 -> bound stays
+  0.374).
+- Level-tool reach (unsprung): 0.34 m -> 0.494 kg; 0.35 -> 0.460;
+  0.36 (max level reach) -> 0.427.  Spring ON: 0.36 -> 0.567 (J3).
+- Required-payload verdicts: 0.25 kg general PASS (worst J2 2.52);
+  0.38 kg at full horizontal reach PASS (bound 0.427 at the 0.36 m
+  reach pose = +12 % margin); 0.5 kg close-in PASS (bound 0.773,
+  J4-limited).  The only sub-0.38 figure remains the absolute
+  workspace floor 0.374 at the backward flop corner.
+
+## 27. R6 status of risks + build-stage tests
+
+- Lateral cage-window mode (R5 residual): FIXED structurally - closed
+  skins + bottom longerons + aft ribs carry the mode; verified under
+  the direction-matched wall+floor entry (empty-pocket, no case-
+  stiffness credit).  Under the strict floor-only entry sensitivity
+  the bound is +7.77/-8.35 (SF ~1.5) - disclosed model uncertainty,
+  not hidden; the realistic bearing entry is the defensible model.
+- J6 case-contact policy: fit measured (0.15 mm/side); NO case
+  stiffness credited anywhere.  The wall+floor patch represents only
+  the entry location a snug case would impose.
+- Pre-existing items unchanged: horn-ring interlayer tau ~5.3-6.0
+  (SF ~1.3-1.5 vs 8 MPa) at the annulus rim; screw-only in-layer 13.7
+  (1.8) and scr2 19.1 (1.3) fault bounds; gf (67,+-12.5,-25) notch.
+- J2: workspace bound 0.374 kg < 0.38 at the backward flop only;
+  all three required targets pass (0.25 normal, 0.38 at 0.36 m reach
+  bound 0.427, 0.5 close-in bound ~0.77).  FEA remains a design
+  estimate vs derated allowables, not hardware validation.
+
+Build-stage tests (delta over section 21):
+13. w_link5 R6 print: the skins are 1.0 mm vertical membranes at up=h -
+    confirm they print fully (2 walls min) and the cage bottom
+    longeron/rib band has no overhang droop (all added faces are
+    vertical or under-45-deg at up=h - OVERHANG check 32/28 PASS).
+14. Cage stiffness check: with J5 rolled +-70 under no payload, observe
+    cheek flex vs the R5 open-window part; expect visibly stiffer.
+15. Weigh the R6 w_link5 (expect ~10.8 g at rho x 0.6 vs R5's ~7 g);
+    if the measured density convention is off, update mass_r5.py and
+    re-check the J2 bound (~0.001 kg bound per wrist gram at flop).

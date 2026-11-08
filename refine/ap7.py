@@ -152,8 +152,18 @@ L5_CAGE = ((14.5, -26.0), (14.5, -47.0), (17.0, -54.0), (58.0, -54.0),
            (21.0, -24.0))                                           # D7: cheek top-front corner cut below the cradle/J4-case sweep footprint
 L5_BOTTOM = -52.4                                # cage bottom (case -52.27 + clr)
 L5_BACK = (14.5, 16.65, -52.4, -40.0)            # back-bottom wall a0,a1,h0,h1 (below plug)
-L5_WIN = ((34.0, 10.0, -34.0, 20.0), (50.0, 8.0, -30.0, 16.0))   # windows a_c,a_hw,h_c,h_hw
-L5_CLEATS = ((24.0, -20.0), (24.0, -34.0))       # cable cleats (a,h) on the -b cheek outer face
+L5_WIN = ((34.0, 10.0, -34.0, 20.0), (50.0, 8.0, -30.0, 16.0))   # window openings a_c,a_hw,h_c,h_hw
+# R6: lateral-mode fix - the open windows left only cantilever strips to
+# carry +-b (lateral) bending about a, which reads as cross-layer sigma_hh
+# +-33 MPa at the strip/window-top corners (R5 _lat bound).  Each opening
+# now keeps a continuous outer-face SKIN (L5_SKIN thick) so the cheek
+# works as a closed membrane/shear panel + the case side stays open to
+# the pocket (case clearance at |b|=12.51 is untouched).  No cable notch:
+# the J6 cable exits the open pocket mouth (a<17), not the windows.
+L5_SKIN = 1.0                                    # closure skin thickness (outer face)
+L5_SKIN_R = 3.0                                  # recess corner radius (smooths 2.4->skin step)
+L5_CLEATS = ((24.0, -20.0), (24.0, -42.0))       # cable cleats (a,h) on the -b cheek outer face
+                                                 # (R6: -34 -> -42, clears the window band)
 
 # ---------- w_grip_frame: J6 horn plate + grip keel cage + rack cage [D] ----------
 GF_PLATE_A = (62.7, 69.0)                        # J6 horn plate (face 62.6; ends < plug band 65.8)

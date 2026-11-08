@@ -1,8 +1,8 @@
-"""render_sheets.py - 3 labelled image sheets for the R5 refinement report.
+"""render_sheets.py - 3 labelled image sheets for the R6 refinement report.
 
-sheet1: changed parts, stock vs fix isometric (4 pairs, R5 volumes noted)
-sheet2: R5 FEA stress fields (l5 up=h layer-z normal case + direction
-        bound, l4/gf trimmed scrann)
+sheet1: changed parts, stock vs fix isometric (5 pairs, R6 volumes noted)
+sheet2: R6 FEA stress fields (l5 cage fix: -h design case, lateral wall+floor
+        entry + strict floor-only bound, worst combined case, cl0.8 convergence)
 sheet3: wrist assembly context + w_link5 print orientation (up=h)
 Run: fea/.venv/bin/python render_sheets.py
 """
@@ -53,7 +53,7 @@ def grid(cells, title, dest, cw=720, ch=560, pad=8, hdr=54, sub=28):
 
 # ---- sheet 1: parts stock vs fix ----
 pairs = [("w_grip_frame", "stock_w_grip_frame", "fix_w_grip_frame", "17.5 cc"),
-         ("w_link5", "stock_w_link5", "fix_w_link5", "8.6 cc"),
+         ("w_link5", "stock_w_link5", "fix_w_link5", "13.8 cc"),
          ("w_link4", "stock_w_link4", "fix_w_link4", "16.8 cc"),
          ("w_j4_cradle", "stock_w_j4_cradle", "fix_w_j4_cradle", "16.3 cc"),
          ("tool_grip", "stock_tool_grip", "fix_tool_grip", "24.7 cc")]
@@ -64,9 +64,9 @@ for nm, s_, f_, vol in pairs:
         if not os.path.exists(png):
             shot(os.path.join(OUT, base + ".stl"), png)
     rows.append([("%s STOCK" % nm, os.path.join(REN, "stock_%s.png" % nm)),
-                 ("%s R5-FIXED (%s)" % (nm, vol),
+                 ("%s R6-FIXED (%s)" % (nm, vol),
                   os.path.join(REN, "fix_%s.png" % nm))])
-grid(rows, "SOMA D6 wrist refinement R5 - changed parts (stock vs R-fix)",
+grid(rows, "SOMA D6 wrist refinement R6 - changed parts (stock vs R-fix)",
      os.path.join(REN, "sheet1_parts.png"))
 
 # ---- sheet 2: FEA (R3 horn-mount models) ----
@@ -79,28 +79,28 @@ def fea_shot(vtu, png, warp=25.0, vmax=None):
     p.camera_position = "iso"; p.set_background("white")
     p.screenshot(png); p.close()
 
-for tag, vtu, vm in (("l4_r5", FEA + "/l4_scrann_step1.vtu", 20.0),
-                     ("l4_r5c", FEA + "/l4_scrann_c0.8_step1.vtu", 20.0),
-                     ("l5_r5", FEA + "/l5_scrann_step1.vtu", 20.0),
-                     ("l5_r5lat", FEA + "/l5_scrann_lat_step1.vtu", 20.0),
-                     ("gf_r5", FEA + "/gf_scrann_step1.vtu", 20.0),
-                     ("l5_r5c", FEA + "/l5_scrann_c0.8_step1.vtu", 20.0)):
+for tag, vtu, vm in (("l5_r6", FEA + "/l5_scrann_step1.vtu", 20.0),
+                     ("l5_r6lat", FEA + "/l5_scrann_lat_step1.vtu", 20.0),
+                     ("l5_r6latf", FEA + "/l5_scrann_latf_step1.vtu", 20.0),
+                     ("l5_r6comb2", FEA + "/l5_scrann_comb2_step1.vtu", 20.0),
+                     ("l4_r6", FEA + "/l4_scrann_step1.vtu", 20.0),
+                     ("l5_r6c", FEA + "/l5_scrann_c0.8_step1.vtu", 20.0)):
     png = FEA + "/%s_iso.png" % tag
     if not os.path.exists(png) and os.path.exists(vtu):
         fea_shot(vtu, png, vmax=vm)
 
-grid([[("l5 up=h scrann: sigma_n(z)<=+5.1, in-layer 9.2 MPa",
-        FEA + "/l5_r5_iso.png"),
-       ("l5 _lat bound: cheek-window +-33 MPa (NEW LIMIT)",
-        FEA + "/l5_r5lat_iso.png")],
-      [("l4 R5 trimmed+filleted scrann",
-        FEA + "/l4_r5_iso.png"),
-       ("l4 R5 cl0.8 convergence check",
-        FEA + "/l4_r5c_iso.png")],
-      [("gf REVERTED window trial: sigma_n +-28.6 at notch",
-        FEA + "/gf_r5_iso.png"),
-       ("l5 cl0.8: sigma_n(z) +5.0 converged",
-        FEA + "/l5_r5c_iso.png")]],
+grid([[("l5 R6 scrann (-h): sigma_n <=+2.2, in-layer ~11 MPa",
+        FEA + "/l5_r6_iso.png"),
+       ("l5 R6 _lat wall+floor entry: sigma_n -0.7 (FIXED)",
+        FEA + "/l5_r6lat_iso.png")],
+      [("l5 R6 _latf strict floor-only bound: sigma_n +-3.0",
+        FEA + "/l5_r6latf_iso.png"),
+       ("l5 R6 _comb2 worst combined: sigma_n -2.5, in-layer 6.3",
+        FEA + "/l5_r6comb2_iso.png")],
+      [("l4 R5 trimmed+filleted scrann (unchanged)",
+        FEA + "/l4_r6_iso.png"),
+       ("l5 R6 cl0.8 convergence check",
+        FEA + "/l5_r6c_iso.png")]],
      "CalculiX von Mises - realistic horn-mount BCs (screws+annulus+pilot), 0.5 kg class wrench",
      os.path.join(REN, "sheet2_fea.png"))
 
@@ -116,7 +116,7 @@ for f in (OUT + "/fix_w_j4_cradle.stl", OUT + "/fix_w_link4.stl",
 p.camera_position = "iso"; p.set_background("white")
 p.screenshot(os.path.join(REN, "assembly_wrist.png")); p.close()
 
-# w_link5 in its R5 print orientation (up=h: rests on the cage-back
+# w_link5 in its R5/R6 print orientation (up=h: rests on the cage-back
 # faces, layers in the a-b plane -> the J5-plate bending stresses are
 # in-layer; orientation changes the allowable mapping, not the stress)
 m = pv.read(OUT + "/fix_w_link5.stl")          # W-frame STL: +z IS the part's +h
@@ -126,7 +126,7 @@ p2.camera_position = "iso"; p2.camera.elevation = -10
 p2.set_background("white")
 p2.screenshot(os.path.join(REN, "l5_print_up_h.png")); p2.close()
 
-grid([[("wrist assembly (R5 parts, W design frame)",
+grid([[("wrist assembly (R6 parts, W design frame)",
         os.path.join(REN, "assembly_wrist.png")),
        ("w_link5 print orientation: up=h (layers in a-b plane)",
         os.path.join(REN, "l5_print_up_h.png"))]],

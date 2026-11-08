@@ -162,11 +162,31 @@ def w_link5():
         g_lo, g_hi = sorted((sg * N.L5_GUS_B[0], sg * N.L5_GUS_B[1]))
         s = s + xb(poly_ah(g_lo, N.L5_GUSSET), g_lo, g_hi)
     s = s + box(N.L5_CAGE[1][0], 64.7, -N.L5_CHEEK_B[1], N.L5_CHEEK_B[1], N.L5_BOTTOM - 2.0, N.L5_BOTTOM)  # keel web
+    for sg in (1, -1):                                   # R6: bottom longeron - outer-face
+        b_lo, b_hi = sorted((sg * N.L5_CHEEK_B[1],       #  T-flange on each cheek bottom; the
+                             sg * 17.3))                 #  pocket-face cheek/keel corner can't be
+        s = s + box(N.L5_CAGE[1][0], 64.7, b_lo, b_hi,   #  filleted (case clearance), so deepen
+                    N.L5_BOTTOM - 2.0, -48.0)            #  the section at the outer face instead
+        s = s + box(55.0, 64.7, b_lo, b_hi, -45.0, -38.0)  #  + aft-end rib: relieves the (61.05,-41.4)
+                                                         #  step corner under floor-entry bound
     a0, a1, bh0, bh1 = N.L5_BACK
     s = s + box(a0, a1, -N.L5_CHEEK_B[1], N.L5_CHEEK_B[1], bh0, bh1)            # back-bottom wall
     s = s - pocket("j6")
     for ac, ahw, hc, hhw in N.L5_WIN:                                        # cheek windows
-        s = s - box(ac - ahw, ac + ahw, -N.L5_CHEEK_B[1] - 1, N.L5_CHEEK_B[1] + 1, hc - hhw, hc + hhw)
+        for sg in (1, -1):                    # R6: recess each window from the INNER face
+            b_lo, b_hi = sorted((sg * (N.L5_CHEEK_B[0] - 1.0),               #  up to L5_SKIN short of
+                                 sg * (N.L5_CHEEK_B[1] - N.L5_SKIN)))        #  the outer face -> closed skin
+            w = box(ac - ahw, ac + ahw, b_lo, b_hi, hc - hhw, hc + hhw)
+            yed = [e for e in w.edges()                                       #  rounded recess
+                   if abs(e.tangent_at(0.5).normalized().Y) > 0.99]           #  boundary: fillet the
+            w = w.fillet(N.L5_SKIN_R, yed)                                    #  4 b-running corner edges
+            s = s - w
+    sed = [e for e in s.edges()                                               # R6: fillet the aft-tab
+           if abs(e.center().X - 61.05) < 0.6                                 #  step corner (61.05,-41.4)
+           and abs(e.center().Z + 41.4) < 0.6                                 #  - re-entrant notch at the
+           and abs(e.tangent_at(0.5).normalized().Y) > 0.9]                   #  pocket face; only the
+    if sed:                                                                   #  cheek-band segments
+        s = s.fillet(2.0, sed)                                                #  (|b|>12.51) remain
     s = s - horn_holes((N.A_J5, 0), "h", h0, h1, h0 - 1, h0 + B.HORN_CB[1],
                        h1 - B.HORN_RECESS[1], h1 + 1)
     for p in N.L5_CLEATS:

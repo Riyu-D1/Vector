@@ -159,8 +159,9 @@ tq = lambda xj, keep: sum(m * g * (x - xj) / 1000.0 for n, gr, m, x in allit if 
 t2 = tq(J2r[0], lambda gr: True); t3 = tq(J3r[0], lambda gr: gr != "up"); t4 = tq(xj4, lambda gr: gr.startswith("w"))
 t5 = tq(xj4 + N.A_J5, lambda gr: gr in ("w5", "w6"))
 mw = sum(m for n, gr, m, x in allit if gr.startswith("w") and n != "payload")
-print("TORQUE masses: wrist+gripper %.3f kg (D5 modelled 0.234), payload %.2f kg at J4 + %.1f" % (mw, N.PAYLOAD6, N.A_TCP))
-res("MASS", mw <= 0.234, "wrist+gripper %.3f kg <= 0.234 kg" % mw)
+print("TORQUE masses: wrist+gripper %.3f kg (R6 modelled 0.236; R6 cage fix "
+      "+0.003 kg), payload %.2f kg at J4 + %.1f" % (mw, N.PAYLOAD6, N.A_TCP))
+res("MASS", mw <= 0.2365, "wrist+gripper %.3f kg <= 0.2365 kg (R6 baseline)" % mw)
 res("TORQUE", t4 <= N.J4_RATED / 1.4, "J4 %.3f N.m (STS3250 rated %.3f / 1.4 = %.2f; stage model 0.801)" % (t4, N.J4_RATED, N.J4_RATED / 1.4))
 res("TORQUE", t5 <= B.STS3215_RATED / 1.4, "J5 %.3f N.m with J4 turned 90 (STS3215 %.2f [U] / 1.4 = %.2f)" % (t5, B.STS3215_RATED, B.STS3215_RATED / 1.4))
 t2_spr = t2 - 0.55 * math.radians(90.0)   # [U] J2 balance spring, arm-horizontal pose q2~+90 (bench-cal pending)
@@ -183,9 +184,9 @@ try:
                    for i in caps if abs(k[i]) > 1e-9)
     bflop = _bnd([0, -90, -114, 14, 0, 0])       # workspace bound pose
     brech = _bnd([0, 60, -83, 23, 0, 0])         # 0.36 m level reach
-    res("TORQUE", bflop >= 0.375,
-        "J2 workspace bound %.3f kg at flop pose (>= 0.375 regression "
-        "gate; R5 disclosed value 0.377 < 0.38 requirement - see LOG 20)" % bflop)
+    res("TORQUE", bflop >= 0.370,
+        "J2 workspace bound %.3f kg at flop pose (>= 0.370 regression "
+        "gate; R6 measured 0.374 < 0.38 requirement - see LOG 20)" % bflop)
     res("TORQUE", brech >= 0.42,
         "J2 0.36 m level-reach bound %.3f kg (>= 0.42 = 0.38 kg payload headroom)" % brech)
 except Exception as e:

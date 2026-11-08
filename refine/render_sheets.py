@@ -1,8 +1,8 @@
-"""render_sheets.py - 3 labelled image sheets for the R6 refinement report.
+"""render_sheets.py - 3 labelled image sheets for the R7 refinement report.
 
-sheet1: changed parts, stock vs fix isometric (5 pairs, R6 volumes noted)
-sheet2: R6 FEA stress fields (l5 cage fix: -h design case, lateral wall+floor
-        entry + strict floor-only bound, worst combined case, cl0.8 convergence)
+sheet1: changed parts, stock vs fix isometric (5 pairs, R7 volumes noted)
+sheet2: R7 FEA stress fields (l5 r6-notch corner, floor-only bound on the
+        deepened aft block, gf v3 notch + lateral bound, cl0.8 convergence)
 sheet3: wrist assembly context + w_link5 print orientation (up=h)
 Run: fea/.venv/bin/python render_sheets.py
 """
@@ -52,8 +52,10 @@ def grid(cells, title, dest, cw=720, ch=560, pad=8, hdr=54, sub=28):
     print("wrote", dest)
 
 # ---- sheet 1: parts stock vs fix ----
-pairs = [("w_grip_frame", "stock_w_grip_frame", "fix_w_grip_frame", "17.5 cc"),
-         ("w_link5", "stock_w_link5", "fix_w_link5", "13.8 cc"),
+# parts whose geometry changed in R7 -> force re-render (stale R6 pngs)
+R7_CHANGED = {"w_grip_frame", "w_link5"}
+pairs = [("w_grip_frame", "stock_w_grip_frame", "fix_w_grip_frame", "20.3 cc"),
+         ("w_link5", "stock_w_link5", "fix_w_link5", "14.2 cc"),
          ("w_link4", "stock_w_link4", "fix_w_link4", "16.8 cc"),
          ("w_j4_cradle", "stock_w_j4_cradle", "fix_w_j4_cradle", "16.3 cc"),
          ("tool_grip", "stock_tool_grip", "fix_tool_grip", "24.7 cc")]
@@ -61,12 +63,12 @@ rows = []
 for nm, s_, f_, vol in pairs:
     for tag, base in (("stock", s_), ("fix", f_)):
         png = os.path.join(REN, "%s_%s.png" % (tag, nm))
-        if not os.path.exists(png):
+        if not os.path.exists(png) or (tag == "fix" and nm in R7_CHANGED):
             shot(os.path.join(OUT, base + ".stl"), png)
     rows.append([("%s STOCK" % nm, os.path.join(REN, "stock_%s.png" % nm)),
-                 ("%s R6-FIXED (%s)" % (nm, vol),
+                 ("%s R7-FIXED (%s)" % (nm, vol),
                   os.path.join(REN, "fix_%s.png" % nm))])
-grid(rows, "SOMA D6 wrist refinement R6 - changed parts (stock vs R-fix)",
+grid(rows, "SOMA wrist refinement R7 - changed parts (stock vs R-fix)",
      os.path.join(REN, "sheet1_parts.png"))
 
 # ---- sheet 2: FEA (R3 horn-mount models) ----
@@ -79,28 +81,28 @@ def fea_shot(vtu, png, warp=25.0, vmax=None):
     p.camera_position = "iso"; p.set_background("white")
     p.screenshot(png); p.close()
 
-for tag, vtu, vm in (("l5_r6", FEA + "/l5_scrann_step1.vtu", 20.0),
-                     ("l5_r6lat", FEA + "/l5_scrann_lat_step1.vtu", 20.0),
-                     ("l5_r6latf", FEA + "/l5_scrann_latf_step1.vtu", 20.0),
-                     ("l5_r6comb2", FEA + "/l5_scrann_comb2_step1.vtu", 20.0),
-                     ("l4_r6", FEA + "/l4_scrann_step1.vtu", 20.0),
-                     ("l5_r6c", FEA + "/l5_scrann_c0.8_step1.vtu", 20.0)):
+for tag, vtu, vm in (("l5_r7", FEA + "/l5_scrann_step1.vtu", 20.0),
+                     ("l5_r7latf", FEA + "/l5_scrann_latf_step1.vtu", 20.0),
+                     ("l5_r7flop", FEA + "/l5_scrann_flop_step1.vtu", 20.0),
+                     ("gf_r7", FEA + "/gf_scrann_step1.vtu", 20.0),
+                     ("gf_r7lat", FEA + "/gf_scrann_lat_step1.vtu", 20.0),
+                     ("l5_r7c", FEA + "/l5_scrann_c0.8_step1.vtu", 20.0)):
     png = FEA + "/%s_iso.png" % tag
     if not os.path.exists(png) and os.path.exists(vtu):
         fea_shot(vtu, png, vmax=vm)
 
-grid([[("l5 R6 scrann (-h): sigma_n <=+2.2, in-layer ~11 MPa",
-        FEA + "/l5_r6_iso.png"),
-       ("l5 R6 _lat wall+floor entry: sigma_n -0.7 (FIXED)",
-        FEA + "/l5_r6lat_iso.png")],
-      [("l5 R6 _latf strict floor-only bound: sigma_n +-3.0",
-        FEA + "/l5_r6latf_iso.png"),
-       ("l5 R6 _comb2 worst combined: sigma_n -2.5, in-layer 6.3",
-        FEA + "/l5_r6comb2_iso.png")],
-      [("l4 R5 trimmed+filleted scrann (unchanged)",
-        FEA + "/l4_r6_iso.png"),
-       ("l5 R6 cl0.8 convergence check",
-        FEA + "/l5_r6c_iso.png")]],
+grid([[("l5 R7 scrann (-h): notch corner tau 5.3, VM 9.1",
+        FEA + "/l5_r7_iso.png"),
+       ("l5 R7 _latf floor-only bound: aft block -7.5 (was -8.4)",
+        FEA + "/l5_r7latf_iso.png")],
+      [("l5 R7 _flop worst combined: tau 6.1 at corner",
+        FEA + "/l5_r7flop_iso.png"),
+       ("gf R7 scrann: notch -6.7 (was -12 R3 / -10.6 R7v1)",
+        FEA + "/gf_r7_iso.png")],
+      [("gf R7 _lat bound: aft-cage VM 14.8 conservative",
+        FEA + "/gf_r7lat_iso.png"),
+       ("l5 R7 cl0.8 convergence: corner tau 5.7",
+        FEA + "/l5_r7c_iso.png")]],
      "CalculiX von Mises - realistic horn-mount BCs (screws+annulus+pilot), 0.5 kg class wrench",
      os.path.join(REN, "sheet2_fea.png"))
 
@@ -126,7 +128,7 @@ p2.camera_position = "iso"; p2.camera.elevation = -10
 p2.set_background("white")
 p2.screenshot(os.path.join(REN, "l5_print_up_h.png")); p2.close()
 
-grid([[("wrist assembly (R6 parts, W design frame)",
+grid([[("wrist assembly (R7 parts, W design frame)",
         os.path.join(REN, "assembly_wrist.png")),
        ("w_link5 print orientation: up=h (layers in a-b plane)",
         os.path.join(REN, "l5_print_up_h.png"))]],

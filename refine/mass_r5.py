@@ -24,12 +24,15 @@ Corrections applied here:
        l4     16.77 cc -> 13.18 g @ (252.33,-15.10,101.83)  [wrist4](was 19.79 cc;
              filleted windows; collar-window cut reverted after its
              rim reached sigma_n +9.6 tensile at (66.4,+-11.4,22))
-       l5     13.78 cc -> 10.83 g @ (260.78, -0.08, 55.10)  [wrist5]
-             (R6 cage fix: closed window skins 1.0 mm + outer-face
-             bottom longeron + aft-end rib, r3 recess fillets; was 8.64 cc)
-       gf     17.54 cc -> 13.79 g @ (321.62, -0.03, 63.41)  [grip] (R5 window
-             REVERTED - it put sigma_n +-28 MPa at the existing (67,+-12.5,-25)
-             notch; gf stays at R3/R4 geometry)
+       l5     14.15 cc -> 11.13 g @ (261.25, -0.08, 54.84)  [wrist5]
+             (R7: R6 cage + R6 box-notch relief RESTORED + continuous
+             outer block; funnel/flush/lip variants all screened WORSE;
+             R6 was 13.78 cc, was 8.64 cc at R5)
+       gf     20.33 cc -> 15.98 g @ (317.87, -0.02, 63.82)  [grip]
+             (R7: outer-face brace ribs + horn-plate bottom fillet r2.5
+             + plate tabs extended a 69->74 for longer cheek weld;
+             R5 fwd window stayed REVERTED - it put sigma_n +-28 MPa at
+             the existing (67,+-12.5,-25) notch)
   4. Vendor part centroids restored to product/measured positions
      (j5/j6/g servos, gear, racks, fingers); masses unchanged.
 
@@ -38,12 +41,12 @@ apply(G1) mutates the imported gravity_up1 module before use.
 import sys, os
 import numpy as np
 
-# (body, mass kg, AB-pose centroid mm) - measured R5 geometry
+# (body, mass kg, AB-pose centroid mm) - measured R7 geometry
 PLASTIC = [
     ("fore",   0.01279, (209.07,   8.62,  89.42)),   # cradle 16.27 cc
     ("wrist4", 0.01318, (252.33, -15.10, 101.83)),   # l4 16.77 cc (filleted; collar window reverted)
-    ("wrist5", 0.01083, (260.78,  -0.08,  55.10)),   # l5 13.78 cc (R6 cage fix)
-    ("grip",   0.01379, (321.62,  -0.03,  63.41)),   # gf 17.54 cc (window reverted)
+    ("wrist5", 0.01113, (261.25,  -0.08,  54.84)),   # l5 14.15 cc (R7: R6 relief restored + aft block)
+    ("grip",   0.01598, (317.87,  -0.02,  63.82)),   # gf 20.33 cc (R7v3 ribs + r2.5 fillet + plate tabs a74)
 ]
 RHO6 = 1.31e-3 * 0.6          # g/mm3 effective (60 % infill convention)
 

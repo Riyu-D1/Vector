@@ -162,11 +162,21 @@ L5_WIN = ((34.0, 10.0, -34.0, 20.0), (50.0, 8.0, -30.0, 16.0))   # window openin
 # the J6 cable exits the open pocket mouth (a<17), not the windows.
 L5_SKIN = 1.0                                    # closure skin thickness (outer face)
 L5_SKIN_R = 3.0                                  # recess corner radius (smooths 2.4->skin step)
+# R7v3: relief variant under screen - "r6" control / "r6f" r2.5 corner
+# round / "flush" funnel flush with the cheek inner face.  R7v2 funnel
+# (smooth taper 11.5->16.45) read WORSE than the R6 step on every scrann
+# metric (-20.5/14.9/9.6 vs -6.4/9.4/5.3 @ (26.1,+-12.9,-6.2) plate-bottom
+# edge) - the long free edge over the cheek inner face is the riser.
+L5_RELIEF = "r6"
 L5_CLEATS = ((24.0, -20.0), (24.0, -42.0))       # cable cleats (a,h) on the -b cheek outer face
                                                  # (R6: -34 -> -42, clears the window band)
 
 # ---------- w_grip_frame: J6 horn plate + grip keel cage + rack cage [D] ----------
-GF_PLATE_A = (62.7, 69.0)                        # J6 horn plate (face 62.6; ends < plug band 65.8)
+GF_PLATE_A = (62.7, 74.0)                        # J6 horn plate (face 62.6; ends < plug band 65.8)
+                                                 # R7v2: rear reach 69->74 - past the g-pocket
+                                                 # face (~66.4) the pocket cut keeps only the
+                                                 # side tabs (|b|>12.66): longer cheek welds,
+                                                 # less pressure at the (67,+-12.5,-25) notch.
 # plate outline (b,h): rect +-14.5 x -26.5..-8.5 clipped to r 15.0 about the
 # roll axis (0,-17) so its rolled silhouette stays < h -2.0 (D7: clears the
 # fin bottom web h -1.4..-0.05 by 0.6; r 16.2 -> -0.8 grazed the web)
@@ -187,6 +197,15 @@ GF_CAGE = ((67.0, -8.5), (67.0, -45.0), (73.4, -54.0), (104.0, -54.0),
            (115.5, -44.0), (115.5, -12.0), (104.0, -12.0), (80.0, -8.0),
            (73.4, -6.9))                         # grip keel cheek a-h outline
 GF_BOTTOM = -52.4
+# R7: outer-face brace rib on each cheek at the horn-plate longitude -
+# T-flanges the 2.4 mm cheek wall across the (67,+-12.5,-25) notch band
+# and the pocket-floor corner below it (same strategy as the l5 R6
+# longerons: the inner face is case channel, so deepen outward).
+# a>=67.5 keeps ~0.8 mm off the l4 tail collar back plate (ends a=66.7)
+# under J6 roll; b band clears the pocket cut (|b|<=~12.8).  A forward
+# cheek nose (a 62.7..67) was tried and REVERTED: rolled it grazes the
+# j5 servo plug (a<=65.9, r~17 about J6) to ~0.1 mm.
+GF_RIB = (67.5, 74.5, 14.91, 17.0, -51.4, -10.0)  # a0,a1,b_in,b_out,h0,h1
 GF_BACKWALL = (70.0, 73.5, -52.4, -40.0)         # back-bottom wall a0,a1,h0,h1 (under the plug; its roll tube clears fin+j5 only for a > 66)
 # R-fix: stock win2 top edge (-14) pinched against the sloped cage outline at
 # a~104, leaving a floating ~1.5 mm wedge sliver.  Lowered to give a >=2 mm

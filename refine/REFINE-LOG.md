@@ -6,14 +6,15 @@ Scope: fix the documented F9 gripper payload limitation in `w_grip_frame` /
 All changes live under `refine/`; product files, `main`, and the
 tool-changer print pack are untouched. No parts ordered, no physical test.
 
-**Status (R3 pass, this commit):** geometry R1/R2 as logged below PLUS the
-R3 horn-mount investigation — realistic screw/horn FEA found the w_link4
-J4 horn-mount load path was soft and notched (fixed: widened strut,
-10x stiffer, ~93->15 MPa); PETG-CF allowables are now source-backed
-(25 MPa in-layer / 12.5 MPa cross-layer); assembled-load sweep bounds the
-payload envelope (0.38 kg anywhere unsprung; 0.5 kg only in the documented
-close-in/forward envelope with the J2 spring). NOT hardware-verified — see
-sections 6-9.
+**Status (R7 pass, this commit):** cumulative R1-R7.  Latest: consolidated
+wrist-strength pass with mode-specific allowables (25 in-layer VM / 15
+layer-normal compress / 12.5 layer-normal tension / 8 MPa interlayer-
+shear characteristic) and a corrected interlayer-tau metric.  gf notch
+fixed via outer-face ribs + plate tabs (-12.0 -> -6.66 design case);
+l5 corner tau remains the limiting residual (5.3-6.05 -> SF 1.3-1.5) —
+structural guarantee is 0.25 kg; 0.38/0.5 targets do NOT meet SF2 and
+are disclosed, not hidden (sections 28-32).  Torque bound 0.374 kg
+all-pose unchanged.  NOT hardware-verified.
 
 ## 1. Confirmed faults (ranked)
 
@@ -976,3 +977,238 @@ Build-stage tests (delta over section 21):
 15. Weigh the R6 w_link5 (expect ~10.8 g at rho x 0.6 vs R5's ~7 g);
     if the measured density convention is off, update mass_r5.py and
     re-check the J2 bound (~0.001 kg bound per wrist gram at flop).
+
+## 28. R7 scope + materials basis
+
+Owner direction: one consolidated pass on the three open wrist items -
+the l5 horn-ring interlayer-shear margin, the R6 wall+floor load-entry
+uncertainty (floor-only sensitivity SF ~1.5), and the gf (67,+-12.5,-25)
+notch - through geometry/load-path redesign, not another local patch.
+
+Mode-specific allowables (datasheet strength vs design allowable vs the
+SF2 gate are kept distinct; no double-counted deratings):
+
+| mode | datasheet / measured basis | design allowable | SF2 gate |
+|---|---|---|---|
+| in-layer VM (xy) | Bambu PETG-CF TDS tensile 35+-5 MPa XY (ISO 527 printed) | 25 MPa (35 x 0.71) | <= 12.5 MPa |
+| layer-normal tension (z) | TDS 29+-4 MPa Z; open-frame cooling + creep derate | 12.5 MPa (29 x 0.43) | <= 6.25 MPa |
+| layer-normal compression | printed PETG-CF ASTM D695: 39.2 MPa @80% infill (AIP Adv. 14, 095208); 44-50 optimized (J.Thermoplast.Compos. 2025); interfaces are not weaker in compression | 15 MPa (~1/3 of lowest measured) | <= 7.5 MPa |
+| interlayer shear | printed CF-composite layer-adhesion shear 6.1-8.7 MPa (Materials 2021, PMC8160704); lap-shear PETG-PETC ~2.7 MPa is a dissimilar-material joint, not monolithic print | 8 MPa = lower-bound characteristic, NOT a strengthened assumption | <= 4.0 MPa |
+
+The ~8 MPa shear figure is justified as the low end of measured printed
+short-fibre-composite interface shear; it is a characteristic strength,
+not a derated allowable - so SF2 against it needs computed tau <= 4 MPa,
+which is the strict criterion applied below.  [U]: no coupon test on this
+part/printer; open-frame A1 cooling argues for the lower band.
+
+IMPORTANT R7 analysis fix (fea/sigscan_r3.py): the interlayer-tau scan
+indexed s6 = (sxx,syy,szz,sxy,syz,sxz) as sqrt(s6[3+((a+1)%3)]^2 +
+s6[3+((a+2)%3)]^2) = sqrt(sxy^2 + syz^2) for EVERY layer axis - mixing
+the in-layer sxy with one true interlayer component and dropping the
+other.  Corrected to the true through-layer pair
+x->{3,5} y->{3,4} z->{4,5} (TAU_IDX).  All R5/R6 "interlayer tau"
+figures were measured on the mixed metric; R7 re-reports everything on
+the corrected definition.  l4 re-scan on the same saved frds: corrected
+tau 4.02 (cl1.5) / 4.88 (cl0.8, different node - not yet convergent) -
+same residual class as l5's horn-ring rim, now on one metric.
+
+## 29. R7 geometry changes (p_wrist7.py / ap7.py)
+
+### Clearance evidence driving the l5 relief (sweep_probe.py,
+clearance_map.py, relief_depth.py - point-cloud ~0.4 mm pessimistic)
+
+- The D7 relief is genuinely needed by the COMBINED J4xJ5 envelope
+  (corner poses graze to ~0.02 mm at the relief band); a J4-only sweep
+  understates it (~11.7 mm clear).  R6's measured band was right.
+- relief_depth.py: intrusion reaches the FULL plate thickness at
+  |b|>=~14.5 at every a in the mouth - no partial-height relief can
+  keep outer material; |b|<=12.5 stays clean - the kept-neck band is
+  the actual structural resource.
+- The mouth is boxed in below by the j5 servo pocket face (a>24.65,
+  |b|<12.51) and outside/above by the sweep - no room for a bulkhead
+  (the a<24.65 cavity is the servo insertion path).
+- The grazing intruder at the mouth is our own w_link4 outer corner
+  for a 24..30 and the cradle beyond - documented, not relieved:
+  l4's corner is verified-carrying structure.
+
+### w_link5 (print up=h unchanged) - final = "r6" box notch
+
+L5_RELIEF in ap7.py selects among screened variants (all retained in
+p_wrist7.py for reproduction).  Same-mesh (cl3) scrann screen:
+
+| variant | shape | in-layer VM | corrected tau | verdict |
+|---|---|---|---|---|
+| r6 | R6 box notch (kept |b|<10 to a=28.2 step) | 7.08 | 4.84 | BEST - kept |
+| 2step | notch then second step to |b|<12.5 at a=31 | 8.80 | 4.82 | tau-equal, VM worse |
+| r6w | wider neck |b|<10.75 | 7.30 | 5.17 | worse |
+| r6f | r6 + r2.5 in-plane corner round | 8.27 | 6.04 | worse (hotspot moves to fillet tangent) |
+| flush | mouth edge pinned at cheek inner face | 9.25 | 7.79 | worse |
+| funnel (v2) | smooth taper 11.5->full by a~37 | 14.9 (cl1.5) | 9.6 (cl1.5) | regression - reverted |
+| lip | bottom flange to |b|<12.4 | 14.85 | 7.96 | failed |
+
+Mechanism: ANY kept-material edge landing in b in (10.5,14.9) at the
+mouth creates a plate-bottom/cheek-top riser; the hotspot migrates
+along the edge rather than shrinking.  R6's narrow neck is the optimum
+the verified envelope allows - restored verbatim.
+- Aft outer-face block deepened (KEPT): a 50..64.7 x h -48..-38 so the
+  outer-face T-section runs continuous over the (58.7,+-12.5,-51.8)
+  pocket-floor inner corner (floor-only lateral bound).
+- Volume 13.78 -> 14.15 cc; mass 10.83 -> 11.13 g; centroid AB
+  (260.78,-0.08,55.10) -> (261.25,-0.08,54.84).
+
+### w_grip_frame (print up=h unchanged) - v3
+
+- GF_RIB = (67.5, 74.5, 14.91, 17.0, -51.4, -10.0): outer-face brace
+  rib per cheek, T-flanging the 2.4 mm cheek wall across the notch
+  longitude and the pocket-floor corner.  a>=67.5 keeps ~0.8 mm off
+  the l4 tail collar back plate (ends 66.7) under J6 roll; |b|>14.91
+  clears the g-pocket band.  Inner-face fillet impossible (0.15 mm
+  case channel) - hence outward deepening.
+- Horn-plate bottom edges (+-11.61,-26.5) rounded r2.5.
+- GF_PLATE_A rear reach 69->74: past the g-pocket face (~66.4) only
+  the side tabs (|b|>12.66) survive the pocket cut - longer cheek
+  welds at zero roll-clip cost.  Verified ZERO overlap against the
+  REFINED g-servo envelope servo_w("g") at (107,0,-17); an earlier
+  alarm was a wrong-frame comparison vs B.SERVOS (101.4,0,0).
+- Forward cheek nose (a 62.7..67) TRIED and REVERTED: rolled, it
+  grazes the j5 servo plug (a<=65.9, r~17 about J6) to ~0.1 mm.
+- Volume 17.54 -> 20.33 cc; mass 13.79 -> 15.98 g; centroid AB
+  (321.62,-0.03,63.41) -> (317.87,-0.02,63.82).  Carried-stack synced in
+  msh2_r3.py + pose_wrenches.py (0.01598 kg @ W 94.77,-0.02,-25.68).
+
+gf J6-roll clearance after all additions: 0.30 mm vs l4 collar -
+the pre-existing binding pair, unchanged.
+
+## 30. Mass + torque after R7
+
+Measured (rho x 0.6 convention): wrist+gripper 0.238 kg.
+asm_loads.py on final masses (checks/asm_loads_r7.txt):
+- workspace bound 0.374 kg (J2, flop [0,-90,-114,14,0,0]) - unchanged.
+- named-pose bounds: Q_WORST 0.424, AB-level 0.401, reach-0.36m 0.427,
+  Q_CLOSE 0.772 - all pass, unchanged.
+Torque caps are protections, not structural proof.
+
+## 31. R7 FEA (fea/run_r5fea.py all l5,gf; corrected tau metric)
+
+Format: compress sig_n / in-layer VM / interlayer tau (MPa) at each
+metric's max node.  SF2 gates from section 28: compress <= 7.5,
+in-layer VM <= 12.5, interlayer tau <= 4.0.
+
+w_link5 - final "r6" box notch + deepened aft block (14.15 cc):
+
+| case | sig_n(z) | VM in-layer | tau | hotspot / note |
+|---|---|---|---|---|
+| face (optimistic) | -3.62 | 2.59 | 1.61 | |
+| ann | -6.36 | 8.78 | 5.40 | (28.2,+-10.4,-3.8) notch corner |
+| scpilot | -6.80 | 13.67 | 5.90 | (28.2,-10.4,-4.5) |
+| screw (fault) | -6.82 | 13.70 | 5.93 | same |
+| scrann (design) | -6.32 | 9.08 | 5.32 | (28.2,10.4,-3.8) |
+| scr2 (fault) | -5.75 | 19.11 raw | 5.67 | bolt-hole band |
+| scrann p38 | -5.24 | 7.53 | 4.41 | same corner - SF 1.81 |
+| scrann p25 | -4.07 | 5.84 | 3.42 | same corner - SF 2.34 PASS |
+| scr2 p38 / p25 | -4.77 / -3.70 | 15.2 / 12.29 | 4.70 / 3.65 | fault bounds |
+| conv cl3/cl1.5/cl0.8 | | | 4.84 / 5.32 / 5.65 | same corner, bounded growth = real feature |
+
+Direction cases (scrann, p50 wrench):
+
+| dir | sig_n | VM | tau | note |
+|---|---|---|---|---|
+| lat | -2.13 | 5.11 | 1.37 | lateral alone is NOT the corner driver |
+| latf (floor-only) | -7.52 | 6.91 | 2.68 | @(58.7,12.5,-51.8) pocket-floor corner; R6 was -8.35 - the deepened block helped; SF ~2.0 under the strict sensitivity |
+| axp / axn | -1.43 / -2.15 | 2.76 | 1.83 | |
+| up (+h) | -4.40 | 9.08 | 5.32 | vertical gravity drives the corner, both signs |
+| roll | -1.88 | 4.78 | 1.43 | |
+| comb | -2.39 | 3.82 | 2.14 | |
+| comb2 | -5.50 | 6.62 | 3.80 | |
+| flop | -4.97 | 10.17 | 6.05 | WORST single result - same flop family that caps J2 torque |
+| screw_lat / screw_up | -2.31 / -4.89 | 5.10 / 13.70 | 1.52 / 5.93 | fault bounds |
+| p38 lat/roll/comb, p25 roll | <= -1.92 | <= 4.23 | <= 1.69 | all comfortable |
+
+w_grip_frame v3 (ribs + r2.5 fillet + tabs a74; 20.33 cc):
+
+| case | sig_n(z) | VM | tau | note |
+|---|---|---|---|---|
+| scrann p50 (design) | -6.66 | 9.39 | 3.22 | notch @(67.0,+-12.5,-25.5): SF 2.25/2.66/2.48 PASS |
+| face/ann/screw/scpilot/scr2 | -6.59..-6.67 | 9.39 | ~3.2 | BC-insensitive (dead-load dominated) |
+| scrann p38 | -5.36 | 7.58 | 2.60 | PASS |
+| scrann p25 | -3.96 | 5.61 | 1.93 | PASS |
+| conv cl3 -> cl0.8 | -8.18 -> -9.34 raw | 9.03 -> 11.10 | 5.22 -> 3.79 | notch raw peak DIVERGES (re-entrant corner, patch-avg 2.06 -> SF ~7); the cl3 aft-keel hotspot was a coarse-mesh artifact (tau falls with refinement) |
+| lat p50 | -7.82 | 14.81 | 4.14 | aft cage corner (115.5,+-12.5,-40)/(114.1,+-12.5,-12): SF 1.9/1.7/1.9 raw - marginal under the pure-axis bound |
+| roll p50 | -7.11 | 13.91 | 3.91 | same region, VM SF 1.8 |
+| comb p50 | -6.20 | 12.59 | 3.86 | borderline |
+| up p50 | -5.10 | 9.39 | 3.22 | PASS |
+| p38 lat | -6.30 | 11.94 | 3.34 | PASS (2.38/2.09/2.40) |
+
+## 32. R7 acceptance table + honest residuals
+
+Allowables (section 28): in-layer VM 25, layer-normal compress 15,
+layer-normal tension 12.5, interlayer shear 8 MPa characteristic.
+SF2 gates: 12.5 / 7.5 / 6.25 / 4.0.
+
+| part / interface | governing bound | mode | MPa | allow | SF | verdict |
+|---|---|---|---|---|---|---|
+| w_link5 horn ring (scrann) | p50 -h / +h vertical | interlayer tau | 5.32 | 8 | 1.50 | FAIL SF2 |
+| " | flop family (p50) | interlayer tau | 6.05 | 8 | 1.32 | FAIL - worst case |
+| " | p38 -h (reach-pose equivalent) | interlayer tau | 4.41 | 8 | 1.81 | FAIL at 0.38 kg |
+| " | p25 | interlayer tau | 3.42 | 8 | 2.34 | PASS at 0.25 kg |
+| " | scrann p50 | compress / VM | -6.32 / 9.08 | 15 / 25 | 2.4 / 2.75 | PASS |
+| l5 aft pocket-floor corner | latf floor-only p50 | compress | -7.52 | 15 | 2.0 | borderline pass on the strict sensitivity bound (R6 was -8.35) |
+| l5 screw-fault bounds | screw / scr2 p50 | VM / tau | 13.7 / 19.1; 5.9 / 5.7 | 25 / 8 | 1.3-1.8 | fault bounds, not the assembly case |
+| w_grip_frame notch (67,+-12.5,-25) | scrann p50 | compress | -6.66 cl1.5 / -9.34 cl0.8 raw / 2.06 patch | 15 | 2.25 cl1.5; ~7 patch; raw corner diverges | PASS on converged/patch metric; residual = partially-singular corner peak, disclosed |
+| " | scrann p50 | VM / tau | 9.39 / 3.22 | 25 / 8 | 2.66 / 2.48 | PASS |
+| gf aft cage (114-115.5,+-12.5,-12..-40) | pure-lat / roll p50 | VM / tau / compress | 14.8 / 4.14 / -7.82 | 25 / 8 / 15 | 1.7-1.9 | marginal raw under the most conservative axis bound; no named pose applies pure lateral; p38 lat passes (>=2.09) |
+| w_link4 horn plate (unchanged) | scrann p50 | tau (corrected) | 4.02 cl1.5 / 4.88 cl0.8 | 8 | 2.0 / 1.64 | same rim-shear residual class as l5; VM 8.9 -> 2.8 PASS, compress -1.4 PASS |
+| w_j4_cradle | - | - | - | - | - | NOT freshly FEA'd this round (stator-side mount; no geometry change since R4) |
+| horn screws/pilot/annulus | scr2 2-screw fault | VM | 19.11 raw | 25 | 1.31 | fault bound reported separately, as required |
+
+Target-payload verdicts:
+- 0.25 kg normal: PASS - every part, mode and direction bound meets
+  SF2 (worst is the l5 corner at 2.34).
+- 0.38 kg at full horizontal reach: FAIL on the l5 horn-ring corner
+  (interlayer tau 4.41, SF 1.81) - the reach-pose wrench is near-pure
+  -h, so the scrann p38 bound is representative, not inflated.
+- 0.5 kg close-in: FAIL on the same corner (tau 5.32 under the -h
+  bound; the flop family, which is also the J2 torque limiter, reads
+  6.05).  The Q_CLOSE mixed wrench (~87% -h fraction) interpolates to
+  ~4.6-5.0 -> SF ~1.6, still under 2.
+- Max defensible payload at the l5 corner under the conservative
+  vertical bound: ~0.33 kg (tau crosses the 4.0 MPa gate between the
+  p25 and p38 solves).  The SF2-guaranteed bound is 0.25 kg.
+- The corner is envelope-limited: the J4xJ5 sweep needs the relief to
+  full plate depth at |b|>~14.5, the j5 pocket blocks material below,
+  the horn seats above, and every tested edge shape in b 10.5..14.9
+  concentrates worse (screen in section 29).  Further margin needs
+  material/process change (e.g. tougher filament or a metal horn
+  ring), not more print-geometry reshaping.
+
+Residual uncertainties (all [U], no hardware test performed):
+- 8 MPa interlayer characteristic is a literature lower bound for
+  printed short-CF composites; no coupon on this part/printer/filament
+  batch.  Build-stage: print a stack of neck specimens and lap/shear
+  them, or instrument one part to failure.
+- gf notch raw corner peak is mesh-divergent (re-entrant corner);
+  patch-averaged values are the defensible metric but the true
+  physical peak depends on printed corner radius.
+- Floor-only entry for l5 latf remains a sensitivity bound; the real
+  J6 case load sharing (snug 0.15 mm fit) is not credited anywhere.
+- scr2/screw are fault bounds; the design case is scrann
+  (shank+annulus+pilot) per assembly reality.
+- All FEA values are design estimates; nothing here is hardware
+  validation.
+
+## 33. R7 build-stage tests (delta over section 27)
+
+16. w_grip_frame R7 print: confirm the outer-face brace ribs (a
+    67.5..74.5, |b| 14.91..17.0, h -51.4..-10) and plate tabs to a=74
+    print as single welded walls at up=h - OVERHANG check 26/20 PASS.
+17. Horn-ring corner specimen: print the l5 neck region (or a
+    dedicated lap/shear coupon in the same orientation) and load to
+    failure - establishes the real interlayer-shear characteristic vs
+    the assumed 8 MPa literature lower bound that currently gates the
+    0.38/0.5 kg targets.
+18. Weigh R7 parts (expect ~11.1 g l5, ~16.0 g gf at rho x 0.6);
+    re-check the J2 bound if the density convention is off.
+19. gf notch inspection: since the raw corner peak is mesh-divergent,
+    inspect the actual printed corner radius at the plate-bottom/cheek
+    weld (a=67, |b|~12.5, h~-25) - a genuine fillet there materially
+    changes the real peak vs the sharp-geometry model.

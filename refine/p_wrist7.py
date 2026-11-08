@@ -153,8 +153,43 @@ def w_link5():
     h0, h1 = N.L5_TOP
     s = extrude(ab(h0, *N.L5_PLATE), amount=h1 - h0, dir=(0, 0, 1))            # horn plate
     for sg in (1, -1):                                                       # D7: front b-corner reliefs (cradle sweep clearance)
-        lo, hi2 = sorted((sg * 10.0, sg * 17.0))             # R4: cut past the wider plate edge
-        s = s - box(N.L5_PLATE[0] - 1.0, 28.2, lo, hi2, h0 - 1.0, h1 + 1.0)
+        # R7v3: variant-driven relief.  Measured envelope from
+        # clearance_map.py / relief_depth.py (intrusion reaches the full
+        # plate thickness at |b|>~14.5, so the relief must stay full
+        # height; ~+0.4 mm sample pessimism).
+        if N.L5_RELIEF == "r6":                        # R6 verbatim: box notch
+            lo, hi2 = sorted((sg * 10.0, sg * 17.0))
+            s = s - box(N.L5_PLATE[0] - 1.0, 28.2, lo, hi2, h0 - 1.0, h1 + 1.0)
+        elif N.L5_RELIEF == "r6f":                     # R6 step + in-plane corner round
+            lo, hi2 = sorted((sg * 10.0, sg * 17.0))
+            cut = box(N.L5_PLATE[0] - 1.0, 28.2, lo, hi2, h0 - 1.0, h1 + 1.0)
+            ce = [e for e in cut.edges()                             # vertical cut edge at
+                  if abs(e.center().X - 28.2) < 0.2                  # the neck->full-width
+                  and abs(e.center().Y - sg * 10.0) < 0.2]           # re-entrant corner
+            if ce:
+                cut = cut.fillet(2.5, ce)
+            s = s - cut
+        elif N.L5_RELIEF == "r6w":                     # wider neck, same step
+            lo, hi2 = sorted((sg * 10.75, sg * 17.0))
+            s = s - box(N.L5_PLATE[0] - 1.0, 28.2, lo, hi2, h0 - 1.0, h1 + 1.0)
+        elif N.L5_RELIEF == "2step":                   # two smaller steps
+            lo, hi2 = sorted((sg * 10.0, sg * 17.0))
+            s = s - box(N.L5_PLATE[0] - 1.0, 28.2, lo, hi2, h0 - 1.0, h1 + 1.0)
+            lo, hi2 = sorted((sg * 12.5, sg * 17.0))
+            s = s - box(28.2, 31.0, lo, hi2, h0 - 1.0, h1 + 1.0)
+        elif N.L5_RELIEF == "lip":                     # bottom-flanged neck: |b|<10
+            lo, hi2 = sorted((sg * 10.0, sg * 17.0))   #  full height + a 1.75 mm
+            s = s - box(N.L5_PLATE[0] - 1.0, 28.2, lo, hi2, -4.4, h1 + 1.0)
+            lo, hi2 = sorted((sg * 12.4, sg * 17.0))   #  bottom lip out to |b|=12.4
+            s = s - box(N.L5_PLATE[0] - 1.0, 28.2, lo, hi2, h0 - 1.0, -4.4)
+        elif N.L5_RELIEF == "flush":                   # mouth edge flush with cheek inner face
+            eg = ((23.0, 12.51), (25.0, 12.55), (27.0, 12.55),
+                  (29.0, 12.9), (30.5, 13.6), (32.0, 14.6),
+                  (33.5, 15.4), (35.5, 16.1), (37.5, 16.45))
+            tp = tuple((a_, sg * b_) for a_, b_ in eg) + \
+                ((38.5, sg * 17.0), (23.0, sg * 17.0))
+            s = s - extrude(_ab(h0 - 1.0) * Polygon(*tp, align=None),
+                            amount=(h1 - h0) + 2.0, dir=(0, 0, 1))
     for sg in (1, -1):
         b_lo, b_hi = sorted((sg * N.L5_CHEEK_B[0], sg * N.L5_CHEEK_B[1]))
         s = s + xb(poly_ah(b_lo, N.L5_CAGE), b_lo, b_hi)     # R1: face on lower bound, grows outward
@@ -167,8 +202,14 @@ def w_link5():
                              sg * 17.3))                 #  pocket-face cheek/keel corner can't be
         s = s + box(N.L5_CAGE[1][0], 64.7, b_lo, b_hi,   #  filleted (case clearance), so deepen
                     N.L5_BOTTOM - 2.0, -48.0)            #  the section at the outer face instead
-        s = s + box(55.0, 64.7, b_lo, b_hi, -45.0, -38.0)  #  + aft-end rib: relieves the (61.05,-41.4)
-                                                         #  step corner under floor-entry bound
+        s = s + box(50.0, 64.7, b_lo, b_hi, -48.0, -38.0)  #  + aft-end rib: relieves the (61.05,-41.4)
+                                                         #  step corner under floor-entry bound.
+                                                         #  R7: 55->50 a-reach and -45->-48 depth so
+                                                         #  the outer-face block runs continuous
+                                                         #  h -52.4..-38 over a 50..64.7 - the (58.7,
+                                                         #  +-12.5,-51.8) pocket-floor inner corner
+                                                         #  sits inside a ~14.5 mm deep T-section now
+                                                         #  (floor-only lateral bound).
     a0, a1, bh0, bh1 = N.L5_BACK
     s = s + box(a0, a1, -N.L5_CHEEK_B[1], N.L5_CHEEK_B[1], bh0, bh1)            # back-bottom wall
     s = s - pocket("j6")
@@ -197,12 +238,19 @@ def w_link5():
 def w_grip_frame():
     a0, a1 = N.GF_PLATE_A
     s = xa(poly_bh(a0, N.GF_PLATE), a0, a1)                  # horn plate (r16.2 roll clip)
+    ped = [e for e in s.edges()                              # R7: round the plate's bottom
+           if abs(e.center().Z + 26.5) < 0.5                 #  edges (+-11.61,-26.5) - softens the
+           and abs(e.tangent_at(0.5).normalized().X) > 0.9]  #  cheek-side of the a=67 weld corner
+    if ped:
+        s = s.fillet(2.5, ped)                               #  (R7v2: 1.5->2.5 - notch still -10.6)
     for sg in (1, -1):
         b_lo, b_hi = sorted((sg * N.GF_CHEEK_B[0], sg * N.GF_CHEEK_B[1]))
         s = s + xb(poly_ah(b_lo, N.GF_CAGE), b_lo, b_hi)     # R1: face on lower bound, grows outward
         s = s + box(66.0, 69.0, *sorted((sg * 13.5, sg * N.GF_CHEEK_B[1])),
                     -26.5, -8.5)                             # R2f: side boss wrapping the plate's outer b edge
                                                              # (a>=66 stays clear of the j5 case roll sweep)
+        ra0, ra1, rb0, rb1, rh0, rh1 = N.GF_RIB               # R7: outer-face brace rib
+        s = s + box(ra0, ra1, *sorted((sg * rb0, sg * rb1)), rh0, rh1)
     s = s + box(71.5, 114.7, -N.GF_CHEEK_B[1], N.GF_CHEEK_B[1], N.GF_BOTTOM - 2.0, N.GF_BOTTOM)  # keel web
     a0w, a1w, bh0, bh1 = N.GF_BACKWALL
     s = s + box(a0w, a1w, -N.GF_CHEEK_B[1], N.GF_CHEEK_B[1], bh0, bh1)         # back-bottom wall

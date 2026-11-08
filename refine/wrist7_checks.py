@@ -161,7 +161,10 @@ t5 = tq(xj4 + N.A_J5, lambda gr: gr in ("w5", "w6"))
 mw = sum(m for n, gr, m, x in allit if gr.startswith("w") and n != "payload")
 print("TORQUE masses: wrist+gripper %.3f kg (R6 modelled 0.236; R6 cage fix "
       "+0.003 kg), payload %.2f kg at J4 + %.1f" % (mw, N.PAYLOAD6, N.A_TCP))
-res("MASS", mw <= 0.2365, "wrist+gripper %.3f kg <= 0.2365 kg (R6 baseline)" % mw)
+# R7 baseline: gf rib/plate-tabs +1.2 g and l5 aft block +0.3 g are
+# deliberate structure; asm_loads_r7 confirms the workspace bound is
+# unchanged at 0.374 kg (J2 flop), named poses unchanged.
+res("MASS", mw <= 0.2395, "wrist+gripper %.3f kg <= 0.2395 kg (R7 baseline)" % mw)
 res("TORQUE", t4 <= N.J4_RATED / 1.4, "J4 %.3f N.m (STS3250 rated %.3f / 1.4 = %.2f; stage model 0.801)" % (t4, N.J4_RATED, N.J4_RATED / 1.4))
 res("TORQUE", t5 <= B.STS3215_RATED / 1.4, "J5 %.3f N.m with J4 turned 90 (STS3215 %.2f [U] / 1.4 = %.2f)" % (t5, B.STS3215_RATED, B.STS3215_RATED / 1.4))
 t2_spr = t2 - 0.55 * math.radians(90.0)   # [U] J2 balance spring, arm-horizontal pose q2~+90 (bench-cal pending)

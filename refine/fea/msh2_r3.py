@@ -106,6 +106,7 @@ def _grav_for(d):
 
 
 def gf_case(name, P):
+    name, d, _fo = _wrench_dir(name)              # R7: direction bounds too
     name, pay = _payload(name)
     a, b, h = P[:, 0], P[:, 1], P[:, 2]
     r = np.hypot(b, h + 17.0)                      # roll axis (0,-17)
@@ -124,7 +125,8 @@ def gf_case(name, P):
         "scr2": top2(b, h) & (a >= 62.65) & (a <= 67.0),
     }[name]
     load = a >= 120.0
-    return fix, load, [((137.4, 0.0, -17.0), (0.0, 0.0, -(9.81 * pay + 1.1)))], (0.0, 0.0, -1.0)
+    F = tuple(f * (9.81 * pay + 1.1) for f in d)
+    return fix, load, [((137.4, 0.0, -17.0), F)], _grav_for(d)
 
 
 def l5_case(name, P):
@@ -180,7 +182,7 @@ def l5_case(name, P):
 # carried stack + payload COM (W frame) as a function of payload kg -
 # masses/COMs from mass_r5.py converted to W (AB - 223.1,0,89.5); payload
 # applied at the TCP point (137.4,0,-17).
-_L5_STACK = [(0.05500, (41.53, 0.00, -29.59)), (0.01379, (98.52, -0.03, -26.09)),
+_L5_STACK = [(0.05500, (41.53, 0.00, -29.59)), (0.01598, (94.77, -0.02, -25.68)),
              (0.05500, (95.53, 0.00, -29.59)), (0.00800, (119.70, 0.00, -17.00)),
              (0.01200, (119.90, -12.99, -3.28)), (0.01200, (119.90, 12.99, -30.72)),
              (0.00097, (131.08, 3.00, -16.62)), (0.00097, (131.08, -3.00, -17.38)),

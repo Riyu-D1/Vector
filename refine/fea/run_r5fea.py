@@ -34,7 +34,7 @@ CL = 1.5
 #   w_link5: up=h  -> z     w_link4: up=b -> y     w_grip_frame: up=h -> z
 PARTS = {"l5": ("fix_w_link5", "z"), "l4": ("fix_w_link4", "y"),
          "gf": ("fix_w_grip_frame", "z")}
-RTAG = {"l5": "_r6", "l4": "_r5", "gf": "_r5"}   # report file suffix per part
+RTAG = {"l5": "_r7", "l4": "_r5", "gf": "_r7"}   # report file suffix per part
 # parts whose geometry changed -> new mesh/solve required
 REMESH = ("l4", "gf", "l5")
 BCASES = ("face", "ann", "screw", "scpilot", "scrann", "scr2")
@@ -47,6 +47,9 @@ L5_NEW = (["l5_scrann_%s" % d for d in DIR_P50]
           + ["l5_screw_up", "l5_screw_lat"]
           + ["l5_scrann_p38_%s" % d for d in DIR_P38]
           + ["l5_scrann_p25_roll"])
+# R7: gf direction bounds on the same machinery (lateral + rolled + mixed)
+GF_NEW = ["gf_scrann_%s" % d for d in ("lat", "roll", "comb", "up")] \
+    + ["gf_scrann_p38_lat"]
 
 
 def sh(cmd, **kw):
@@ -155,13 +158,19 @@ if __name__ == "__main__":
     if which in ("deck", "all"):
         for case in L5_NEW:
             deck("l5", case)
+        for case in GF_NEW:                      # R7: gf direction bounds
+            deck("gf", case)
     if which in ("solve", "all"):
         for case in L5_NEW:
             solve("l5", case)
+        for case in GF_NEW:
+            solve("gf", case)
     if which == "analyze":
         # re-analyze the full l5 set (old frds + new direction frds)
         for case in list(cases("l5")) + L5_NEW:
             analyze("l5", case)
+        for case in list(cases("gf")) + GF_NEW:
+            analyze("gf", case)
         for cl in CONVERGE_CL:
             analyze("l5", "l5_scrann", cl)
     print("done")

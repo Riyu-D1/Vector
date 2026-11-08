@@ -34,6 +34,13 @@ def main(frd, inp, laxis):
         if any(n in constrained for n in e):
             tainted.update(e)
     a = AX[laxis]
+    # R7 fix: s6 = (sxx,syy,szz,sxy,syz,sxz); the true through-layer
+    # shear pair for layer-normal a are the two components that include
+    # index a: x->{sxy(3),sxz(5)} y->{sxy(3),syz(4)} z->{syz(4),sxz(5)}.
+    # The old formula s6[3+((a+1)%3)]/s6[3+((a+2)%3)] paired sxy+syz for
+    # every axis - an in-layer+interlayer mix that mis-stated the mode.
+    TAU_IDX = {0: (3, 5), 1: (3, 4), 2: (4, 5)}
+    ta, tb = TAU_IDX[a]
     byname = {}
     for i, s in enumerate(steps):
         byname.setdefault(s["name"], []).append(s["data"])
@@ -45,8 +52,7 @@ def main(frd, inp, laxis):
                 continue
             s6 = s[:6]
             sn, vi = layer_split(s6, laxis)
-            tsh = math.sqrt(s6[3 + ((a + 1) % 3)] ** 2
-                            + s6[3 + ((a + 2) % 3)] ** 2)
+            tsh = math.sqrt(s6[ta] ** 2 + s6[tb] ** 2)
             rows.append((sn, vi, tsh, vonmises(s6), n))
         st = max(rows, key=lambda r: r[0])
         sc = min(rows, key=lambda r: r[0])

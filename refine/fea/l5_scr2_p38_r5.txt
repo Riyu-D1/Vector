@@ -1,0 +1,15 @@
+l5_scr2_p38.frd: 44649 nodes 22720 tets, 4 result blocks
+constrained 2269 (NFIX 644 NLOAD 1625); excluded-with-elements 6169
+step1: max|U| 0.519 mm (@(64.7, -12.7, -54.4)) | raw maxVM 21.66 | filtered 15.45 | patch 13.47 MPa
+    hot VM 15.45 @n5929 (33.0, 5.7, -2.1) | sig_n(z) -2.93 VM_in-layer 16.58
+    hot VM 15.44 @n6341 (37.6, 6.6, -2.1) | sig_n(z) +2.96 VM_in-layer 16.43
+    hot VM 14.55 @n5824 (36.8, -7.2, -2.1) | sig_n(z) +2.25 VM_in-layer 15.34
+    hot VM 14.07 @n5927 (32.9, 5.4, -2.1) | sig_n(z) -1.78 VM_in-layer 14.64
+    hot VM 13.94 @n5954 (32.9, -5.5, -2.1) | sig_n(z) -2.34 VM_in-layer 14.76
+    raw-max VM 21.66 @n4928 (33.3, 5.5, -2.1) | sig_n -9.12 VM_in-layer 23.59
+wrote l5_scr2_p38_step1.vtu
+l5_scr2_p38.frd axis=z step1: filtered nodes 38480
+   tensile sig_n +4.22 / 2.62 / 1.75 MPa @n309 (40.8, 12.3, -6.2)
+   compress sig_n -4.66 / 3.07 / 1.71 MPa @n317 (28.9, 12.3, -6.2)
+   in-layer VM  -2.93 / 16.58 / 5.08 MPa @n5929 (33.0, 5.7, -2.1)
+   interlayer tau +2.25 / 15.34 / 6.83 MPa @n5824 (36.8, -7.2, -2.1)

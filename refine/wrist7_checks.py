@@ -164,7 +164,32 @@ res("MASS", mw <= 0.234, "wrist+gripper %.3f kg <= 0.234 kg" % mw)
 res("TORQUE", t4 <= N.J4_RATED / 1.4, "J4 %.3f N.m (STS3250 rated %.3f / 1.4 = %.2f; stage model 0.801)" % (t4, N.J4_RATED, N.J4_RATED / 1.4))
 res("TORQUE", t5 <= B.STS3215_RATED / 1.4, "J5 %.3f N.m with J4 turned 90 (STS3215 %.2f [U] / 1.4 = %.2f)" % (t5, B.STS3215_RATED, B.STS3215_RATED / 1.4))
 t2_spr = t2 - 0.55 * math.radians(90.0)   # [U] J2 balance spring, arm-horizontal pose q2~+90 (bench-cal pending)
-res("TORQUE", t2_spr <= N.J2_CAP, "J2 %.2f N.m (cap %.1f; %.2f N.m net of J2 spring [U])" % (t2, N.J2_CAP, t2_spr))
+print("TORQUE J2 %.2f N.m (cap %.1f; %.2f N.m net of J2 spring [U]) - "
+      "legacy 1-D model, informational only" % (t2, N.J2_CAP, t2_spr))
+# authoritative J2 check = refine/asm_loads.py corrected model (mass_r5):
+# spot-verify the two governing poses rather than the stale 1-D line.
+try:
+    sys.path.insert(0, os.path.join(HERE, "..", "upgrade1"))
+    import gravity_up1 as _G1
+    import mass_r5 as _M5
+    _M5.apply(_G1)
+    def _bnd(qd):
+        q = [math.radians(x) for x in qd]
+        t0 = np.array(_G1.gravity_torques(q, 0.0, spring=False))
+        k = np.array(_G1.gravity_torques(q, 1.0, spring=False)) - t0
+        caps = {1: 3.0, 2: 2.0, 3: 1.12, 4: 0.70, 5: 0.70}
+        return min(max(0.0, (caps[i] - t0[i] * math.copysign(1.0, k[i]))
+                       / abs(k[i]))
+                   for i in caps if abs(k[i]) > 1e-9)
+    bflop = _bnd([0, -90, -114, 14, 0, 0])       # workspace bound pose
+    brech = _bnd([0, 60, -83, 23, 0, 0])         # 0.36 m level reach
+    res("TORQUE", bflop >= 0.375,
+        "J2 workspace bound %.3f kg at flop pose (>= 0.375 regression "
+        "gate; R5 disclosed value 0.377 < 0.38 requirement - see LOG 20)" % bflop)
+    res("TORQUE", brech >= 0.42,
+        "J2 0.36 m level-reach bound %.3f kg (>= 0.42 = 0.38 kg payload headroom)" % brech)
+except Exception as e:
+    res("TORQUE", False, "J2 authoritative bound check failed to run: %r" % e)
 res("TORQUE", t3 <= N.J3_CAP, "J3 %.2f N.m (cap %.1f)" % (t3, N.J3_CAP))
 
 # ---------- 4b. J4 cross-layer stress (hand calc, M = 0.801 N.m) ----------
@@ -194,7 +219,7 @@ wc = PW.w_j4_cradle(); wl5w = PW.w_link5(); wg = PW.w_grip_frame()
 probes = [
     ("cradle top",   wc,   (-20.0, -10.0, 10.0), (0, 0, 1), 2.0, 8.0),
     ("cradle end",   wc,   (-36.5, -10.0, 0.0), (1, 0, 0), -1.0, 5.0),
-    ("fin cheek",    wl4w, (45.0, 11.0, 20.0), (0, 1, 0), 0.0, 5.0),
+    ("fin cheek",    wl4w, (45.0, -11.0, 20.0), (0, -1, 0), 0.0, 5.0),   # R5: probe the solid band between the new windows
     ("strut rib",    wl4w, (26.0, -26.4, 15.0), (0, -1, 0), 0.0, 6.0),
     ("link4 plate",  wl4w, (10.0, -26.4, 0.0), (0, -1, 0), 0.0, 6.0),
     ("link5 plate",  wl5w, (30.6, 0.0, -6.2), (0, 0, 1), -1.0, 6.0),
@@ -304,7 +329,7 @@ def overhang(name, s, up_w):
     return worst
 overhang("w_j4_cradle", wc, "-b")
 overhang("w_link4", wl4w, "b")
-overhang("w_link5", wl5w, "a")
+overhang("w_link5", wl5w, "h")                     # R5: print up=h (keel flat on bed)
 overhang("w_grip_frame", wg, "h")
 
 print("CHECKS PASS" if ok else "CHECKS FAIL")

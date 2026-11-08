@@ -1,4 +1,3 @@
-// toolchg auto: mesh /Users/deepakdiwan/Vector-wt/refine/refine/out/fix_w_grip_frame.step -> C3D10 tet mesh
 SetFactory("OpenCASCADE");
 Merge "/Users/deepakdiwan/Vector-wt/refine/refine/out/fix_w_grip_frame.step";
 Mesh.ElementOrder = 2;

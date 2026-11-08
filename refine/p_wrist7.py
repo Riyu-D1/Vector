@@ -21,7 +21,8 @@ import os, sys, math
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "cad", "arm2b"))
 sys.path.insert(0, os.path.join(HERE, "..", "cad", "arm2"))
-from build123d import (Plane, Pos, Polygon, RectangleRounded, extrude, Location)
+from build123d import (Plane, Pos, Polygon, RectangleRounded, extrude, Location,
+                       fillet, Axis)
 import ap2 as P2
 import p_arm2 as PA
 import ap2b as B
@@ -120,6 +121,28 @@ def w_link4():
     for ra0, ra1, rh0, rh1 in N.L4_RIBS:                                       # ribs strut -> fin -b cheek
         s = s + box(ra0, ra1, b0, -12.7, rh0, rh1)
     s = s + xb(poly_ah(b0, N.L4_RIBMID), b0, -12.7)       # R4v3: tapered mid rib
+    # R5: honest mass trims for the J2 margin - windows in the R4-added
+    # bulkheads, placed in the rib-only b span so the plate face, strut
+    # (b<=-22.65) and the -b cheek band (b>=-14.91) are all untouched;
+    # the remaining a-h frame strips keep the plate->cheek tie.  All
+    # corners rounded r1.5 (b-parallel edges) so the window corners are
+    # not stress-riser notches in the printed part.
+    def wcut(a0, a1, b0, b1, h0, h1, r=1.5):
+        r = min(r, 0.45 * (a1 - a0), 0.45 * (h1 - h0))
+        c = box(a0, a1, b0, b1, h0, h1)
+        return fillet(c.edges().filter_by(Axis.Y), r)
+    s = s - wcut(13.5, 27.5, -22.4, -15.0, 10.0, 14.5)      # mid-rib window
+    s = s - wcut(28.0, 40.0, -22.4, -15.0, 33.5, 36.5)      # shoulder-rib window
+    # (collar back-plate window REVERTED: the thin frame rim reached
+    #  sigma_n(y) +9.6 MPa tensile at (66.4,+-11.4,22) - SF ~1.3 for
+    #  ~0.4 g saved, not worth a new hotspot in the R4 collar)
+    s = s - wcut(42.0, 52.0, -15.91, 15.91, 22.0, 30.0)     # fin cheek window
+    s = s - wcut(42.0, 52.0, -15.91, 15.91, 6.0, 14.0)      # fin cheek window (lower)
+    s = s - wcut(52.0, 58.0, -15.91, 15.91, 14.0, 22.0)     # fin cheek window (aft)
+    s = s - wcut(44.0, 58.0, -15.91, -12.51, 4.0, 12.0)     # -b cheek window (rib-free zone)
+    s = s - wcut(24.0, 40.0, 12.51, 15.91, 6.0, 28.0)       # +b cheek window (no ribs on +b)
+    s = s - wcut(42.0, 52.0, 12.51, 15.91, 14.0, 22.0)      # +b cheek band between windows
+    s = s - wcut(40.0, 58.0, 12.51, 15.91, 30.0, 34.0)      # +b cheek upper window
     s = s - pocket("j5")                                     # case + plug + horn (open top slot)
     s = s - horn_holes((0, 0), "b", b0, b1, b0 - 1, b0 + B.HORN_CB[1],
                        b1 - B.HORN_RECESS[1], b1 + 1)

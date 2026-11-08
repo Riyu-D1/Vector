@@ -57,9 +57,9 @@ SERVOS = {
 # ---------- w_j4_cradle (J4 servo sleeve + bolt plate, D5 interface kept) [D] ----------
 CR_OUT = (-37.3, 12.3, -14.5, 14.5, 6.0)        # sleeve outer a0,a1,h0,h1,r
 CR_B = (-20.0, 13.0)
-CR_PLATE_B = (28.5, 32.55)
+CR_PLATE_B = (29.5, 32.55)                        # R5: mount flange -1.0 mm (mass trim; mount face unchanged)
 CR_PLATE = (-34.0, 0.0, -14.0, 14.0, 5.0)
-CR_BOSS_D = 8.0; CR_BOSS_B = (12.9, 28.5)
+CR_BOSS_D = 8.0; CR_BOSS_B = (12.9, 29.5)          # bosses extended to the thinned flange
 CR_SLOT = (-22.3, -10.7, 11.0, 25.5, 4.0, 16.0)          # J4 plug exit slot
 CR_GROOVE = (-36.0, -10.0, 14.0, 18.5, 13.6, 14.8)       # cable guide groove
 

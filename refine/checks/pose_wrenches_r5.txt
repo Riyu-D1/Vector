@@ -1,0 +1,21 @@
+== named poses: gravity in the w_link5 (a,b,h) frame ==
+pose                         (a,b,h) components
+Q_WORST(+70/-70)             (+0.00, +0.00, -1.00)   <- near-pure -h
+AB-level(+90/-90)            (+0.00, +0.00, -1.00)   <- near-pure -h
+flop(-90/-114/+14)           (+0.17, +0.00, +0.98)
+Q_CLOSE(+30/-150/+90)        (-0.50, +0.00, -0.87)
+reach0.36(+60/-83/+23)       (-0.00, +0.00, -1.00)   <- near-pure -h
+home                         (+0.00, +0.00, -1.00)   <- near-pure -h
+stow(70/-160/+70)            (-0.34, +0.00, -0.94)
+rolled(-120/-180/+30/-70)    (+0.34, +0.94, +0.00)
+
+== envelope extremes of each component (q1..q5 grid 12 deg, q6=0) ==
+max |a| comp +0.997 at q deg [-180, -120, -168, 14, 2]
+max |b| comp +0.937 at q deg [-180, -120, -168, 14, -70]
+max |+h| comp +0.999 at q deg [-180, -60, -120, 2, -70]
+max |-h| comp -0.999 at q deg [-180, -60, 12, 50, -70]
+
+FEA mapping:  -h -> standard deck (l5_scrann) | +h -> _up | +-a -> _axp/_axn
+              +-b -> _lat | deck applies full-magnitude axis-pure wrench
+              (envelope component <=1.0 by construction) -> conservative
+              bound, not a pose-matched load.

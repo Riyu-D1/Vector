@@ -11,8 +11,11 @@ previous claims can be reconciled explicitly:
   claim C (upgrade1 model, D6 masses + STS3250 J4 + J2 spring):
       max_payload 0.501 kg at Q_WORST.
 
-Model used here: upgrade1/gravity_up1.py PARTS verbatim (the newest mass
-set: STS3250 74.5 g at J4, D6 wrist centroids). Springs: J2 one-way
+Model used here: upgrade1/gravity_up1.py PARTS patched by
+refine/mass_r5.py (R5): the up1 wrist entries were a stale D6 snapshot
+(pre R-round wrist re-layout); wrist5/grip origins + all wrist centroids
+are restored to the kinematic/product values and plastic masses/COMs are
+the measured R5 solids x rho x 0.6 infill. Springs: J2 one-way
 k=0.55 N.m/rad as designed (cad3/BOM_delta: Springmasters 471671 at J2
 AND J3; the J3 spring's assist direction/range is NOT modelled -
 unsprung J3 is the conservative convention, same as cad3/fea).
@@ -38,6 +41,8 @@ sys.path.insert(0, os.path.join(ROOT, "upgrade1"))
 from soma_arm import config
 from soma_arm.kinematics import ArmKinematics
 import gravity_up1 as G1
+import mass_r5
+mass_r5.apply(G1)          # R5: corrected origins/centroids/masses
 
 KIN = ArmKinematics()
 LIM = list(zip(config.JOINT_MIN, config.JOINT_MAX))

@@ -1,0 +1,15 @@
+l5_scpilot.frd: 44649 nodes 22720 tets, 4 result blocks
+constrained 3074 (NFIX 1449 NLOAD 1625); excluded-with-elements 7825
+step1: max|U| 0.405 mm (@(64.7, 12.7, -54.4)) | raw maxVM 16.55 | filtered 13.07 | patch 10.59 MPa
+    hot VM 13.07 @n5824 (36.8, -7.2, -2.1) | sig_n(z) +2.15 VM_in-layer 13.83
+    hot VM 12.30 @n6341 (37.6, 6.6, -2.1) | sig_n(z) +2.28 VM_in-layer 13.08
+    hot VM 11.59 @n5818 (37.1, 7.2, -2.1) | sig_n(z) +0.77 VM_in-layer 11.70
+    hot VM 10.89 @n5817 (37.4, 6.9, -2.1) | sig_n(z) +0.60 VM_in-layer 10.97
+    hot VM 10.72 @n6339 (37.9, -6.5, -2.1) | sig_n(z) +1.05 VM_in-layer 11.01
+    raw-max VM 16.55 @n4906 (36.7, 7.0, -2.1) | sig_n +6.57 VM_in-layer 17.79
+wrote l5_scpilot_step1.vtu
+l5_scpilot.frd axis=z step1: filtered nodes 36824
+   tensile sig_n +3.98 / 2.22 / 1.58 MPa @n309 (40.8, 12.3, -6.2)
+   compress sig_n -6.74 / 4.58 / 2.73 MPa @n317 (28.9, 12.3, -6.2)
+   in-layer VM  +2.15 / 13.83 / 5.90 MPa @n5824 (36.8, -7.2, -2.1)
+   interlayer tau +2.15 / 13.83 / 5.90 MPa @n5824 (36.8, -7.2, -2.1)

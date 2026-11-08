@@ -67,6 +67,36 @@ def _payload(name):
     return name, 0.5
 
 
+def _wrench_dir(name):
+    """R5: trailing direction suffix -> force unit vector applied at the
+    RB ref node, scaled by the case force magnitude.  Default = -z
+    (keel-down gravity wrench, the R3/R4 convention).  The wrist hangs
+    in every orientation across the workspace, so the gravity wrench on
+    the horn plate decomposes into a/h and b components whose envelope
+    is bounded by these cases:
+      _lat  +y   (lateral bound, b-symmetric part so one sign suffices)
+      _axp  +x   (axial pull toward TCP - pose family with the keel
+                  pitched up)
+      _axn  -x   (axial push)
+      _up   +z   (inverted-pose bound: the plate pulls AWAY from the
+                  horn flange - pure screw-tension path; pair with the
+                  "screw" support case which the flange-unload fault
+                  already models)"""
+    for tag, d in (("_lat", (0.0, 1.0, 0.0)), ("_axp", (1.0, 0.0, 0.0)),
+                   ("_axn", (-1.0, 0.0, 0.0)), ("_up", (0.0, 0.0, 1.0))):
+        if name.endswith(tag):
+            return name[: -len(tag)], d
+    return name, (0.0, 0.0, -1.0)
+
+
+def _grav_for(d):
+    """self-weight direction follows the wrench's dominant axis sign
+    (inverted pose pulls the case upward); lat/ax keep -z."""
+    if d == (0.0, 0.0, 1.0):
+        return (0.0, 0.0, 1.0)
+    return (0.0, 0.0, -1.0)
+
+
 def gf_case(name, P):
     name, pay = _payload(name)
     a, b, h = P[:, 0], P[:, 1], P[:, 2]
@@ -86,10 +116,11 @@ def gf_case(name, P):
         "scr2": top2(b, h) & (a >= 62.65) & (a <= 67.0),
     }[name]
     load = a >= 120.0
-    return fix, load, [((137.4, 0.0, -17.0), (0.0, 0.0, -(9.81 * pay + 1.1)))]
+    return fix, load, [((137.4, 0.0, -17.0), (0.0, 0.0, -(9.81 * pay + 1.1)))], (0.0, 0.0, -1.0)
 
 
 def l5_case(name, P):
+    name, d = _wrench_dir(name)          # R5: direction suffix is outer
     name, pay = _payload(name)
     a, b, h = P[:, 0], P[:, 1], P[:, 2]
     holes = _holes([(30.6 + O45, O45), (30.6 + O45, -O45),
@@ -110,7 +141,8 @@ def l5_case(name, P):
     # J6 pocket floor patch (keel web top h~-52.4 under the case)
     load = (h >= -52.55) & (h <= -52.2) & (a >= 17.0) & (a <= 64.5) \
         & (np.abs(b) <= 12.4)
-    return fix, load, [((113.7, 0.0, -30.0), (0.0, 0.0, -(9.81 * pay + 1.965)))]
+    F = tuple(f * (9.81 * pay + 1.965) for f in d)
+    return fix, load, [((113.7, 0.0, -30.0), F)], _grav_for(d)
 
 
 def l4_case(name, P):
@@ -134,7 +166,7 @@ def l4_case(name, P):
     # faces where the J5 case sits (case face at -2.0, pocket floor -1.4)
     load = (h >= -1.5) & (h <= 0.0) & (a >= 20.0) & (a <= 61.0) \
         & (np.abs(b) <= 12.4)
-    return fix, load, [((106.0, 0.0, -5.0), (0.0, 0.0, -(9.81 * pay + 2.255)))]
+    return fix, load, [((106.0, 0.0, -5.0), (0.0, 0.0, -(9.81 * pay + 2.255)))], (0.0, 0.0, -1.0)
 
 
 CASES = {"gf": gf_case, "l5": l5_case, "l4": l4_case}
@@ -146,7 +178,7 @@ def main(msh, inp, case):
     assert nodes and elems, "empty mesh"
     ids = np.array(sorted(nodes))
     P = np.array([nodes[i] for i in ids])
-    fix, load, wrenches = CASES[part](name, P)
+    fix, load, wrenches, grav = CASES[part](name, P)
     fix_ids, load_ids = ids[fix], ids[load]
     assert len(fix_ids) and len(load_ids), (case, len(fix_ids), len(load_ids))
     assert not set(fix_ids) & set(load_ids)
@@ -199,7 +231,7 @@ def main(msh, inp, case):
         w("*RIGID BODY, NSET=NLOAD%d, REF NODE=%d\n" % (k, ref0 + k))
     w("*BOUNDARY\nNFIX, 1, 3, 0.\n")
     w("*STEP\n*STATIC\n")
-    w("*DLOAD\nEALL, GRAV, 9810.0, 0.00000, 0.00000, -1.00000\n")
+    w("*DLOAD\nEALL, GRAV, 9810.0, %.6f, %.6f, %.6f\n" % grav)
     for k, (B, F) in enumerate(wrenches):
         for j in range(3):
             if abs(F[j]) > 1e-9:

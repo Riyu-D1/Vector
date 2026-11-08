@@ -67,11 +67,13 @@ def main(which="both"):
     if which in ("both", "stock"):
         jobs += [("stock_w_grip_frame", W.w_grip_frame),
                  ("stock_w_link5", W.w_link5),
-                 ("stock_w_link4", W.w_link4)]
+                 ("stock_w_link4", W.w_link4),
+                 ("stock_w_j4_cradle", W.w_j4_cradle)]
     if which in ("both", "fixed"):
         jobs += [("fix_w_grip_frame", R.w_grip_frame),
                  ("fix_w_link5", R.w_link5),
-                 ("fix_w_link4", R.w_link4)]
+                 ("fix_w_link4", R.w_link4),
+                 ("fix_w_j4_cradle", R.w_j4_cradle)]
         import p_toolchg7 as RT
         import p_toolchg as PT
         jobs += [("stock_tool_grip", PT.tool_grip),

@@ -165,18 +165,14 @@ def l5_case(name, P):
         load = load | ((b <= -11.8) & (a >= 17.0) & (a <= 62.0)
                        & (h >= -52.0) & (h <= -8.0))
     F = tuple(f * (9.81 * pay + 1.965) for f in d)
-    # R6: for pose-matched cases (_roll/_comb/_comb2/_flop) the force is
-    # applied at the true mass-weighted COM of the carried stack + payload
-    # (pose_wrenches.py:wrench -> r_eq), so the transmitted moment matches
-    # the actual gravity wrench; the legacy ref (113.7,-30) understates it
-    # ~12 % at p50 and is kept for the axis-pure bounds + _latf sensitivity.
-    POSE_DIRS = ("roll", "comb", "comb2", "flop")
-    tag = next((t for t in POSE_DIRS if case_tag.endswith("_" + t) or
-                case_tag.endswith("_" + t + "f")), None)
-    if tag is not None:
-        com = _stack_com(pay)
-        return fix, load, [((com[0], 0.0, com[2]), F)], _grav_for(d)
-    return fix, load, [((113.7, 0.0, -30.0), F)], _grav_for(d)
+    # R8: EVERY case now applies the wrench at the true mass-weighted COM
+    # of the carried stack + payload.  R7 only did this for the
+    # pose-matched tags; the legacy ref (113.7,-30) understates the moment
+    # about the horn ~10 % at p50 / ~7 % at p38 (checks/verify_r8.py).
+    # The carried masses always gravitate through their COM, regardless
+    # of which axis-pure bound direction the deck represents.
+    com = _stack_com(pay)
+    return fix, load, [((com[0], 0.0, com[2]), F)], _grav_for(d)
 
 
 # carried stack + payload COM (W frame) as a function of payload kg -
@@ -197,27 +193,48 @@ def _stack_com(pay):
 
 
 def l4_case(name, P):
+    name, d, _fo = _wrench_dir(name)              # R8: direction bounds too
     name, pay = _payload(name)
     a, b, h = P[:, 0], P[:, 1], P[:, 2]
     holes = _holes([(O45, O45), (O45, -O45), (-O45, O45), (-O45, -O45)])
-    shank = holes(a, h) & (b >= -28.65) & (b <= -26.6)
+    # R8: the J4 horn mounts the plate's INBOARD face (J4_FACE_B=-26.6; the
+    # kp horn disc spans b -21.6..-26.6) - the earlier ann at b<=-30.6 put
+    # the bearing patch on the free face.  R8 also extends the plate to
+    # -32.1 outboard (fore_l at -32.6 leaves 0.5 mm), so the screw shank
+    # band runs from the counterbore shoulder -30.1 to the inboard face.
+    shank = holes(a, h) & (b >= -30.15) & (b <= -26.6)
     diag2 = _holes([(O45, O45), (-O45, -O45)])
     rr = np.hypot(a, h)
     pilot = (b >= -28.85) & (b <= -25.7) & (rr >= 3.4) & (rr <= 3.75)
-    ann = (b <= -30.6) & (rr >= 3.55) & (rr <= 9.65)
+    ann = (b >= -26.75) & (rr >= 3.55) & (rr <= 9.65)
     fix = {
-        "face": b <= -30.6,
+        "face": b <= -32.0,
         "ann": ann | pilot,
         "screw": shank,
         "scpilot": shank | pilot,
         "scrann": shank | ann | pilot,
-        "scr2": diag2(a, h) & (b >= -28.65) & (b <= -26.6),
+        "scr2": diag2(a, h) & (b >= -30.15) & (b <= -26.6),
     }[name]
     # J5 pocket bearing region: fin bottom web top + lower cheek inner
     # faces where the J5 case sits (case face at -2.0, pocket floor -1.4)
     load = (h >= -1.5) & (h <= 0.0) & (a >= 20.0) & (a <= 61.0) \
         & (np.abs(b) <= 12.4)
-    return fix, load, [((106.0, 0.0, -5.0), (0.0, 0.0, -(9.81 * pay + 2.255)))], (0.0, 0.0, -1.0)
+    # R8b: direction-matched bearing - same rule as l5.  A +-b push
+    # presses the J5 case side face (case b +-12.36, a 20.5..65.7,
+    # h 0.1..47.8) into the cheek inner wall |b|=12.51; the floor-only
+    # patch concentrated the lateral wrench unrealistically (p50 _lat
+    # read tau ~21 MPa vs ~6 keel-down).
+    if d[1] > 0.3:
+        load = load | ((b >= 11.8) & (a >= 20.0) & (a <= 66.0)
+                       & (h >= 0.0) & (h <= 48.0))
+    elif d[1] < -0.3:
+        load = load | ((b <= -11.8) & (a >= 20.0) & (a <= 66.0)
+                       & (h >= 0.0) & (h <= 48.0))
+    # R8: apply at the true distal-stack COM (was (106,-5) - understated
+    # the moment ~13 % at p50); self-weight along the wrench direction.
+    com = _stack_com(pay)
+    F = tuple(f * (9.81 * pay + 2.255) for f in d)
+    return fix, load, [((com[0], 0.0, com[2]), F)], _grav_for(d)
 
 
 CASES = {"gf": gf_case, "l5": l5_case, "l4": l4_case}
@@ -276,7 +293,7 @@ def main(msh, inp, case):
     wr_nset("NFIX", fix_ids)
     for k in range(len(wrenches)):
         wr_nset("NLOAD%d" % k, load_ids if k == 0 else [])
-    w("*MATERIAL, NAME=PETGCF\n*ELASTIC\n4000.0, 0.35\n*DENSITY\n7.62e-10\n")
+    w("*MATERIAL, NAME=PETGCF\n*ELASTIC\n4000.0, 0.35\n*DENSITY\n7.86e-10\n")
     w("*SOLID SECTION, ELSET=EALL, MATERIAL=PETGCF\n")
     for k, (B, F) in enumerate(wrenches):
         w("*RIGID BODY, NSET=NLOAD%d, REF NODE=%d\n" % (k, ref0 + k))

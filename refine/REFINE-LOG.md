@@ -1212,3 +1212,263 @@ Residual uncertainties (all [U], no hardware test performed):
     inspect the actual printed corner radius at the plate-bottom/cheek
     weld (a=67, |b|~12.5, h~-25) - a genuine fillet there materially
     changes the real peak vs the sharp-geometry model.
+
+# R8 FINAL PASS — broader load-path redesign + honest re-verification (2026-11-09)
+
+Owner direction: one last bounded pass - audit the analysis chain,
+then try a genuinely different load path (not another notch cosmetic)
+and either demonstrate SF>=2 at the named targets or close out with a
+defensible limit statement.  All derivative work stays in refine/.
+
+## 34. R8 audit findings (verified before redesigning)
+
+Reproducible check: refine/checks/verify_r8.py (output saved to
+checks/verify_r8_out.txt).
+
+- Stress extraction / orientation mapping: sigscan_r3.py's corrected
+  TAU_IDX (R7) pairs the right two shear components per layer axis; the
+  R7 hotspot tensor dump confirmed a near-pure-syz shear state at the
+  l5 funnel corner - orientation choice genuinely changes the mode
+  mapping, so mode-specific allowables are mandatory (done in sec 28).
+- Force/moment transfer: reaction-force equilibrium verified on
+  l5_scrann (+6.98 N returned vs ~-6.98 N applied incl. self-weight).
+  BUT the legacy wrench reference points understated the applied
+  moment about each horn: l5 -10 % at p50 / -7 % at p38 / -2 % p25;
+  l4 -14 % at p50 / -12 % at p38 (legacy (113.7,-30) / (106,-5) vs the
+  mass-weighted stack COM ~ (123.3,-19.4) at p50).  R8 decks apply
+  every wrench AT the true COM (_stack_com, msh2_r3.py) - this alone
+  raises the honest stress ~10-14 % over R5-R7 figures.
+- Self-weight: present in every deck as *DLOAD gravity along the
+  wrench direction (pose-matched); density corrected 7.62 -> 7.86e-10.
+- Horn/screw/pilot supports: the l4 annulus patch was on the wrong
+  face - the J4 horn mounts the plate's INBOARD face (kp horn disc
+  fills b -21.6..-26.6, J4_FACE_B=-26.6); the R5-R7 ann patch at
+  b<=-30.6 bore on the free face.  R8: ann at b>=-26.75, shank band
+  -30.15..-26.6 (counterbore shoulder to inboard face).  Assembly
+  uncertainty (screws do or don't share the annulus load) stays
+  separated from the 2-screw fault bound (scr2), which is reported as
+  a fault case only.
+- Interlayer-shear evidence: PMC8160704 is continuous-carbon-fibre
+  printed composite at 0.3-0.4 mm layers - NOT short-CF PETG-CF on a
+  Bambu A1.  Its measured range is 6.1-15.1 MPa (6.1 at 0.4/1.2,
+  8.7 at 0.4/1.0, 12.5-15.1 at 0.3).  The R7 use of 8 MPa as a "lower
+  bound" is corrected: 8 is a mid-band working characteristic, and
+  every SF below is reported against BOTH 8 and the honest 6.1 low
+  bound.  A 2024 continuous-fibre PETG study (ILSS to 27.4 MPa) is
+  also indirect.  No coupon exists for this material/process - the
+  gap is a stated uncertainty, not assumed strength.
+- Load-entry patch for l4 lateral bounds: R8 initially applied the
+  lateral wrench through the J5-pocket FLOOR patch only; a +-b push
+  physically bears on the pocket side wall (case b+-12.36 -> wall
+  |b|=12.51).  Direction-matched wall bearing added (same rule as l5).
+  Result changed negligibly - the fin-cheek stress is load-path real,
+  not a patch shape artifact.
+
+## 35. R8 concept studies (bounded set)
+
+1. Swept-envelope loft relief for l5 (SELECTED): the J4xJ5 swept
+   phantom map showed the R6/R7 box notch |b|<10 full-depth was
+   over-conservative - the intruder is our own w_j4_cradle grazing the
+   plate TOP over much of the band.  checks/bake_loft.py bakes a
+   keep-top table (312 stations, a 23.6..28.4 x |b| 9.5..16.4):
+   46 % full-depth kept + 15 % bottom lip, 38 % still fully relieved.
+   Restores a real chord through the old funnel corner.
+2. l4 horn-plate outboard thickening (SELECTED): plate b -30.65 ->
+   -32.1 (+1.45 mm to the fore_l inner face at -32.6, 0.5 mm clear);
+   strut outer face follows (L4_STRUT_B -32.1); mid-rib shortened to
+   -20.5 (cradle wall); J4-hardware clearance cuts - d20 horn bore
+   + a SWEPT case-front fan (the case box contains the J4 axis, so the
+   +-80 deg union is a fan, not the rest-pose box; the static box left
+   ~10 mm3 grazes at +-5 deg).  Rim section 4.0 -> 5.45 mm; screws
+   need M3x14 (+1.5 mm reach) - flagged as a build item.
+3. Rejected - inboard horn annulus boss: the vendor J4 horn/case
+   occupies b -26.1..-21.6; a boss there collides (measured ~1.2 cm3).
+4. Rejected - closed-box fin / thicker cheeks: the J5 case protrudes
+   to h 47.8 above the fin top (37.8) - no top web is geometrically
+   possible.  Cheeks at |b| 12.51..14.91 could go to ~16.4 (collar
+   band) = +60 % local section, but the lateral bound needs ~3x, and
+   the added mass lands on the already-marginal J2 flop bound
+   (0.372 kg vs 0.370 gate).  Not a fix.
+5. Rejected - wider wrist b-envelope / moved J5: the cradle walls cap
+   |b| at 20 (strut already ends at -20.5); the J5 servo/horn
+   interface fixes the pocket position.  The lateral fuse is the
+   ~5 mm b-section between the J5 pocket and the J4 horn - an
+   architecture limit, not a notch shape.
+6. Out of scope - tougher filament, metal horn ring, adhesive paths:
+   hardware/material changes the brief disallows.
+
+## 36. R8 geometry + rebuilt artifacts
+
+- ap7.py: L5_RELIEF="loft" + baked L5_LOFT table; L4_B=(-32.1,-26.65);
+  L4_STRUT_B=(-32.1,-22.65).
+- p_wrist7.py: loft relief in w_link5(); l4 strut on its own face;
+  mid-rib end -20.5; horn bore; swept case-front fan cut (21 rotated
+  boxes, +-80 deg, unioned).
+- fea/msh2_r3.py: true-COM wrenches l4/l5/gf; l4 inboard annulus +
+  extended shank band; l4 wall-bearing for |b|-dominant directions;
+  density 7.86e-10.
+- Rebuilt (build_refine.py): fix_w_link5 14.26 cc (+0.2 vs R7),
+  fix_w_link4 17.22 cc, gf/cradle unchanged.  Assembled-pose STLs
+  re-exported via PB.pose (the earlier W-frame exports had produced
+  false ROM collisions - noted for the record).
+- Mass check: wrist+gripper 0.238 kg <= 0.2395 gate PASS; J2 flop
+  workspace bound 0.372 kg (>= 0.370 regression gate; it was 0.374
+  at R6 - the loft l5 costs 2 g of payload headroom).
+
+## 37. R8 checks re-run (checks/wrist7_checks_r8.txt)
+
+ALL PASS after the swept-fan fix: reach, horn holes/axes (err 0.000),
+cradle/servo/pocket clearances, grip operation, mass+torque gates,
+strut-section stress bound 6.7 MPa (SF 3.7), wall runs, J2-J6 ROM
+(J4 -80..+80 vs need 140 total; J5 -70..+70; J6 -180..+180), cable
+channels, overhang/printability for all four printed parts.
+The l4 strut had actually overlapped the vendor J4 horn since R3 -
+stale STLs had masked it; the R8 horn bore + fan clearance make that
+interface honest for the first time.
+
+## 38. R8 FEA (fea/run_r8fea.py; 66 solves cl1.5 + cl3/cl0.8 convergence)
+
+Convention: compress sig_n / in-layer VM / interlayer tau at each
+metric's max filtered node; layer axes z (l5,gf), y (l4).  Every
+wrench now at the true COM - honest, ~10-14 % more moment than R7.
+
+w_link5 loft (14.26 cc):
+
+| case | sig_n(z) | VM | tau | note |
+|---|---|---|---|---|
+| scrann p50 | -16.36 | 11.81 | 5.34 | lip edge (26.2,+-13,-6.2) |
+| conv c3/c1.5/c0.8 | -13.5/-16.4/-19.6 | - | 6.74/5.34/5.26 | converged ~5.3-6 |
+| screw / scpilot / ann | -16.8 | 13.4 | 5.4-5.9 | support-insensitive |
+| scr2 fault p50 | -9.08 | 24.39 | 6.14 | 2-screw bound |
+| flop p50 | +16.52 tens | 11.95 | 5.40 | lip edge - NEW mode |
+| up p50 | +16.36 tens | 11.81 | 5.34 | same edge, reversed |
+| comb2 p50 | -7.93 | 10.85 | 5.39 | |
+| p38 scrann | -13.09 | 9.46 | 4.28 | SF 1.87 vs 8 |
+| p25 scrann | -9.54 | 6.90 | 3.12 | SF 2.56 vs 8 |
+| lat / roll / comb / ax | <= -4.6 | <= 8.6 | <= 3.3 | not governing |
+
+w_link4 thickened (17.22 cc):
+
+| case | sig_n(y) | VM | tau | note |
+|---|---|---|---|---|
+| scrann p50 | -11.32 | 24.06 | 7.48 | strut free edge (36.9,-22.6,32) |
+| conv c3/c1.5/c0.8 | - | 17.7/24.1/31.9 | 6.6/7.5/9.8 | NON-CONVERGED edge |
+| lat p50 | +52.7 tens | 47.10 | 20.86 | fin -b cheek bearing edge |
+| lat c0.8 | +87.9 | 60.0 | 33.5 | DIVERGES - bearing-edge singularity |
+| roll / comb / comb2 p50 | +44..+48 | 39-43 | 17.5-18.8 | same edge class |
+| flop p50 | - | 26.31 | 7.95 | |
+| axp / axn p50 | +-9 | 17.4 | 5.87 | axial bounds benign |
+| p38 scrann | -9.23 | 19.56 | 6.08 | |
+| p38 lat/roll/comb | +38..+44 | 34-39 | 15-17 | |
+| p25 scrann | -6.96 | 14.65 | 4.54 | |
+| p25 roll | +29.6 | 26.13 | 11.66 | fails even at 0.25 kg rolled |
+
+w_grip_frame (unchanged geometry, honest COM wrench re-solved):
+
+| case | sig_n(z) | VM | tau | note |
+|---|---|---|---|---|
+| scrann p50 | -6.66 | 9.40 | 3.22 | same notch, unchanged |
+| lat / roll / comb / up p50 | -6..-8 | 9.4-14.8 | 3.2-4.1 | lat marginal 1.9 |
+| p38 / p25 scrann | -5.4/-4.0 | 7.6/5.6 | 2.6/1.9 | PASS |
+
+## 39. R8 acceptance table + VERDICT
+
+Allowables (sec 28, unchanged): in-layer VM 25, layer-normal compress
+15, layer-normal tension 12.5, interlayer shear 8 MPa characteristic
+(re-labeled: mid-band working value from 6.1-15.1 indirect evidence -
+NOT a lower bound).  SF2 gates 12.5 / 7.5 / 6.25 / 4.0.
+
+| part / interface | governing load | mode | MPa | allow | SF vs 8 (vs 6.1) | verdict |
+|---|---|---|---|---|---|---|
+| w_link5 lip edge (26.2,+-13,-6.2) | scrann p50 keel | interlayer tau | 5.34 (~5.3-6.7 converged) | 8 | 1.50 (1.14) | FAIL SF2 at 0.5 kg |
+| " | scrann p38 reach | interlayer tau | 4.28 | 8 | 1.87 (1.43) | FAIL at 0.38 kg |
+| " | scrann p25 | interlayer tau | 3.12 | 8 | 2.56 (1.96) | PASS vs 8 / borderline vs 6.1 |
+| " | flop/up p50 | layer-normal tension | +16.5 | 12.5 | 0.76 | FAIL - new loft-lip mode |
+| " | scrann p50 | layer-normal compression | -16.4..-19.6 non-conv | 15 | 0.76-0.92 | unresolved (edge) |
+| " | scr2 fault p50 | tau / VM | 6.14 / 24.4 | 8 / 25 | 1.30 / 1.02 | fault bound |
+| l5 horn screws/pilot | scrann all dirs | tau | <= 5.9 | 8 | >= 1.36 | part-level bound |
+| w_link4 strut edge (36.9,-22.6,32) | scrann p50 keel | interlayer tau | 7.48 (6.6-9.8 NON-CONVERGED) | 8 | 1.07 (0.81) | FAIL, unresolved |
+| " | scrann p50 | in-layer VM | 24.1 (17.7-31.9 non-conv) | 25 | 1.04 (0.78) | FAIL, unresolved |
+| l4 fin -b cheek (42,-14.9,32) | _lat p50 | tau / VM / sig_n(y) | 20.9-33.5 / 47-60 / +53..+88 DIVERGES | 8 / 25 / 12.5 | 0.24-0.38 | FAIL catastrophically, model-bound |
+| " | p25 roll | tau | 11.66 | 8 | 0.69 (0.52) | FAIL even 0.25 kg rolled |
+| l4 horn plate/screws | scrann keel p38 | tau | 6.08 | 8 | 1.32 (1.0) | FAIL at 0.38 kg |
+| w_grip_frame notch | scrann p50 | tau / VM / compress | 3.22 / 9.40 / -6.66 | 8 / 25 / 15 | 2.48 / 2.66 / 2.25 | PASS |
+| " | _lat p50 | VM / tau | 14.8 / 4.14 | 25 / 8 | 1.69 / 1.93 | marginal (bounds) |
+| w_j4_cradle | - | - | - | - | - | unchanged since R4; not re-FEA'd |
+| assembled torque J4/J5/J3 | 0.5 kg named | - | 0.83/0.61/1.80 N.m | caps | PASS | unchanged caps |
+| J2 flop workspace bound | flop pose | - | 0.372 kg bound | >=0.370 | PASS (was 0.374) | regression only, target was 0.38 |
+| deflection | p50 keel | l4 tip | 1.82 mm | - | - | ~0.8 deg; flagged, not gated |
+
+Target verdicts:
+- 0.25 kg normal (keel-down family): l5 PASS (2.56 vs 8); gf PASS;
+  l4 strut edge 1.76 FAIL and NON-CONVERGED (reads 4.5->6+ under
+  refinement); l4 rolled bound FAILS outright (0.69).  => NOT met.
+- 0.38 kg full reach: l5 1.87 FAIL; l4 keel 1.32 FAIL; l4 lateral
+  0.47 FAIL.  => NOT met.
+- 0.5 kg close-in: l5 1.50 tau / 0.76 lip tension FAIL; l4 1.07
+  FAIL.  => NOT met.
+- Lateral/rolled bounds: the l4 fin cheek bearing edge DIVERGES
+  (20.9->33.5 tau) - the model cannot bound it; physically a
+  concentration exists regardless of convergence, so rolled poses
+  are unverified-to-failing at every payload.
+
+Defensible static limits (linear scaling on the honest COM wrench):
+- l5 keel-down family: tau gate 4.0 at F~5.1 N -> ~0.32 kg vs 8;
+  ~0.20 kg vs 6.1.  Flop-bound lip tension unresolved (edge).
+- l4 keel-down family: gate at F~3.8 N -> ~0.16 kg vs 8 (cl1.5); the
+  non-converged edge makes the true figure unresolved, possibly less.
+- => The defensible claim is ~0.25 kg in near-keel-down,
+  non-rolled poses ONLY, conditional on the two edge singularities
+  being local; rolled poses unverified at any payload.
+
+VERDICT: B - the original payload targets are NOT met on paper.
+
+What the redesign DID establish (useful, honest result):
+- The l5 horn-ring funnel is resolved: the loft relief removed the
+  pure-syz shear hotspot (R7's 5.3 MPa corner) while carrying a
+  ~10 % larger honest moment; l5's governing tau is ~5.3 converged at
+  a new lip edge, and its residual is a lip-notch, not the ring.
+- The chain's true fuse is the w_link4 fin: the ~5 mm b-section
+  between the J5 pocket and the J4 horn cannot carry the
+  lateral/rolled wrench family at target payloads, and its strut
+  free edge fails SF2 even keel-down.  This is an ARCHITECTURE/
+  packaging limit: closing the fin is impossible (case protrudes),
+  cheeks can't grow enough (packaging + J2 flop bound), and no
+  printable shape change changes a ~5 mm bearing section.
+- w_grip_frame is verified PASS on the honest wrench (SF ~1.9-2.5);
+  w_j4_cradle unchanged (stator side, no new loads).
+- J2 flop bound regression 0.372 kg still passes its gate, but was
+  already below the 0.38 kg target - recorded since R6.
+
+Recommendation: retain the R8 geometry as the best verified design
+(l5 loft + thickened l4 - strictly better than R7 on the same honest
+wrenches).  Build the restricted ~0.25 kg version for bench
+validation + coupons, NOT for the named targets.  Do NOT iterate
+further on print geometry - the remaining gap needs either
+hardware/material change (metal horn ring, tougher filament,
+redesigned wrist architecture with a wider J5-J4 b-section) or
+measured material data proving >8 MPa interlayer shear for this
+exact PETG-CF/A1 process.  All stress values here are design
+estimates; nothing in this pass is hardware validation.
+
+## 40. R8 build-stage tests (delta over section 33)
+
+20. w_link5 loft print (up=h): verify the lip loft relief surface
+    (bake_loft table) prints self-supporting - the lip edges are
+    shallow up-facing steps; OVERHANG check passed but the lip
+    termination corner (26.2,+-13,-6.2) is where the model hot-spots.
+21. w_link4 screws: plate thickened +1.45 mm - countersunk M3 reach
+    becomes ~M3x14; confirm horn engagement and that heads stay
+    inside the counterbore.  Confirm the d20 horn bore + swept
+    case-front clearance leave >=0.5 mm to the vendor J4 hardware
+    through the full +-80 deg sweep.
+22. Interlayer-shear coupons in BOTH print orientations used (up=b
+    for l4, up=h for l5) at the actual A1 + PETG-CF profile - the
+    6.1-vs-8 MPa question is the difference between verdict B and
+    a marginal pass at p38/p50.
+23. Fin lateral-capacity check: apply a lateral tip load to a
+    printed l4 and measure deflection/first-crack at the -b cheek
+    top edge (42,-14.9,32 region) - the model is divergent there;
+    the test decides whether the edge concentration is physical.
+24. Weigh R8 parts (expect l5 ~11.4 g, l4 ~10.3 g at rho x 0.6);
+    re-check the J2 flop bound (currently 0.372, gate 0.370).

@@ -1,0 +1,17 @@
+== 1. legacy-ref vs COM moment, l5 decks ==
+case     Fz(N)    M_legacy  M_com     ratio     err   
+p50      -6.87    -571      -637      0.896     -10%
+p38      -5.69    -473      -511      0.926     -7%
+p25      -4.42    -367      -373      0.983     -2%
+== l4 decks (legacy ref a=106, h=-5) ==
+p50      -7.16    -759      -883      0.859     -14%
+p38      -5.98    -634      -720      0.881     -12%
+    (COM point also carries h ~ -19.5 vs -5 -> axial-force
+     moment arms differ for the direction cases; keel-down
+     shown, matches the -10%% / -7%% under-statement used in R8)
+
+== 2. L5_LOFT keep-top vs the R6/R7 box notch ==
+stations 312 over a 23.60..28.40 x |b| 9.5..16.4:
+  full-depth kept  145 (46%)
+  lip kept (partial) 47 (15%); lips h -6.13..-2.38, depth above plate bottom 0.02..3.77
+  fully relieved   120 (38%)

@@ -108,7 +108,7 @@ def w_j4_cradle():
 def w_link4():
     b0, b1 = N.L4_B
     s = xb(ah(b0, *N.L4_PLATE), b0, b1)                       # horn plate
-    s = s + xb(poly_ah(b0, N.L4_STRUT), *N.L4_STRUT_B)       # R3: widened strut rib
+    s = s + xb(poly_ah(N.L4_STRUT_B[0], N.L4_STRUT), *N.L4_STRUT_B)   # R3: widened strut rib
     for sg in (1, -1):                                       # dorsal fin cheeks
         b_lo, b_hi = sorted((sg * N.L4_CHEEK_B[0], sg * N.L4_CHEEK_B[1]))
         s = s + xb(poly_ah(b_lo, N.L4_FIN), b_lo, b_hi)      # R1: face on lower bound, grows outward
@@ -120,7 +120,26 @@ def w_link4():
     s = s + box(ta0, ta1, tb0, tb1, th0, th1)                # collar back plate (closes tail)
     for ra0, ra1, rh0, rh1 in N.L4_RIBS:                                       # ribs strut -> fin -b cheek
         s = s + box(ra0, ra1, b0, -12.7, rh0, rh1)
-    s = s + xb(poly_ah(b0, N.L4_RIBMID), b0, -12.7)       # R4v3: tapered mid rib
+    s = s + xb(poly_ah(N.L4_STRUT_B[0], N.L4_RIBMID),     # R4v3: tapered mid rib;
+               N.L4_STRUT_B[0], -20.5)                    # R8: end 0.5 short of the
+                                                        # cradle -b wall (was -12.7,
+                                                        # intruded the wall corner)
+    # R8: clear the J4 hardware out of the strut/rib band - the kp model:
+    # horn disc b -26.1..-21.6 r9.6; case front face -24.5 spanning
+    # a -35..10.1, h +-12.36.  Bore d20 through the horn band + a case-front
+    # box.  The R3 strut had always overlapped the vendor horn; stale STLs
+    # masked it in the ROM check.
+    s = s - cyl((0, 0), 20.0, "b", -26.55, -24.8)
+    # case-front clearance must be the SWEPT footprint: the case box
+    # (a -35.12..10.11, h +-12.36) contains the J4 axis, so the union over
+    # the +-80 deg sweep is a big fan, not the rest-pose box.  Cutting only
+    # the static box left ~10 mm3 grazes at +-5 deg.
+    sw = None
+    for q in range(-80, 81, 8):
+        c = box(-35.4, 10.4, -24.85, -19.0, -12.8, 12.8)
+        c = c.rotate(Axis((0, -22.0, 0), (0, 1, 0)), q)
+        sw = c if sw is None else sw + c
+    s = s - sw
     # R5: honest mass trims for the J2 margin - windows in the R4-added
     # bulkheads, placed in the rib-only b span so the plate face, strut
     # (b<=-22.65) and the -b cheek band (b>=-14.91) are all untouched;
@@ -190,6 +209,27 @@ def w_link5():
                 ((38.5, sg * 17.0), (23.0, sg * 17.0))
             s = s - extrude(_ab(h0 - 1.0) * Polygon(*tp, align=None),
                             amount=(h1 - h0) + 2.0, dir=(0, 0, 1))
+        elif N.L5_RELIEF == "loft":                    # R8: swept-envelope lip loft
+            # keep-top table baked from the J4xJ5 swept phantom
+            # (checks/bake_loft.py).  None = keep full plate; -99 = full cut.
+            BS = [9.5 + 0.3 * i for i in range(24)]
+            for a_c, row in N.L5_LOFT:
+                j = 0
+                while j < len(row):
+                    k = j
+                    while k + 1 < len(row) and row[k + 1] == row[j]:
+                        k += 1
+                    if row[j] is not None:
+                        b_lo = sg * (BS[j] - 0.16)
+                        b_hi = sg * (BS[k] + 0.16)
+                        lo, hi2 = sorted((b_lo, b_hi))
+                        z0 = row[j] if row[j] != -99.0 else h0 - 0.1
+                        s = s - box(a_c - 0.21, a_c + 0.21, lo, hi2,
+                                    z0 - 0.02, h1 + 1.0)
+                    j = k + 1
+            # beyond the table (|b|>16.5): full cut, same as r6 outer band
+            lo, hi2 = sorted((sg * 16.4, sg * 17.0))
+            s = s - box(N.L5_PLATE[0] - 1.0, 28.7, lo, hi2, h0 - 1.0, h1 + 1.0)
     for sg in (1, -1):
         b_lo, b_hi = sorted((sg * N.L5_CHEEK_B[0], sg * N.L5_CHEEK_B[1]))
         s = s + xb(poly_ah(b_lo, N.L5_CAGE), b_lo, b_hi)     # R1: face on lower bound, grows outward

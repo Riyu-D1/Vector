@@ -64,7 +64,7 @@ CR_SLOT = (-22.3, -10.7, 11.0, 25.5, 4.0, 16.0)          # J4 plug exit slot
 CR_GROOVE = (-36.0, -10.0, 14.0, 18.5, 13.6, 14.8)       # cable guide groove
 
 # ---------- w_link4: J4 horn plate + strut + dorsal fin (J5 case) [D] ----------
-L4_B = B.L4_B                                   # (-30.65, -26.65) horn plate b
+# L4_B set below next to the strut-band comment (R8 outboard thickening).
 L4_PLATE = (-15.0, 15.0, -15.0, 15.0, 5.0)      # horn plate a-h profile
 # R-fix: stock strut polygon self-intersects at TWO sections (trailing edge
 # (14,0)->(5,-12) crosses the leading edge at a~8.8; the (24,10)->(30,22)
@@ -82,7 +82,14 @@ L4_PLATE = (-15.0, 15.0, -15.0, 15.0, 5.0)      # horn plate a-h profile
 # 2.65 mm clear of the cradle -b end at -20).
 L4_STRUT = ((5.0, -13.0), (14.0, -13.0), (40.0, 38.2),
             (36.0, 38.2), (14.0, 12.0), (8.0, -8.0))   # rib silhouette a-h, b = L4_STRUT_B
-L4_STRUT_B = (-30.65, -22.65)                       # R3: 8 mm rib (was plate 4 mm)
+L4_STRUT_B = (-32.1, -22.65)                        # R3: 8 mm rib (was plate 4 mm);
+                                                    # R8: outer face follows the plate to -32.1
+# R8: the J4 horn mounts the plate's INBOARD face (J4_FACE_B=-26.6; the kp
+# horn disc fills b -21.6..-26.6), so a boss there would collide with the
+# horn.  The only free direction is outboard: the plate face -30.65 ->
+# -32.1, leaving 0.5 mm to the fore_l inner face at -32.6.  The rim punch
+# section grows 4.0 -> 5.45 mm.  Screws need +1.5 mm reach (M3x14).
+L4_B = (-32.1, -26.65)                              # was (-30.65,-26.65)
 L4_CHEEK_B = (12.51, 14.91)                     # fin cheeks +-b (case b +-12.36 + clr)
 # R4: the R3 tailwall could only exist for a > 65.87 (the j5 case pocket cuts
 # every |-b| < 12.51 feature up to a 65.87), so it built as a ~0.13 mm
@@ -167,7 +174,30 @@ L5_SKIN_R = 3.0                                  # recess corner radius (smooths
 # (smooth taper 11.5->16.45) read WORSE than the R6 step on every scrann
 # metric (-20.5/14.9/9.6 vs -6.4/9.4/5.3 @ (26.1,+-12.9,-6.2) plate-bottom
 # edge) - the long free edge over the cheek inner face is the riser.
-L5_RELIEF = "r6"
+# R8: "loft" = swept-envelope relief.  The J4xJ5 swept phantom
+# (cradle+j4case+fore plates, point-cloud 0.6 mm gate, checks/bake_loft.py)
+# only grazes the TOP of the plate over much of the band - the box notch
+# threw away keepable material.  LOFT keeps the full plate out to the
+# true envelope plus a bottom lip where the intrusion is shallow.  The
+# funnel section under the annulus grows ~10x vs the r6 notch.
+L5_RELIEF = "loft"
+# per-(a,|b|) keep-top h; None = keep full plate; -99 = full cut.
+# a rows 23.6..28.4 step 0.4; |b| cols 9.5..16.4 step 0.3.  +-b symmetrized.
+L5_LOFT = (
+    (23.6, (None,)*8 + (-3.38, -4.63, -5.38) + (-99.0,)*13),
+    (24.0, (None,)*9 + (-3.63, -4.88, -5.63) + (-99.0,)*12),
+    (24.4, (None,)*9 + (-2.88, -4.13, -5.13, -5.88) + (-99.0,)*11),
+    (24.8, (None,)*10 + (-3.38, -4.38, -5.38) + (-99.0,)*11),
+    (25.2, (None,)*10 + (-2.38, -4.13, -4.88, -5.63) + (-99.0,)*10),
+    (25.6, (None,)*11 + (-3.13, -4.38, -5.38, -6.13) + (-99.0,)*9),
+    (26.0, (None,)*11 + (-2.38, -3.88, -5.13, -5.88) + (-99.0,)*9),
+    (26.4, (None,)*12 + (-3.13, -4.38, -5.63) + (-99.0,)*9),
+    (26.8, (None,)*12 + (-2.38, -4.13, -5.13, -5.88) + (-99.0,)*8),
+    (27.2, (None,)*13 + (-3.38, -4.63, -5.63) + (-99.0,)*8),
+    (27.6, (None,)*13 + (-3.13, -4.38, -5.38, -5.88) + (-99.0,)*7),
+    (28.0, (None,)*13 + (-2.38, -3.63, -4.88, -5.88) + (-99.0,)*7),
+    (28.4, (None,)*14 + (-3.38, -4.38, -5.63, -6.13) + (-99.0,)*6),
+)
 L5_CLEATS = ((24.0, -20.0), (24.0, -42.0))       # cable cleats (a,h) on the -b cheek outer face
                                                  # (R6: -34 -> -42, clears the window band)
 

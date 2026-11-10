@@ -1,0 +1,65 @@
+REACH J2 (np.float64(-20.0), np.float64(143.5)) J3 (np.float64(-20.0), np.float64(270.2)) J4 (np.float64(96.4), np.float64(216.2)) J5 (x 127.00 z 219.20) J6 (y 0.00 z 199.20) TCP x 233.80
+REACH J4->J5 30.60 (want 30.6), J5 axis y 0.00 PASS
+REACH J5 horn cylinder z 3.00 (want J4 + 3.0, horn bottom end) PASS
+REACH J6 roll line -17.00 below J4 (want -17.0) dy 0.00 PASS
+REACH J4->TCP 137.40 (want 137.4) PASS
+REACH J2->TCP 380.5 (want 375 +- 10) PASS
+HOLE w_link4: 4 x d3.4 on the STS3215 horn PCD14 PASS
+HOLE w_link5: 4 x d3.4 on the STS3215 horn PCD14 PASS
+HOLE w_grip_frame: 4 x d3.4 on the STS3215 horn PCD14 PASS
+HOLE w_link4: 4 horn holes on the servo horn axis (err 0.000) PASS
+HOLE w_link5: 4 horn holes on the servo horn axis (err 0.000) PASS
+HOLE w_grip_frame: 4 horn holes on the servo horn axis (err 0.000) PASS
+HOLE fore_r2: 4 x d3.4 J4 cradle bolts clear PASS
+HOLE w_j4_cradle: 4 x d2.5 pilots on the same centres PASS
+CLEAR w_j4_cradle x j4 case: intersection 0.00 mm3 PASS
+CLEAR w_link4 x j5 case: intersection 0.00 mm3 PASS
+CLEAR w_link5 x j6 case: intersection 0.00 mm3 PASS
+CLEAR w_grip_frame x g case: intersection 0.00 mm3 PASS
+GRIP open 25.0 mm: racks in the 64 channels, on the gear, no hits PASS
+MASS w_j4_cradle     15.5 cm3 ->  19.7 g solid ( 11.8 g at 0.6)  was  28.7 cm3  -45.8%
+MASS w_link4         17.7 cm3 ->  22.5 g solid ( 13.5 g at 0.6)  was  29.8 cm3  -40.6%
+MASS w_link5         14.3 cm3 ->  18.1 g solid ( 10.9 g at 0.6)  was  11.2 cm3  +27.3%
+MASS w_grip_frame    20.3 cm3 ->  25.8 g solid ( 15.5 g at 0.6)  was  20.9 cm3  -2.7%
+TORQUE masses: wrist+gripper 0.239 kg (R6 modelled 0.236; R6 cage fix +0.003 kg), payload 0.50 kg at J4 + 137.4
+MASS wrist+gripper 0.239 kg <= 0.241 kg (R9 baseline; pin is fore-side) PASS
+TORQUE J4 0.834 N.m (STS3250 rated 1.569 / 1.4 = 1.12; stage model 0.801) PASS
+TORQUE J5 0.605 N.m with J4 turned 90 (STS3215 0.98 [U] / 1.4 = 0.70) PASS
+TORQUE J2 3.32 N.m (cap 3.0; 2.45 N.m net of J2 spring [U]) - legacy 1-D model, informational only
+TORQUE J2 workspace bound 0.371 kg at flop pose (>= 0.370 regression gate; R6 measured 0.374 < 0.38 requirement - see LOG 20) PASS
+TORQUE J2 0.36 m level-reach bound 0.424 kg (>= 0.42 = 0.38 kg payload headroom) PASS
+TORQUE J3 1.80 N.m (cap 2.0) PASS
+STRESS J4: min strut section S 64 mm3 at h 24 -> 12.5 MPa, SF 2.0 vs [U] 25 MPa PASS
+WALL cradle top: wall run 2.00 mm at (-20.0, -10.0, 10.0) PASS
+WALL cradle end: wall run 2.05 mm at (-36.5, -10.0, 0.0) PASS
+WALL fin cheek: wall run 2.40 mm at (45.0, -11.0, 20.0) PASS
+WALL strut rib: wall run 5.15 mm at (26.0, -26.4, 15.0) PASS
+WALL link4 plate: wall run 5.50 mm at (10.0, -26.4, 0.0) PASS
+WALL link5 plate: wall run 1.85 mm at (30.6, 0.0, -6.2) PASS
+WALL link5 cheek: wall run 2.40 mm at (59.5, 16.0, -20.0) PASS
+WALL link5 web: wall run 2.05 mm at (20.0, 0.0, -51.5) PASS
+WALL grip cheek: wall run 2.40 mm at (113.0, 16.0, -40.0) PASS
+WALL grip web: wall run 2.05 mm at (75.0, 0.0, -51.5) PASS
+WALL grip plate: wall run 5.85 mm at (68.5, 10.0, -17.0) PASS
+ROM home pose wrist + gripper clear of every part PASS
+ROM J4 free -95..+85 deg (total 180, need >= 140) stops: + [vendor_sts3215_j6 x w_j4_cradle 189] - [w_link4 x vendor_sts3215_j4 3] PASS
+ROM J5 free -70..+70 deg (total 140, need >= 140) stops: + [w_link5 x fore_r2 3] - [w_link5 x fore_l2 3] PASS
+ROM J6 free -180..+180 deg (total 360, need >= 300) stops: + [] - [] PASS
+ROM J3 free -180..+35 deg (total 215, need >= 150) stops: + [fore_l2 x link1 147] - [] PASS
+ROM J2 free -125..+60 deg (total 185, need >= 150) stops: + [vendor_sts3215_j6 x base_plate 1793] - [upper_out x base_reinf 1] PASS
+YOKE journal bore d3.4 on the J4 axis: [(0.0, 13.7, 0.0, 0.0, 1.0, 0.0), (4.95, -33.1, -4.95, 0.0, 1.0, 0.0)] PASS
+YOKE pin d3 slip clear of journal bore + cradle bore (vols 0.00/0.00 mm3) PASS
+CLEAR J4 sweep min dist l4 x cradle = 0.50 mm at -80 deg (gate 0.50) PASS
+CLEAR J4 sweep min dist l4 x case = 0.55 mm at -80 deg (gate 0.50) PASS
+CLEAR J4 sweep min dist l4 x pin = 0.20 mm at 50 deg (gate 0.15) PASS
+CLEAR J4 sweep min dist l4 x fore_l = 1000000000.00 mm at None deg (gate 0.50) PASS
+CLEAR J4 sweep min dist l4 x fore_r = 1000000000.00 mm at None deg (gate 0.50) PASS
+CABLE w_j4_cradle: plug channel empty at 3/3 probe pts PASS
+CABLE w_link4: plug channel empty at 3/3 probe pts PASS
+CABLE w_link5: plug channel empty at 3/3 probe pts PASS
+CABLE w_grip_frame: plug channel empty at 3/3 probe pts PASS
+OVERHANG w_j4_cradle: 10 down-facing faces, 10 past 45 deg, worst droop 1.00 (1.00 = flat ceiling) PASS
+OVERHANG w_link4: 14 down-facing faces, 14 past 45 deg, worst droop 1.00 (1.00 = flat ceiling) PASS
+OVERHANG w_link5: 30 down-facing faces, 26 past 45 deg, worst droop 1.00 (1.00 = flat ceiling) PASS
+OVERHANG w_grip_frame: 26 down-facing faces, 20 past 45 deg, worst droop 1.00 (1.00 = flat ceiling) PASS
+CHECKS PASS

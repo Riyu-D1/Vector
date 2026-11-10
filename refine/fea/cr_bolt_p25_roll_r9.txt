@@ -1,0 +1,14 @@
+/Users/deepakdiwan/Vector-wt/refine/refine/fea/cr_bolt_p25_roll.frd: 82078 nodes 44916 tets, 4 result blocks
+constrained 10359 (NFIX 9823 NLOAD 536); excluded-with-elements 15721
+step1: max|U| 0.011 mm (@(4.2, 25.5, 0.0)) | raw maxVM 2.30 | filtered 2.30 | patch 0.78 MPa
+    hot VM 2.30 @n29921 (-4.5, 29.5, 1.5) | sig_n(y) +0.42 VM_in-layer 2.35
+    hot VM 2.24 @n31174 (0.0, 29.9, 4.7) | sig_n(y) -0.56 VM_in-layer 0.65
+    hot VM 2.14 @n29684 (-0.5, 29.5, 4.6) | sig_n(y) -0.41 VM_in-layer 1.75
+    hot VM 2.12 @n29917 (-4.8, 29.5, 0.4) | sig_n(y) +0.69 VM_in-layer 2.34
+    hot VM 2.10 @n29918 (-4.8, 29.5, -0.4) | sig_n(y) +0.61 VM_in-layer 2.32
+    raw-max VM 2.30 @n29921 (-4.5, 29.5, 1.5) | sig_n +0.42 VM_in-layer 2.35
+cr_bolt_p25_roll.frd axis=y step1: filtered nodes 66357
+   tensile sig_n +1.60 / 2.00 / 0.95 MPa @n1898 (-4.2, 29.5, -0.0)
+   compress sig_n -1.46 / 1.50 / 0.69 MPa @n1902 (-0.7, 29.5, 4.2)
+   in-layer VM  +0.42 / 2.35 / 0.59 MPa @n29921 (-4.5, 29.5, 1.5)
+   interlayer tau -0.56 / 0.65 / 1.23 MPa @n31174 (0.0, 29.9, 4.7)

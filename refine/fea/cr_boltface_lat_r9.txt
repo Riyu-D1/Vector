@@ -1,0 +1,14 @@
+/Users/deepakdiwan/Vector-wt/refine/refine/fea/cr_boltface_lat.frd: 82078 nodes 44916 tets, 4 result blocks
+constrained 16716 (NFIX 16165 NLOAD 551); excluded-with-elements 28453
+step1: max|U| 0.004 mm (@(4.2, 25.5, 0.0)) | raw maxVM 10.44 | filtered 1.84 | patch 10.44 MPa
+    hot VM 1.84 @n1898 (-4.2, 29.5, -0.0) | sig_n(y) +1.92 VM_in-layer 1.63
+    hot VM 1.70 @n31314 (-4.1, 29.1, -1.1) | sig_n(y) +1.69 VM_in-layer 0.41
+    hot VM 1.69 @n29921 (-4.5, 29.5, 1.5) | sig_n(y) +0.40 VM_in-layer 1.57
+    hot VM 1.67 @n31313 (-3.9, 29.1, -1.8) | sig_n(y) +1.62 VM_in-layer 0.31
+    hot VM 1.64 @n1897 (-4.0, 29.5, -1.5) | sig_n(y) +1.58 VM_in-layer 1.49
+    raw-max VM 10.44 @n2226 (0.0, 32.3, -1.6) | sig_n -7.09 VM_in-layer 3.72
+cr_boltface_lat.frd axis=y step1: filtered nodes 53625
+   tensile sig_n +1.92 / 1.63 / 0.95 MPa @n1898 (-4.2, 29.5, -0.0)
+   compress sig_n -1.03 / 0.30 / 0.21 MPa @n67647 (-0.2, 31.5, 2.8)
+   in-layer VM  +1.92 / 1.63 / 0.95 MPa @n1898 (-4.2, 29.5, -0.0)
+   interlayer tau +1.92 / 1.63 / 0.95 MPa @n1898 (-4.2, 29.5, -0.0)

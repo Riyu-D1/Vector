@@ -1,0 +1,10 @@
+/Users/deepakdiwan/Vector-wt/refine/refine/fea/l5_scpilot.frd: 44649 nodes 22720 tets, 4 result blocks
+constrained 3074 (NFIX 1449 NLOAD 1625); excluded-with-elements 7825
+step1: max|U| 0.405 mm (@(64.7, 12.7, -54.4)) | raw maxVM 16.55 | filtered 13.07 | patch 10.59 MPa
+    hot VM 13.07 @n5824 (36.8, -7.2, -2.1) | sig_n(x) +9.06 VM_in-layer 10.09
+    hot VM 12.30 @n6341 (37.6, 6.6, -2.1) | sig_n(x) +10.15 VM_in-layer 8.94
+    hot VM 11.59 @n5818 (37.1, 7.2, -2.1) | sig_n(x) +8.25 VM_in-layer 8.19
+    hot VM 10.89 @n5817 (37.4, 6.9, -2.1) | sig_n(x) +7.58 VM_in-layer 8.98
+    hot VM 10.72 @n6339 (37.9, -6.5, -2.1) | sig_n(x) +7.98 VM_in-layer 7.74
+    raw-max VM 16.55 @n4906 (36.7, 7.0, -2.1) | sig_n +13.24 VM_in-layer 15.37
+wrote /Users/deepakdiwan/Vector-wt/refine/refine/fea/l5_scpilot_step1.vtu

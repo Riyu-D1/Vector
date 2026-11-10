@@ -1,0 +1,9 @@
+l5_scpilot.frd: 40310 nodes 20097 tets, 4 result blocks
+constrained 3088 (NFIX 1463 NLOAD 1625); excluded-with-elements 7779
+step1: max|U| 0.824 mm (@(64.7, 12.7, -54.4)) | raw maxVM 33.50 | filtered 33.50 | patch 11.86 MPa
+    hot VM 33.50 @n3678 (36.2, 12.5, -6.2) | sig_n(x) -0.00 VM_in-layer 27.43
+    hot VM 33.28 @n3659 (36.2, -12.5, -6.2) | sig_n(x) +0.08 VM_in-layer 27.35
+    hot VM 26.87 @n27 (36.2, 12.5, -6.2) | sig_n(x) +1.54 VM_in-layer 22.05
+    hot VM 26.65 @n20 (36.2, -12.5, -6.2) | sig_n(x) +1.67 VM_in-layer 21.94
+    hot VM 23.33 @n1245 (36.2, 12.5, -5.5) | sig_n(x) -2.95 VM_in-layer 20.83
+    raw-max VM 33.50 @n3678 (36.2, 12.5, -6.2) | sig_n -0.00 VM_in-layer 27.43

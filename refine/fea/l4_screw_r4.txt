@@ -1,0 +1,10 @@
+/Users/deepakdiwan/Vector-wt/refine/refine/fea/l4_screw.frd: 74673 nodes 41138 tets, 4 result blocks
+constrained 6434 (NFIX 1261 NLOAD 5173); excluded-with-elements 7925
+step1: max|U| 0.385 mm (@(61.0, 16.4, 34.6)) | raw maxVM 8.12 | filtered 8.12 | patch 3.91 MPa
+    hot VM 8.12 @n9456 (20.5, -14.9, 7.5) | sig_n(y) -0.77 VM_in-layer 8.44
+    hot VM 7.76 @n2382 (24.3, -22.6, 7.3) | sig_n(y) -0.20 VM_in-layer 7.72
+    hot VM 7.59 @n3547 (20.0, -14.5, 7.6) | sig_n(y) -0.81 VM_in-layer 7.95
+    hot VM 7.56 @n27911 (24.5, -23.1, 7.6) | sig_n(y) -1.88 VM_in-layer 7.89
+    hot VM 7.24 @n258 (20.0, -14.9, 7.3) | sig_n(y) -0.26 VM_in-layer 7.32
+    raw-max VM 8.12 @n9456 (20.5, -14.9, 7.5) | sig_n -0.77 VM_in-layer 8.44
+wrote /Users/deepakdiwan/Vector-wt/refine/refine/fea/l4_screw_step1.vtu

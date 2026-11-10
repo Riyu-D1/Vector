@@ -1,0 +1,9 @@
+l4r3_face.frd: 67137 nodes 36423 tets, 4 result blocks
+constrained 8558 (NFIX 3385 NLOAD 5173); excluded-with-elements 14533
+step1: max|U| 0.349 mm (@(36.0, 14.9, 37.8)) | raw maxVM 14.48 | filtered 14.48 | patch 4.41 MPa
+    hot VM 14.48 @n1600 (65.9, -11.8, 24.0) | sig_n(y) +14.53 VM_in-layer 0.72
+    hot VM 14.34 @n22086 (65.9, -11.8, 24.0) | sig_n(y) +14.28 VM_in-layer 0.78
+    hot VM 14.09 @n1509 (66.0, -11.8, 24.0) | sig_n(y) +14.20 VM_in-layer 0.50
+    hot VM 12.28 @n22324 (65.9, -12.0, 23.4) | sig_n(y) +11.39 VM_in-layer 2.69
+    hot VM 11.12 @n21160 (66.0, -12.1, 23.4) | sig_n(y) +10.73 VM_in-layer 2.87
+    raw-max VM 14.48 @n1600 (65.9, -11.8, 24.0) | sig_n +14.53 VM_in-layer 0.72

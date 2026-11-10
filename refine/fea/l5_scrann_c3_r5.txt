@@ -1,0 +1,15 @@
+l5_scrann_c3.frd: 18239 nodes 8997 tets, 4 result blocks
+constrained 2427 (NFIX 1983 NLOAD 444); excluded-with-elements 5179
+step1: max|U| 0.336 mm (@(64.7, 11.9, -54.4)) | raw maxVM 14.76 | filtered 8.41 | patch 8.20 MPa
+    hot VM 8.41 @n4120 (37.3, -8.0, -2.1) | sig_n(z) +0.62 VM_in-layer 7.48
+    hot VM 8.38 @n4453 (28.2, 10.7, -4.0) | sig_n(z) -1.23 VM_in-layer 0.20
+    hot VM 8.37 @n4300 (28.2, -10.7, -4.0) | sig_n(z) -0.76 VM_in-layer 0.24
+    hot VM 8.02 @n4438 (28.2, 10.6, -4.6) | sig_n(z) -0.82 VM_in-layer 0.46
+    hot VM 7.96 @n4449 (28.2, 11.8, -4.2) | sig_n(z) -1.55 VM_in-layer 0.76
+    raw-max VM 14.76 @n4118 (36.8, -7.7, -2.1) | sig_n +5.49 VM_in-layer 14.18
+wrote l5_scrann_c3_step1.vtu
+l5_scrann_c3.frd axis=z step1: filtered nodes 13060
+   tensile sig_n +3.36 / 1.91 / 1.15 MPa @n251 (40.2, 12.3, -6.2)
+   compress sig_n -4.56 / 3.66 / 2.18 MPa @n229 (29.5, -12.3, -6.2)
+   in-layer VM  +0.62 / 7.48 / 3.59 MPa @n4120 (37.3, -8.0, -2.1)
+   interlayer tau -0.76 / 0.24 / 4.79 MPa @n4300 (28.2, -10.7, -4.0)

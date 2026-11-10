@@ -75,6 +75,9 @@ bbox fits 256³ with margin.
   length; M3 grub self-tap.
 - TCP repeatability ≤0.5 mm claim — the bench card measures it.
 - F9: `tool_grip` payload caveat — pen-only pack, called out in BENCH.md.
+  (Pack now ships `fix_tool_grip` — rear-rim trim for the w_link4 J5 sweep —
+  whose 5.7 N TCP case runs filtered VM 8.09 MPa → SF 3.09, not the old
+  stock cheek ~0.87; payload caveat still stands pending bench.)
 
 ## 3MF note
 

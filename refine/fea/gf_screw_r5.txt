@@ -1,0 +1,15 @@
+/Users/deepakdiwan/Vector-wt/refine/refine/fea/gf_screw.frd: 74316 nodes 38805 tets, 4 result blocks
+constrained 11193 (NFIX 2153 NLOAD 9040); excluded-with-elements 14817
+step1: max|U| 1.011 mm (@(125.1, -32.0, -39.4)) | raw maxVM 28.02 | filtered 28.02 | patch 2.56 MPa
+    hot VM 28.02 @n25399 (67.3, -12.5, -25.1) | sig_n(z) -28.42 VM_in-layer 10.06
+    hot VM 27.78 @n7336 (67.3, 12.5, -25.1) | sig_n(z) -28.61 VM_in-layer 9.68
+    hot VM 27.72 @n2968 (67.0, -12.5, -25.5) | sig_n(z) -28.41 VM_in-layer 2.37
+    hot VM 27.57 @n658 (67.0, 12.5, -25.5) | sig_n(z) -28.36 VM_in-layer 2.54
+    hot VM 26.01 @n23611 (67.0, 14.4, -27.0) | sig_n(z) -26.79 VM_in-layer 1.44
+    raw-max VM 28.02 @n25399 (67.3, -12.5, -25.1) | sig_n -28.42 VM_in-layer 10.06
+wrote /Users/deepakdiwan/Vector-wt/refine/refine/fea/gf_screw_step1.vtu
+gf_screw.frd axis=z step1: filtered nodes 59499
+   tensile sig_n +25.66 / 1.75 / 0.33 MPa @n37194 (70.0, -14.6, -27.6)
+   compress sig_n -28.61 / 9.68 / 5.84 MPa @n7336 (67.3, 12.5, -25.1)
+   in-layer VM  -11.82 / 12.29 / 6.93 MPa @n32 (67.0, 12.5, -24.7)
+   interlayer tau +1.92 / 5.09 / 8.24 MPa @n8344 (69.0, 12.2, -24.4)

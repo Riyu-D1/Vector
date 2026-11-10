@@ -1,0 +1,14 @@
+/Users/deepakdiwan/Vector-wt/refine/refine/fea/l4_scrann_p38_lat.frd: 103729 nodes 57626 tets, 4 result blocks
+constrained 33129 (NFIX 6748 NLOAD 26381); excluded-with-elements 39106
+step1: max|U| 0.393 mm (@(66.7, -16.4, 4.0)) | raw maxVM 13.00 | filtered 13.00 | patch 6.02 MPa
+    hot VM 13.00 @n12 (14.0, 13.5, -1.6) | sig_n(y) +0.65 VM_in-layer 13.05
+    hot VM 11.47 @n24683 (14.4, 13.9, -1.6) | sig_n(y) +0.75 VM_in-layer 11.17
+    hot VM 10.91 @n2101 (14.0, 14.2, -1.6) | sig_n(y) +0.98 VM_in-layer 10.18
+    hot VM 10.88 @n5484 (13.3, 13.5, -1.5) | sig_n(y) +0.48 VM_in-layer 11.07
+    hot VM 10.87 @n461 (14.7, 13.5, -1.6) | sig_n(y) +0.56 VM_in-layer 10.98
+    raw-max VM 13.00 @n12 (14.0, 13.5, -1.6) | sig_n +0.65 VM_in-layer 13.05
+l4_scrann_p38_lat.frd axis=y step1: filtered nodes 64623
+   tensile sig_n +8.98 / 2.51 / 2.74 MPa @n29342 (42.0, -15.4, 32.5)
+   compress sig_n -2.27 / 0.21 / 0.59 MPa @n29678 (41.6, -15.3, 37.8)
+   in-layer VM  +0.65 / 13.05 / 1.63 MPa @n12 (14.0, 13.5, -1.6)
+   interlayer tau +8.52 / 3.31 / 3.97 MPa @n28817 (41.5, -15.4, 32.0)

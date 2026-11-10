@@ -1,0 +1,100 @@
+home-pose intersecting pairs: 12 declared, 0 undeclared
+   DECLARED cy2_carrier x cy2_vendor_outpins 5.0 mm3  (cyclo outpins engage the carrier)
+   DECLARED cy2_disc1 x cy2_vendor_outpins 165.1 mm3  (cyclo drive: outpins in disc1 holes (precesses))
+   DECLARED cy2_disc2 x cy2_vendor_outpins 180.0 mm3  (cyclo drive: outpins in disc2 holes (precesses))
+   DECLARED cy3_carrier x cy3_vendor_outpins 5.0 mm3  (cyclo outpins engage the carrier)
+   DECLARED cy3_disc1 x cy3_vendor_outpins 165.1 mm3  (cyclo drive: outpins in disc1 holes (precesses))
+   DECLARED cy3_disc2 x cy3_vendor_outpins 180.0 mm3  (cyclo drive: outpins in disc2 holes (precesses))
+   DECLARED flange_j2 x vendor_spring_j2 2.6 mm3  (spring seat)
+   DECLARED flange_j3 x vendor_spring_j3 2.5 mm3  (spring seat)
+   DECLARED plug_j5 x vendor_sts3215_j5 2415.6 mm3  (plug proxy inside own servo/case zone)
+   DECLARED plug_j6 x vendor_sts3215_j6 2415.6 mm3  (plug proxy inside own servo/case zone)
+   DECLARED tc_gear x tc_rack_d 32.5 mm3  (gear/rack mesh)
+   DECLARED tc_gear x tc_rack_u 32.5 mm3  (gear/rack mesh)
+HOME   home pose clear of undeclared intersections                              PASS
+== per-joint sweeps (step 2.5 deg, others 0, grip closed) ==
+SWEEP  J1 swept -150..+150: min bbox gap 0.0 mm, min z 3.3 mm                   PASS
+SWEEP  J2 swept -120..+70: min bbox gap 0.0 mm, min z -91.5 mm  COLLISIONS: +62.5deg base_plate x vendor_sts3215_j6 29mm3; +62.5deg base_plate x w_link5 357mm3; +65.0deg base_plate x vendor_sts3215_j6 1793mm3; +65.0deg base_plate x w_link5 1467mm3; +67.5deg base_plate x vendor_sts3215_j6 4344mm3; +67.5deg base_plate x w_link5 1635mm3; +70.0deg base_link x w_link5 231mm3; +70.0deg base_plate x vendor_sts3215_j6 6790mm3; +70.0deg base_plate x w_link5 1790mm3 FAIL
+SWEEP  J3 swept -180..+30: min bbox gap 0.0 mm, min z 3.3 mm                    PASS
+SWEEP  J4 swept -70..+70: min bbox gap 0.0 mm, min z 3.3 mm                     PASS
+SWEEP  J5 swept -70..+70: min bbox gap 0.0 mm, min z 3.3 mm                     PASS
+SWEEP  J6 swept -180..+180: min bbox gap 0.0 mm, min z 3.3 mm                   PASS
+SWEEP  gripper 0..25 mm: min bbox gap 0.0 mm                                    PASS
+== named + corner poses ==
+POSE   home                q=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0] tcp=(234,0,199) z_min 3.3 clean PASS
+POSE   stow                q=[0.0, 70.0, -160.0, 70.0, 0.0, 0.0] tcp=(288,0,334) z_min 3.3 clean PASS
+POSE   reach-forward       q=[0.0, 70.0, -95.0, 25.0, 0.0, 0.0] tcp=(365,0,170) z_min 3.3 clean PASS
+POSE   reach-up            q=[0.0, -0.0, -65.0, 65.0, 0.0, 0.0] tcp=(216,0,336) z_min 3.3 clean PASS
+POSE   reach-down          q=[0.0, 70.0, -5.0, -65.0, 0.0, 0.0] tcp=(237,0,42) z_min 3.3 clean PASS
+POSE   wrist-fully-flexed  q=[0.0, 45.0, -45.0, 70.0, 70.0, 0.0] tcp=(193,100,110) z_min 3.3 clean PASS
+CORNER J2-120 J3-180 J4-70 min z -98.7 clean                                    FAIL
+CORNER J2-120 J3-180 J4+70 min z -159.3 clean                                   FAIL
+CORNER J2-120 J3+30 J4-70 min z 3.3 clean                                       PASS
+CORNER J2-120 J3+30 J4+70 min z 3.3 COLLISIONS [('cy2_disc1', 'vendor_sts3215_j6', 179.20224505042768), ('cy2_disc1', 'w_link5', 255.78082343525392), ('cy2_disc2', 'w_link5', 397.2657618611723), ('cy2_housing', 'vendor_sts3215_j6', 4395.4566491560345), ('cy2_housing', 'w_link5', 2563.728341019217), ('cy2_hub', 'vendor_sts3215_j6', 264.38580723850635), ('cy2_hub', 'w_link5', 133.55115445325808), ('cy2_vendor_motor', 'vendor_sts3215_j6', 1799.9963183496027), ('cy2_vendor_motor', 'w_link5', 1173.708432709438), ('cy2_vendor_outpins', 'w_link5', 28.715953500618195), ('cy2_vendor_ringpins', 'vendor_sts3215_j6', 124.59377437062557), ('cy2_vendor_ringpins', 'w_link5', 267.33093214116906)] FAIL
+CORNER J2+70 J3-180 J4-70 min z 3.3 clean                                       PASS
+CORNER J2+70 J3-180 J4+70 min z 3.3 clean                                       PASS
+CORNER J2+70 J3+30 J4-70 min z -28.9 COLLISIONS [('base_link', 'fore_l2', 3317.884495059665), ('base_link', 'fore_r2', 3317.884495039405), ('base_link', 'plug_j6', 69.53086031220407), ('base_link', 'vendor_sts3215_j5', 227.22847864309293), ('base_link', 'vendor_sts3215_j6', 2850.1682494441147), ('base_link', 'vendor_sts3250_j4', 2538.715578558484), ('base_link', 'w_j4_cradle', 1092.8156886310285), ('base_link', 'w_link4', 2246.6805252712), ('base_link', 'w_link5', 2913.187763497466), ('base_plate', 'fix_tool_grip_posed', 148.12082197672007), ('base_plate', 'vendor_sts3215_j6', 3521.9429711810953), ('base_plate', 'w_link5', 3580.174647895864), ('base_reinf', 'fore_l2', 709.7823975056637), ('base_reinf', 'fore_r2', 692.1283800878556), ('base_reinf', 'vendor_sts3250_j4', 2174.7051124875507), ('base_reinf', 'w_j4_cradle', 1061.3477398703023), ('base_reinf', 'w_link4', 969.7767407387864), ('base_reinf', 'wrist_pin', 41.03223657845121), ('fore_l2', 'link1', 1060.0078592224868), ('fore_l2', 'yaw_limit', 149.21407821147668), ('fore_r2', 'link1', 1019.7239982400943), ('fore_r2', 'yaw_limit', 147.82775057434935), ('j1_cradle', 'plug_j6', 1872.3729043072676), ('j1_cradle', 'vendor_sts3215_j6', 2817.7359982827547), ('j1_cradle', 'vendor_sts3250_j4', 3033.410485547301), ('j1_cradle', 'w_j4_cradle', 1399.947616465971), ('j1_cradle', 'w_link4', 60.130559114672614), ('j1_cradle', 'w_link5', 2306.292338444725), ('link1', 'vendor_sts3250_j4', 2268.8840931032355), ('link1', 'w_j4_cradle', 644.8736931272044), ('link1', 'w_link4', 359.3300615932085), ('vendor_sts3250_j4', 'yaw_limit', 2068.3958370464284), ('w_j4_cradle', 'yaw_limit', 567.0931406902046), ('w_link4', 'yaw_limit', 248.2039307856961)] FAIL
+CORNER J2+70 J3+30 J4+70 min z 3.3 COLLISIONS [('base_link', 'fix_tool_grip_posed', 625.3155898011419), ('base_link', 'fore_l2', 3317.884495059665), ('base_link', 'fore_r2', 3317.884495039405), ('base_link', 'tc_master', 969.041641531114), ('base_link', 'vendor_sts3215_j5', 1455.4336091757166), ('base_link', 'vendor_sts3215_j6', 6.3682541047638), ('base_link', 'vendor_sts3250_j4', 2538.715578558484), ('base_link', 'w_j4_cradle', 1092.8156886310285), ('base_link', 'w_link4', 3827.2124559800504), ('base_reinf', 'fix_tool_grip_posed', 59.70509638988102), ('base_reinf', 'fore_l2', 709.7823975056637), ('base_reinf', 'fore_r2', 692.1283800878556), ('base_reinf', 'tc_master', 1125.366875806745), ('base_reinf', 'vendor_sts3215_j6', 1014.5523189298259), ('base_reinf', 'vendor_sts3250_j4', 2174.7051124875507), ('base_reinf', 'w_j4_cradle', 1061.3477398703023), ('base_reinf', 'w_link4', 900.4533895839421), ('base_reinf', 'w_link5', 286.59403578958785), ('base_reinf', 'wrist_pin', 41.03223657845121), ('cy2_disc1', 'vendor_sts3215_j6', 179.2022450504289), ('cy2_disc1', 'w_link5', 255.78082343525494), ('cy2_disc2', 'w_link5', 397.2657618611738), ('cy2_housing', 'vendor_sts3215_j6', 4395.456649156044), ('cy2_housing', 'w_link5', 2563.728341019213), ('cy2_hub', 'vendor_sts3215_j6', 264.385807238509), ('cy2_hub', 'w_link5', 133.5511544532554), ('cy2_vendor_motor', 'vendor_sts3215_j6', 1799.9963183496168), ('cy2_vendor_motor', 'w_link5', 1173.7084327094337), ('cy2_vendor_outpins', 'vendor_sts3215_j6', 3.421265076998735), ('cy2_vendor_outpins', 'w_link5', 28.18765400437016), ('cy2_vendor_ringpins', 'vendor_sts3215_j6', 124.5937743706258), ('cy2_vendor_ringpins', 'w_link5', 267.3309321411683), ('fore_l2', 'link1', 1060.0078592224868), ('fore_l2', 'yaw_limit', 149.21407821147668), ('fore_r2', 'link1', 1019.7239982400943), ('fore_r2', 'yaw_limit', 147.82775057434935), ('j1_cradle', 'plug_j5', 960.433645526804), ('j1_cradle', 'vendor_sts3215_j5', 3492.278779271595), ('j1_cradle', 'vendor_sts3250_j4', 3033.410485547301), ('j1_cradle', 'w_j4_cradle', 1399.947616465971), ('j1_cradle', 'w_link4', 7374.366497646776), ('j1_cradle', 'w_link5', 165.0036892714426), ('link1', 'vendor_sts3215_j6', 2458.262158474715), ('link1', 'vendor_sts3250_j4', 2268.8840931032355), ('link1', 'w_j4_cradle', 644.8736931272044), ('link1', 'w_link4', 417.064472438987), ('link1', 'w_link5', 320.6398897271769), ('plug_j5', 'vendor_sts3250_j1', 1091.5435378717602), ('vendor_sts3215_j5', 'vendor_sts3250_j1', 36463.83737250514), ('vendor_sts3215_j6', 'vendor_sts3250_j1', 49.77533240174169), ('vendor_sts3215_j6', 'yaw_limit', 2776.4284489905776), ('vendor_sts3250_j1', 'w_link4', 969.4802457459554), ('vendor_sts3250_j1', 'w_link5', 550.293286590437), ('vendor_sts3250_j4', 'yaw_limit', 2068.3958370464284), ('w_j4_cradle', 'yaw_limit', 567.0931406902046), ('w_link4', 'yaw_limit', 263.8109551886972), ('w_link5', 'yaw_limit', 884.081679187441)] FAIL
+== Monte-Carlo 1200 poses (uniform in limits, grip 0..25 mm) ==
+MC     1200 poses: min bbox gap 0.0, min z -180.3, undeclared collisions 526    FAIL
+   MC pose 19 q=[-6.0, 33.5, 16.4, 32.1, 18.9, -11.1] grip 5.7: base_link x fix_tool_grip_posed 408 mm3
+   MC pose 19 q=[-6.0, 33.5, 16.4, 32.1, 18.9, -11.1] grip 5.7: base_link x tc_vendor_g 6 mm3
+   MC pose 19 q=[-6.0, 33.5, 16.4, 32.1, 18.9, -11.1] grip 5.7: base_link x vendor_sts3215_j6 3315 mm3
+   MC pose 19 q=[-6.0, 33.5, 16.4, 32.1, 18.9, -11.1] grip 5.7: base_link x w_link5 2841 mm3
+   MC pose 19 q=[-6.0, 33.5, 16.4, 32.1, 18.9, -11.1] grip 5.7: base_plate x fix_tool_grip_posed 1463 mm3
+   MC pose 19 q=[-6.0, 33.5, 16.4, 32.1, 18.9, -11.1] grip 5.7: base_plate x tc_rack_d 16 mm3
+   MC pose 19 q=[-6.0, 33.5, 16.4, 32.1, 18.9, -11.1] grip 5.7: base_plate x tc_vendor_g 7374 mm3
+   MC pose 19 q=[-6.0, 33.5, 16.4, 32.1, 18.9, -11.1] grip 5.7: base_reinf x vendor_sts3215_j6 1386 mm3
+   MC pose 19 q=[-6.0, 33.5, 16.4, 32.1, 18.9, -11.1] grip 5.7: base_reinf x w_link5 476 mm3
+   MC pose 19 q=[-6.0, 33.5, 16.4, 32.1, 18.9, -11.1] grip 5.7: link1 x w_link5 152 mm3
+   MC pose 19 q=[-6.0, 33.5, 16.4, 32.1, 18.9, -11.1] grip 5.7: vendor_sts3215_j6 x yaw_limit 62 mm3
+   MC pose 19 q=[-6.0, 33.5, 16.4, 32.1, 18.9, -11.1] grip 5.7: w_link5 x yaw_limit 111 mm3
+   MC pose 21 q=[-70.2, -22.4, -57.7, 36.3, -65.2, 59.4] grip 0.4: vendor_sts3250_j4 x w_link5 1 mm3
+   MC pose 21 q=[-70.2, -22.4, -57.7, 36.3, -65.2, 59.4] grip 0.4: w_j4_cradle x w_link5 8 mm3
+   MC pose 36 q=[97.1, -115.1, -137.4, 51.9, 59.2, 132.6] grip 2.0: w_j4_cradle x w_link5 1 mm3
+   MC pose 40 q=[56.3, 47.6, 13.7, 1.8, -50.1, -100.1] grip 4.0: base_link x vendor_sts3215_j6 758 mm3
+   MC pose 40 q=[56.3, 47.6, 13.7, 1.8, -50.1, -100.1] grip 4.0: base_link x w_link5 1960 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_link x fore_l2 894 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_link x fore_r2 981 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_link x tc_master 176 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_link x vendor_sts3215_j5 169 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_link x vendor_sts3215_j6 15041 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_link x vendor_sts3250_j4 1272 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_link x w_j4_cradle 1331 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_link x w_link4 680 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_link x w_link5 3318 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_plate x fix_tool_grip_posed 4876 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_plate x tc_master 1360 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_plate x tc_vendor_g 299 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_plate x vendor_sts3215_j6 980 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_plate x w_link5 1558 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_reinf x fore_l2 406 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_reinf x fore_r2 439 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_reinf x vendor_sts3250_j4 3822 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_reinf x w_j4_cradle 331 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_reinf x w_link4 718 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: base_reinf x wrist_pin 2 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: fore_l2 x link1 589 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: fore_l2 x yaw_limit 42 mm3
+   MC pose 77 q=[-34.6, 61.0, 27.6, -26.2, 29.9, 171.9] grip 12.1: fore_r2 x link1 580 mm3
+== exact minimum-distance probes (surface+vertex sampling, mm) ==
+   w_link4              x w_j4_cradle            0.500 mm   yoke plate / journal vs cradle - design 0.2 rad, 0.5 face
+   wrist_pin            x w_link4                0.200 mm   d3 journal in boss bore - design 0.20 rad
+   wrist_pin            x w_j4_cradle            0.050 mm   pin in cradle bore - designed fit
+   w_link4              x fore_r2               13.400 mm   l4 vs fore_r2
+   w_link5              x w_link4                0.692 mm   l5 vs l4 home
+   vendor_sts3215_j5    x w_link4                0.150 mm   j5 case in cradle
+   vendor_sts3215_j6    x w_link5                0.150 mm   j6 case in l5
+   tc_master            x w_link5                1.650 mm   master plate vs l5
+   fix_tool_grip_posed  x w_link5                6.911 mm   tool cage vs l5
+   fix_tool_grip_posed  x w_link4                2.390 mm   tool cage vs l4 collar
+== per-joint summary ==
+joint    range swept        min gap mm   min z mm   verdict
+J1       -150..+150 deg     0.0          3.3        PASS
+J2       -120..+70 deg      0.0          -91.5      FAIL
+J3       -180..+30 deg      0.0          3.3        PASS
+J4       -70..+70 deg       0.0          3.3        PASS
+J5       -70..+70 deg       0.0          3.3        PASS
+J6       -180..+180 deg     0.0          3.3        PASS
+grip     0..25 mm           0.0          3.3        PASS
+CHECKS FAIL

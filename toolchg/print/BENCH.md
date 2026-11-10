@@ -42,8 +42,11 @@ Scope: master on the J6 horn + passive pen tool. Everything here is done
 ## Caveats (do not skip)
 
 - **F9 payload caveat stands**: do NOT hang the 0.5 kg payload on a
-  printed grip tool yet — `tool_grip` cheek SF ~0.87 `[U]` inherited from
-  w_grip_frame. **This pack is pen-only** (~23 g, passive).
+  printed grip tool yet — the pack ships `fix_tool_grip` (rim-trimmed;
+  5.7 N TCP case filtered VM 8.09 MPa → SF 3.09 vs the old stock
+  `tool_grip` cheek ~0.87 `[U]` inherited from w_grip_frame), but the
+  full-payload tool claim is still unproven `[U bench]`.
+  **This pack is pen-only** (~23 g, passive).
 - Pogo pass-through not exercised in this pack; 12 V tool bus comes later.
 - Safety: the detent ball + spring are **small parts** — keep the plunger
   assembled, work over a tray. No powered motion yet — hand twist only.

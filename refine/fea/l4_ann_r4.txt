@@ -1,0 +1,10 @@
+/Users/deepakdiwan/Vector-wt/refine/refine/fea/l4_ann.frd: 74673 nodes 41138 tets, 4 result blocks
+constrained 5730 (NFIX 557 NLOAD 5173); excluded-with-elements 7875
+step1: max|U| 0.370 mm (@(61.0, 16.4, 34.6)) | raw maxVM 10.87 | filtered 8.11 | patch 10.87 MPa
+    hot VM 8.11 @n9456 (20.5, -14.9, 7.5) | sig_n(y) -0.77 VM_in-layer 8.43
+    hot VM 7.67 @n2382 (24.3, -22.6, 7.3) | sig_n(y) -0.20 VM_in-layer 7.63
+    hot VM 7.59 @n3547 (20.0, -14.5, 7.6) | sig_n(y) -0.81 VM_in-layer 7.95
+    hot VM 7.50 @n27911 (24.5, -23.1, 7.6) | sig_n(y) -1.87 VM_in-layer 7.81
+    hot VM 7.24 @n258 (20.0, -14.9, 7.3) | sig_n(y) -0.26 VM_in-layer 7.31
+    raw-max VM 10.87 @n2643 (8.0, -30.6, -4.9) | sig_n -8.39 VM_in-layer 9.71
+wrote /Users/deepakdiwan/Vector-wt/refine/refine/fea/l4_ann_step1.vtu

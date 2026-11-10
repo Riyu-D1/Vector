@@ -37,7 +37,8 @@ L_WRIST = (0.1374**2 + 0.0170**2) ** 0.5  # |W_J5+W_J6+T_TCP| at q=0 = 0.13845
 # ------------------------------------------------------------------ limits
 # Mechanical joint limits (rad) — sim/STATUS-sim.md swept ranges.
 JOINT_MIN = [
-    -math.pi,               # J1 base yaw  ±180
+    math.radians(-150),     # J1 base yaw  -150..+180 (printed yaw hard
+                          #  stop engages at -152.5 - keep 2.5 deg clear)
     math.radians(-120),     # J2 shoulder  -120..+70
     -math.pi,               # J3 elbow     -180..+30
     math.radians(-70),      # J4 wrist pitch ±70
@@ -45,7 +46,10 @@ JOINT_MIN = [
     -math.pi,               # J6 gripper twist ±180
 ]
 JOINT_MAX = [
-    math.pi,
+    math.radians(150),      # J1 max +150: the yaw stop is SYMMETRIC -
+                          #  measured engagement beyond +-152.5 both
+                          #  directions (fc_collision arm-fullfix), so
+                          #  +180 would drive into the same printed stop
     math.radians(70),
     math.radians(30),
     math.radians(70),

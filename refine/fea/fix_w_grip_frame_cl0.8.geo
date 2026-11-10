@@ -1,0 +1,12 @@
+SetFactory("OpenCASCADE");
+Merge "/Users/deepakdiwan/Vector-wt/refine/refine/out/fix_w_grip_frame.step";
+Mesh.ElementOrder = 2;
+Mesh.HighOrderOptimize = 2;
+Mesh.CharacteristicLengthMax = 0.80;
+Mesh.CharacteristicLengthMin = 0.20;
+Mesh.CharacteristicLengthFromCurvature = 1;
+Mesh.MinimumElementsPerTwoPi = 14;
+Mesh 3;
+Mesh.MshFileVersion = 2.2;
+Save "/Users/deepakdiwan/Vector-wt/refine/refine/fea/fix_w_grip_frame_cl0.8.msh";
+Exit;

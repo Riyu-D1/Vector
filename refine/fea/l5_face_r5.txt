@@ -1,0 +1,15 @@
+l5_face.frd: 44649 nodes 22720 tets, 4 result blocks
+constrained 3315 (NFIX 1690 NLOAD 1625); excluded-with-elements 9404
+step1: max|U| 0.167 mm (@(64.7, -12.7, -54.4)) | raw maxVM 10.78 | filtered 5.51 | patch 10.78 MPa
+    hot VM 5.51 @n1964 (46.2, -14.9, -5.1) | sig_n(z) +1.94 VM_in-layer 4.78
+    hot VM 5.51 @n2575 (46.2, 14.9, -5.1) | sig_n(z) +1.90 VM_in-layer 4.85
+    hot VM 5.16 @n13332 (46.1, -14.2, -5.0) | sig_n(z) +1.79 VM_in-layer 4.37
+    hot VM 5.06 @n15103 (46.1, 14.2, -5.0) | sig_n(z) +1.68 VM_in-layer 4.33
+    hot VM 5.04 @n15105 (46.1, 13.0, -5.0) | sig_n(z) +0.78 VM_in-layer 4.41
+    raw-max VM 10.78 @n607 (38.1, 16.4, -2.1) | sig_n +9.69 VM_in-layer 8.01
+wrote l5_face_step1.vtu
+l5_face.frd axis=z step1: filtered nodes 35245
+   tensile sig_n +3.66 / 0.69 / 0.30 MPa @n13802 (58.8, 12.5, -51.8)
+   compress sig_n -3.47 / 1.10 / 0.17 MPa @n785 (28.2, -14.4, -3.0)
+   in-layer VM  +1.90 / 4.85 / 0.29 MPa @n2575 (46.2, 14.9, -5.1)
+   interlayer tau +1.55 / 3.12 / 1.56 MPa @n837 (41.5, 12.3, -3.5)

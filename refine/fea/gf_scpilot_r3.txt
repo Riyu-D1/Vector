@@ -1,0 +1,9 @@
+gf_scpilot.frd: 74558 nodes 38966 tets, 4 result blocks
+constrained 11243 (NFIX 2246 NLOAD 8997); excluded-with-elements 15240
+step1: max|U| 0.456 mm (@(125.1, -26.0, -39.4)) | raw maxVM 12.97 | filtered 12.97 | patch 2.73 MPa
+    hot VM 12.97 @n7278 (67.3, 12.5, -25.1) | sig_n(z) -12.05 VM_in-layer 5.37
+    hot VM 12.85 @n25401 (67.3, -12.5, -25.1) | sig_n(z) -12.08 VM_in-layer 5.04
+    hot VM 10.36 @n642 (67.0, 12.5, -25.5) | sig_n(z) -10.31 VM_in-layer 1.31
+    hot VM 10.35 @n2920 (67.0, -12.5, -25.5) | sig_n(z) -10.33 VM_in-layer 1.22
+    hot VM 9.17 @n37197 (97.4, -14.4, -12.0) | sig_n(z) -0.02 VM_in-layer 9.11
+    raw-max VM 12.97 @n7278 (67.3, 12.5, -25.1) | sig_n -12.05 VM_in-layer 5.37

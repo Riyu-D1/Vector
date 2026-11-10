@@ -1,0 +1,10 @@
+/Users/deepakdiwan/Vector-wt/refine/refine/fea/l5_scr2_p38.frd: 44649 nodes 22720 tets, 4 result blocks
+constrained 2269 (NFIX 644 NLOAD 1625); excluded-with-elements 6169
+step1: max|U| 0.519 mm (@(64.7, -12.7, -54.4)) | raw maxVM 21.66 | filtered 15.45 | patch 13.47 MPa
+    hot VM 15.45 @n5929 (33.0, 5.7, -2.1) | sig_n(x) -16.51 VM_in-layer 7.86
+    hot VM 15.44 @n6341 (37.6, 6.6, -2.1) | sig_n(x) +13.59 VM_in-layer 10.70
+    hot VM 14.55 @n5824 (36.8, -7.2, -2.1) | sig_n(x) +10.45 VM_in-layer 9.85
+    hot VM 14.07 @n5927 (32.9, 5.4, -2.1) | sig_n(x) -16.23 VM_in-layer 5.64
+    hot VM 13.94 @n5954 (32.9, -5.5, -2.1) | sig_n(x) -16.01 VM_in-layer 6.52
+    raw-max VM 21.66 @n4928 (33.3, 5.5, -2.1) | sig_n -25.35 VM_in-layer 11.94
+wrote /Users/deepakdiwan/Vector-wt/refine/refine/fea/l5_scr2_p38_step1.vtu

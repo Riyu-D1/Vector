@@ -1,0 +1,208 @@
+# fullcheck/fea per-part SF2 results - arm-fullfix @ 0.25 kg
+# CalculiX C3D10, bolted/pinned interfaces, fc_torque worst poses.
+# SF = allowable/peak filtered stress (patch-adjacent nodes excluded).
+# allowables: vm 25 | norm 12.5 | comp 15 | shear 8 (+6.1 lb) MPa
+
+back_spacer_j2   28840 nodes 16458 tets | fix 6169 load 1710 | F=-12.91, 0.0, -0.0N M=0.0, -2481.1, -15.7Nmm@-20.0, 0.0, 143.5
+    vm      0.497 MPa SF    50.29
+    norm    0.069 MPa SF   180.93
+    comp    0.632 MPa SF    23.73
+    shear   0.178 MPa SF    45.04
+    max|U| 0.001 mm | raw maxVM 0.66
+    BINDING comp SF 23.73
+back_spacer_j3   28423 nodes 16150 tets | fix 6095 load 1703 | F=-5.54, 0.0, 3.2N M=-1.5, -1258.0, -2.7Nmm@-20.0, 0.0, 270.2
+    vm      0.280 MPa SF    89.28
+    norm    0.058 MPa SF   216.36
+    comp    0.348 MPa SF    43.04
+    shear   0.095 MPa SF    84.16
+    max|U| 0.000 mm | raw maxVM 0.36
+    BINDING comp SF 43.04
+base_link        375076 nodes 248735 tets | fix 23065 load 3359 | F=0.0, 0.0, -13.4N M=15.4, -2743.2, 0.0Nmm@0.0, 0.0, 80.8
+    vm      0.141 MPa SF   177.91
+    norm    0.017 MPa SF   748.44
+    comp    0.200 MPa SF    75.17
+    shear   0.059 MPa SF   135.12
+    max|U| 0.000 mm | raw maxVM 0.15
+    BINDING comp SF 75.17
+base_plate_d     192612 nodes 125834 tets | fix 16402 load 15277 | F=0.0, 0.0, -13.4N M=15.4, -2743.2, 0.0Nmm@0.0, 0.0, 80.8
+    vm      0.004 MPa SF  5578.30
+    norm    0.000 MPa SF 46524.96
+    comp    0.004 MPa SF  3727.46
+    shear   0.002 MPa SF  3462.01
+    max|U| 0.000 mm | raw maxVM 0.03
+    BINDING shear SF 3462.01
+base_reinf       83217 nodes 46494 tets | fix 10609 load 9699 | F=0.0, 0.0, -13.4N M=15.4, -2743.2, 0.0Nmm@0.0, 0.0, 80.8
+    vm      1.017 MPa SF    24.57
+    norm    0.374 MPa SF    33.46
+    comp    0.949 MPa SF    15.80
+    shear   0.219 MPa SF    36.58
+    max|U| 0.006 mm | raw maxVM 1.45
+    BINDING comp SF 15.80
+cy2_carrier      53142 nodes 34130 tets | fix 16860 load 7673 | F=0.0, -12.91, -0.0N M=15.7, 0.0, 2481.1Nmm@0.0, 0.0, 23.4
+    vm      0.211 MPa SF   118.40
+    norm    0.036 MPa SF   347.38
+    comp    0.203 MPa SF    73.94
+    shear   0.112 MPa SF    71.67
+    max|U| 0.000 mm | raw maxVM 0.51
+    BINDING shear SF 71.67
+cy2_housing      156441 nodes 93610 tets | fix 51111 load 16371 | F=-12.91, -0.0, -0.0N M=0.0, -15.7, 2481.1Nmm@0.0, 0.0, 23.4
+    vm      0.014 MPa SF  1750.84
+    norm    0.014 MPa SF   924.93
+    comp    0.019 MPa SF   786.62
+    shear   0.005 MPa SF  1675.73
+    max|U| 0.000 mm | raw maxVM 0.06
+    BINDING comp SF 786.62
+cy2_out_flange   28698 nodes 16434 tets | fix 6884 load 1945 | F=0.0, -12.91, -0.0N M=15.7, 0.0, 2481.1Nmm@0.0, 0.0, 23.4
+    vm      0.450 MPa SF    55.57
+    norm    0.409 MPa SF    30.53
+    comp    0.314 MPa SF    47.73
+    shear   0.243 MPa SF    32.88
+    max|U| 0.000 mm | raw maxVM 1.45
+    BINDING norm SF 30.53
+cy3_carrier      52812 nodes 33876 tets | fix 16855 load 7551 | F=2.6, 5.84, -0.0N M=-2.8, 1.3, 1258.0Nmm@0.0, 0.0, 23.4
+    vm      0.120 MPa SF   208.69
+    norm    0.025 MPa SF   497.68
+    comp    0.093 MPa SF   160.53
+    shear   0.054 MPa SF   146.85
+    max|U| 0.000 mm | raw maxVM 0.27
+    BINDING shear SF 146.85
+cy3_housing      156366 nodes 93555 tets | fix 51032 load 16389 | F=-5.54, 3.2, -0.0N M=-1.5, -2.7, 1258.0Nmm@0.0, 0.0, 23.4
+    vm      0.007 MPa SF  3449.08
+    norm    0.008 MPa SF  1662.86
+    comp    0.009 MPa SF  1691.13
+    shear   0.002 MPa SF  4321.70
+    max|U| 0.000 mm | raw maxVM 0.03
+    BINDING norm SF 1662.86
+cy3_out_flange   28698 nodes 16434 tets | fix 6884 load 1945 | F=2.6, 5.84, -0.0N M=-2.8, 1.3, 1258.0Nmm@0.0, 0.0, 23.4
+    vm      0.175 MPa SF   142.67
+    norm    0.112 MPa SF   112.09
+    comp    0.244 MPa SF    61.47
+    shear   0.095 MPa SF    84.13
+    max|U| 0.000 mm | raw maxVM 0.79
+    BINDING comp SF 61.47
+dogleg_l         62942 nodes 37288 tets | fix 7189 load 4595 | F=2.6, 0.0, 5.84N M=-2.8, -1258.0, 1.3Nmm@-20.0, 0.0, 270.2
+    vm      3.194 MPa SF     7.83
+    norm    0.311 MPa SF    40.21
+    comp    3.920 MPa SF     3.83
+    shear   0.700 MPa SF    11.43
+    max|U| 0.171 mm | raw maxVM 5.26
+    BINDING comp SF 3.83
+dogleg_l_g       98941 nodes 60183 tets | fix 7955 load 4694 | F=2.6, 0.0, 5.84N M=-2.8, -1258.0, 1.3Nmm@-20.0, 0.0, 270.2
+    vm      3.828 MPa SF     6.53
+    norm    0.341 MPa SF    36.65
+    comp    4.496 MPa SF     3.34
+    shear   0.641 MPa SF    12.48
+    max|U| 0.171 mm | raw maxVM 4.26
+    BINDING comp SF 3.34
+dogleg_r         67405 nodes 40226 tets | fix 7212 load 4586 | F=2.6, 0.0, 5.84N M=-2.8, -1258.0, 1.3Nmm@-20.0, 0.0, 270.2
+    vm      3.644 MPa SF     6.86
+    norm    0.228 MPa SF    54.93
+    comp    4.370 MPa SF     3.43
+    shear   0.715 MPa SF    11.19
+    max|U| 0.171 mm | raw maxVM 5.25
+    BINDING comp SF 3.43
+dogleg_r_g       102169 nodes 62305 tets | fix 8019 load 4806 | F=2.6, 0.0, 5.84N M=-2.8, -1258.0, 1.3Nmm@-20.0, 0.0, 270.2
+    vm      3.937 MPa SF     6.35
+    norm    0.164 MPa SF    76.24
+    comp    4.656 MPa SF     3.22
+    shear   0.925 MPa SF     8.65
+    max|U| 0.171 mm | raw maxVM 5.23
+    BINDING comp SF 3.22
+flange_j2        23687 nodes 13661 tets | fix 908 load 3584 | F=0.0, 0.0, -12.91N M=15.7, -2481.1, 0.0Nmm@-20.0, 0.0, 143.5
+    vm      0.488 MPa SF    51.23
+    norm    0.113 MPa SF   111.07
+    comp    0.528 MPa SF    28.44
+    shear   0.267 MPa SF    29.96
+    max|U| 0.001 mm | raw maxVM 0.77
+    BINDING comp SF 28.44
+flange_j3        25546 nodes 14852 tets | fix 1039 load 3693 | F=2.6, 0.0, 5.84N M=-2.8, -1258.0, 1.3Nmm@-20.0, 0.0, 270.2
+    vm      0.169 MPa SF   147.95
+    norm    0.028 MPa SF   444.99
+    comp    0.189 MPa SF    79.42
+    shear   0.092 MPa SF    86.58
+    max|U| 0.000 mm | raw maxVM 0.35
+    BINDING comp SF 79.42
+fore_l2          189850 nodes 118122 tets | fix 19943 load 4054 | F=2.4, 0.0, 4.16N M=-1.1, -502.8, 0.6Nmm@96.4, 0.0, 216.2
+    vm      5.434 MPa SF     4.60
+    norm    0.917 MPa SF    13.64
+    comp    4.751 MPa SF     3.16
+    shear   1.003 MPa SF     7.97
+    max|U| 0.295 mm | raw maxVM 5.43
+    BINDING comp SF 3.16
+fore_l2_g        261325 nodes 164868 tets | fix 24763 load 4320 | F=2.4, 0.0, 4.16N M=-1.1, -502.8, 0.6Nmm@96.4, 0.0, 216.2
+    vm      4.462 MPa SF     5.60
+    norm    0.548 MPa SF    22.80
+    comp    4.344 MPa SF     3.45
+    shear   0.781 MPa SF    10.24
+    max|U| 0.295 mm | raw maxVM 5.21
+    BINDING comp SF 3.45
+fore_r2          201577 nodes 125504 tets | fix 30278 load 4229 | F=2.4, 0.0, 4.16N M=-1.1, -502.8, 0.6Nmm@96.4, 0.0, 216.2
+    vm      1.091 MPa SF    22.91
+    norm    0.165 MPa SF    75.59
+    comp    1.307 MPa SF    11.48
+    shear   0.260 MPa SF    30.80
+    max|U| 0.020 mm | raw maxVM 1.30
+    BINDING comp SF 11.48
+fore_r2_g        260438 nodes 163726 tets | fix 36184 load 4331 | F=2.4, 0.0, 4.16N M=-1.1, -502.8, 0.6Nmm@96.4, 0.0, 216.2
+    vm      1.151 MPa SF    21.72
+    norm    0.191 MPa SF    65.49
+    comp    1.495 MPa SF    10.03
+    shear   0.260 MPa SF    30.73
+    max|U| 0.020 mm | raw maxVM 1.50
+    BINDING comp SF 10.03
+front_spacer_j2  13365 nodes 7357 tets | fix 2837 load 2009 | F=0.0, 0.0, -12.91N M=15.7, -2481.1, 0.0Nmm@-20.0, 0.0, 143.5
+    vm      1.895 MPa SF    13.19
+    norm    0.288 MPa SF    43.44
+    comp    2.090 MPa SF     7.18
+    shear   0.740 MPa SF    10.81
+    max|U| 0.008 mm | raw maxVM 3.22
+    BINDING comp SF 7.18
+front_spacer_j3  15694 nodes 8884 tets | fix 3272 load 2567 | F=2.6, 0.0, 5.84N M=-2.8, -1258.0, 1.3Nmm@-20.0, 0.0, 270.2
+    vm      0.741 MPa SF    33.74
+    norm    0.109 MPa SF   114.96
+    comp    0.834 MPa SF    17.99
+    shear   0.241 MPa SF    33.16
+    max|U| 0.002 mm | raw maxVM 1.28
+    BINDING comp SF 17.99
+j1_cradle        110490 nodes 73682 tets | fix 13609 load 51896 | F=0.0, 0.0, -13.4N M=15.4, -2743.2, 0.0Nmm@0.0, 0.0, 80.8
+    vm      0.001 MPa SF 20632.46
+    norm    0.000 MPa SF 84799.80
+    comp    0.002 MPa SF  7636.20
+    shear   0.001 MPa SF 14952.73
+    max|U| 0.000 mm | raw maxVM 0.01
+    BINDING comp SF 7636.20
+j4_cradle        75103 nodes 47083 tets | fix 21583 load 20828 | F=2.4, 0.0, 4.16N M=-1.1, -502.8, 0.6Nmm@96.4, 0.0, 216.2
+    vm      0.022 MPa SF  1132.51
+    norm    0.008 MPa SF  1619.58
+    comp    0.018 MPa SF   841.42
+    shear   0.006 MPa SF  1264.25
+    max|U| 0.000 mm | raw maxVM 0.10
+    BINDING comp SF 841.42
+link1_h          317580 nodes 186298 tets | fix 17987 load 8991 | F=0.0, 0.0, -12.91N M=15.7, -2481.1, 0.0Nmm@-20.0, 0.0, 143.5
+    vm      3.567 MPa SF     7.01
+    norm    3.471 MPa SF     3.60
+    comp    4.358 MPa SF     3.44
+    shear   1.308 MPa SF     6.12
+    max|U| 0.128 mm | raw maxVM 5.14
+    BINDING comp SF 3.44
+upper_back       58025 nodes 31752 tets | fix 12058 load 8826 | F=-5.54, 0.0, 3.2N M=-1.5, -1258.0, -2.7Nmm@-20.0, 0.0, 270.2
+    vm      3.012 MPa SF     8.30
+    norm    0.323 MPa SF    38.69
+    comp    2.668 MPa SF     5.62
+    shear   0.531 MPa SF    15.05
+    max|U| 0.864 mm | raw maxVM 3.01
+    BINDING comp SF 5.62
+upper_out        29108 nodes 14989 tets | fix 3510 load 3512 | F=-5.54, 0.0, 3.2N M=-1.5, -1258.0, -2.7Nmm@-20.0, 0.0, 270.2
+    vm      3.015 MPa SF     8.29
+    norm    0.416 MPa SF    30.04
+    comp    2.388 MPa SF     6.28
+    shear   0.527 MPa SF    15.19
+    max|U| 0.867 mm | raw maxVM 3.01
+    BINDING comp SF 6.28
+yaw_limit        75962 nodes 43594 tets | fix 16464 load 11344 | F=0.0, 0.0, -13.4N M=15.4, -2743.2, 0.0Nmm@0.0, 0.0, 80.8
+    vm      0.045 MPa SF   560.00
+    norm    0.008 MPa SF  1602.41
+    comp    0.036 MPa SF   411.21
+    shear   0.026 MPa SF   311.24
+    max|U| 0.000 mm | raw maxVM 0.41
+    BINDING shear SF 311.24

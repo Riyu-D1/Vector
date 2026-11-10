@@ -16,6 +16,9 @@ Nothing bought, no carts checked out.
   the dowel line).
 - **Added**: metric feeler-gauge set (~£6 [U]) — required for the
   `final/out/coupon.stl` clearance check before printing the discs.
+- **Added (R9)**: 1× ISO 8734 Ø3×18 dowel — the wrist's second J4
+  bearing pin. Price TBC (same WDS precision-dowel family as the
+  3×12/4×8 lines); totals unchanged.
 - D4's flagged firmware change is now **done**: phase-current caps
   J2 3.71 A / J3 2.47 A + 75 ms soft-stop ramp (see
   `final/BUILD_GUIDE.md` §7).

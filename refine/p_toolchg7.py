@@ -15,6 +15,17 @@ import ap7 as N7                 # refine params (R-fix cage); p_toolchg's N sta
 
 def tool_grip_r():
     s = PT.tc_plate() + PT._neck()
+    # arm-fullfix: rear-rim relief on the socket ring.  The ring's a=69
+    # rear-OD top cap grazed the w_link4 collar 1-4 mm3 across the whole
+    # J5 range (fullcheck --tc; the l4 collar sweeps a ~r21 cylinder
+    # about the roll axis up to a~70.4).  Trim: ring OD cut to r20.35
+    # for a<=70.8, 45 deg chamfer back to r23.05 at a=73.5 -> measured
+    # rim->l4 clearance >=0.5 mm over J5 +-70.  Catches (r<=18.6), dock
+    # groove floor (r20.6), bore and a=69 face annulus are untouched;
+    # the cut is full-circle so J6 roll can't bring a fat rim sector to
+    # the top.
+    s = s - PT.ring(((68.8, 20.35), (70.8, 20.35), (73.5, 23.05),
+                     (73.5, 23.6), (68.8, 23.6)))
     for sg in (1, -1):        # cage cheeks (GF_CAGE shifted) - R1/R2 fix
         pts = tuple((a + PT.SH, h) for a, h in N7.GF_CAGE)
         b_lo, b_hi = sorted((sg * N7.GF_CHEEK_B[0], sg * N7.GF_CHEEK_B[1]))

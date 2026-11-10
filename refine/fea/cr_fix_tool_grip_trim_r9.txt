@@ -1,0 +1,8 @@
+fix_tool_grip.frd: 129964 nodes 72231 tets, 4 result blocks
+constrained 49812 (NFIX 13661 NLOAD 36151); excluded-with-elements 70320
+step1: max|U| 0.159 mm (@(137.1, 32.0, -39.4)) | raw maxVM 8.09 | filtered 8.09 | patch 1.10 MPa
+    hot VM 8.09 at node 37876 (109.4, 13.2, -12.0)
+    hot VM 8.08 at node 9927 (109.4, -13.2, -12.0)
+    hot VM 8.07 at node 9925 (109.4, -14.4, -12.0)
+    hot VM 8.05 at node 37870 (109.4, 14.4, -12.0)
+    hot VM 8.00 at node 9926 (109.4, -13.8, -12.0)

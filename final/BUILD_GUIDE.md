@@ -79,7 +79,13 @@ Print time budget: largest part 200 mm; all parts fit A1 256³.
   + the 12× M3×10 csk back screws.
 - J4: STS3250 in j4_cradle, 4× M3×10 into the **heat-set inserts**.
 - Wrist: link4 → J5, link5 → J6, grip_frame + fingers; servo horns
-  4× M3 on PCD14 each — preset horns to mid-count (2048).
+  4× M3 on PCD14 each — preset horns to mid-count (2048). **The J4
+  horn plate (w_link4) needs M3×14**, not the shorter kit screws —
+  R8 added +1.5 mm of plate reach for the rolled-pose margin.
+- R9 wrist pin: slip the 1× ISO 8734 Ø3×18 dowel into the cradle pad
+  bore Ø3.1 with adhesive (CA/603); the l4 journal bore Ø3.4 must
+  slide free. Verify engagement through the full ±80° J4 sweep —
+  the pin IS the second J4 bearing.
 - Gripper: m1 16T gear on the horn (4× M3 csk), printed racks glued
   into the finger tabs.
 
@@ -201,7 +207,8 @@ Do these BEFORE payload. "If fail" = what to change in firmware.
 [ ] Inserts pressed (3/actuator + 4 J4 cradle)
 [ ] Springs formed + rate-checked 0.4-0.7 N.m/rad; seated in pockets
 [ ] Dowels firm (603 where loose); horn screws 243
-[ ] J1/J4 servos in cradles; horns preset to 2048
+[ ] J1/J4 servos in cradles; horns preset to 2048; M3x14 at the J4 horn plate
+[ ] d3x18 wrist pin glued in the cradle pad; l4 journal slides free on it
 [ ] PCB: K1 pin map = fixed board; DMM continuity pass
 [ ] J19 jumper fitted; F1 6A; PSU current limit 1A
 [ ] base-node flashed, ping PONG 0x000200

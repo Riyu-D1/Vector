@@ -1,7 +1,8 @@
 """toolchg/print/export_print.py - D13 print-pack exporter.
 
-Builds the three prototype print parts from the TESTED p_toolchg code
-(verbatim geometry, no edits), poses them to the home pose, then orients
+Builds the prototype print parts from the TESTED p_toolchg code plus the
+R-fixed fix_tool_grip (refine p_toolchg7, arm-fullfix trimmed rear rim -
+ships in place of the stock D13 tool_grip), poses them to the home pose, then orients
 each for the STATUS print orientation:
 
   coupling pair drawn along the a-axis -> print -a face down
@@ -23,8 +24,14 @@ import trimesh
 from build123d import export_stl, export_step, Pos, Rot
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.dirname(HERE))     # repo root
 sys.path.insert(0, os.path.join(HERE, ".."))      # toolchg/
+sys.path.insert(0, os.path.join(ROOT, "refine"))  # refine/
+sys.path.insert(0, os.path.join(ROOT, "cradlefix"))
+sys.path.insert(0, os.path.join(ROOT, "cad", "arm2b"))
+sys.path.insert(0, os.path.join(ROOT, "cad", "arm2"))
 import p_toolchg as PW                            # noqa
+import p_toolchg7 as PW7                          # noqa
 import tc_params as T                             # noqa
 
 STL = os.path.join(HERE, "stl")
@@ -34,9 +41,17 @@ os.makedirs(STEP, exist_ok=True)
 
 NAMES = ("tc_master", "tc_plate", "tool_pen")
 only = set(sys.argv[1:])
+
+# arm-fullfix: the pack ships the R-fixed tool cage (refine p_toolchg7),
+# not the stock D13 tool_grip.  tool_grip_r() is authored in the tool
+# body frame already, so apply rest() like the stock parts entries do.
+EXTRA = {"fix_tool_grip": ("w6", lambda: PW.rest(PW7.tool_grip_r()))}
+
 t0 = time.time()
-for name, grp, fn in PW.parts():
-    if name not in NAMES or (only and name not in only):
+for name, grp, fn in list(PW.parts()) + [
+        (n, g, f) for n, (g, f) in EXTRA.items()]:
+    if (name not in NAMES and name not in EXTRA) \
+            or (only and name not in only):
         continue
     s = PW.pose(fn(), grp)                        # world home pose, a=+X
     s = Rot(0, -90, 0) * s                        # +a -> +Z, -a face down

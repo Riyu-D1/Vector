@@ -32,12 +32,16 @@ static const uint8_t FT_SERVO_CHAN[FT_N_SERVOS]   = {
     CH_J1, CH_J4, CH_J5, CH_J6, CH_GRIP };
 
 /* joint limits (rad) — from sim/STATUS-sim.md joint ranges
- * (J1 ±180, J2 -120..+70, J3 -180..+30, J4 ±70, J5 ±70, J6 ±180 deg);
+ * (J1 ±150, J2 -120..+70, J3 -180..+30, J4 ±70, J5 ±70,
+ * J6 ±180 deg); J1 clipped to ±150 = 2.5 deg clear of the printed
+ * yaw hard stop - measured SYMMETRIC engagement beyond +-152.5
+ * (fullcheck arm-fullfix; the old "-152.5..+180 free range" note was
+ * a sweep-truncation artifact);
  * jaw 0..1.4 rad UNVERIFIED (calibrate on bench). */
 static const float Q_MIN[ARM_N_CHAN] = {
-    -3.1416f, -2.0944f, -3.1416f, -1.2217f, -1.2217f, -3.1416f, 0.0f };
+    -2.6180f, -2.0944f, -3.1416f, -1.2217f, -1.2217f, -3.1416f, 0.0f };
 static const float Q_MAX[ARM_N_CHAN] = {
-     3.1416f,  1.2217f,  0.5236f,  1.2217f,  1.2217f,  3.1416f, 1.4f };
+     2.6180f,  1.2217f,  0.5236f,  1.2217f,  1.2217f,  3.1416f, 1.4f };
 
 /* Driver phase-current caps (A) for J2/J3 — the D4 printed-disc torque
  * envelope (cyclo4/STATUS-cyc4.md): output torque must stay

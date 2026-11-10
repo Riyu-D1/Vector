@@ -127,7 +127,10 @@ east x87-88 descent + deep lane; WRX uses the x60 slot + field dive.
 J13 pad 1 is +3V3 (fed from the west). Keep dive waypoints ~1.6 mm
 below pad centres.
 
-Gerbers + drill in `gerbers/` — upload the folder to JLCPCB/OSH Park as-is.
+Gerbers + drill in `gerbers/` for regeneration checks only — **do not order
+from this folder**: it is the pre-fix board. Order from
+**`order/pcb13_fix/`** (the K1 pad-net-fixed copy — see `order/PCB_ORDER.md`),
+upload that folder's `gerbers/` to JLCPCB/OSH Park as-is.
 2 layers, 1.6 mm, HASL, any colour. ~$5-10 for 5 boards.
 
 Last verified DRC: 0 clearance / 0 track / 0 via electrical violations,

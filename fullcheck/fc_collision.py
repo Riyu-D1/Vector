@@ -40,15 +40,16 @@ DROP = {"vendor_act_j2", "vendor_act_j3", "vendor_actout_j2", "vendor_actout_j3"
         "vendor_sts3215_j5", "vendor_sts3215_j6", "vendor_sts3215_g",
         "vendor_rack_u", "vendor_rack_d", "vendor_gear_grip",
         "finger_u", "finger_d"}
-# R9 wrist part set (posed world-frame STLs in refine/out)
-WR_PARTS = ["w_j4_cradle", "w_link4", "w_link5",
+# R9 wrist part set (posed world-frame STLs in refine/out); wrist_pin is
+# present in both end-effector configs (it is the J4 journal pin).
+WR_PARTS = ["w_j4_cradle", "w_link4", "w_link5", "wrist_pin",
             "vendor_sts3215_j5", "vendor_sts3215_j6"]
 TC_PARTS = ["tc_master", "fix_tool_grip_posed", "tc_vendor_g", "tc_gear",
             "tc_rack_u", "tc_rack_d", "tc_finger_u", "tc_finger_d"]
 if TC:
     WR_PARTS += TC_PARTS
 else:
-    WR_PARTS += ["wrist_pin", "w_grip_frame", "vendor_sts3215_g",
+    WR_PARTS += ["w_grip_frame", "vendor_sts3215_g",
                  "vendor_gear_grip", "vendor_rack_u", "vendor_rack_d",
                  "finger_u", "finger_d"]
 CYC_UP = {"housing", "pin_ring", "front_ring", "vendor_ringpins", "vendor_motor",

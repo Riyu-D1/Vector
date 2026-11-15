@@ -31,3 +31,7 @@ refine/fea/*.geo
 refine/fea/*.vtu
 final/renders/_tmp/
 final/out/assembly.step
+
+# EasyEDA research assets (local only — SDK clone + extracted app bundles)
+easyeda/_research/
+easyeda/extension/test/dist/

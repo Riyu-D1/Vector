@@ -1,0 +1,72 @@
+{
+	"name": "soma-carrier-v13-builder",
+	"uuid": "ef3ba0a4f2054bf790165892b134131d",
+	"displayName": "SOMA Carrier v1.3 Rebuild",
+	"description": "Rebuilds the SOMA v1.3 carrier board schematic + PCB natively in EasyEDA Pro",
+	"version": "1.0.0",
+	"publisher": "SOMA",
+	"engines": {
+		"eda": "^3.2.0"
+	},
+	"license": "Apache-2.0",
+	"repository": {
+		"type": "extension-store",
+		"url": ""
+	},
+	"categories": "Other",
+	"keywords": [
+		"Tool"
+	],
+	"images": {},
+	"homepage": "",
+	"bugs": "",
+	"activationEvents": {},
+	"entry": "./dist/index",
+	"dependentExtensions": {},
+	"headerMenus": {
+		"home": [
+			{
+				"id": "somaMenu",
+				"title": "SOMA v1.3",
+				"menuItems": [
+					{
+						"id": "run",
+						"title": "Build SOMA Carrier v1.3…",
+						"registerFn": "run"
+					},
+					{
+						"id": "about",
+						"title": "About SOMA rebuild",
+						"registerFn": "about"
+					}
+				]
+			}
+		],
+		"sch": [
+			{
+				"id": "somaMenuSch",
+				"title": "SOMA v1.3",
+				"menuItems": [
+					{
+						"id": "runSch",
+						"title": "Build SOMA Carrier v1.3…",
+						"registerFn": "run"
+					}
+				]
+			}
+		],
+		"pcb": [
+			{
+				"id": "somaMenuPcb",
+				"title": "SOMA v1.3",
+				"menuItems": [
+					{
+						"id": "runPcb",
+						"title": "Build SOMA Carrier v1.3…",
+						"registerFn": "run"
+					}
+				]
+			}
+		]
+	}
+}

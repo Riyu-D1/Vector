@@ -769,14 +769,47 @@ var edaEsbuildExportName = (() => {
     const started = Date.now();
     report(1, "SOMA v1.3: starting");
     try {
-      const libUuid = await eda.lib_LibrariesList.getPersonalLibraryUuid();
+      const T = (pr, ms = 6e3) => Promise.race([pr.catch(() => void 0), new Promise((r) => setTimeout(() => r(void 0), ms))]);
+      const diag = [];
+      let ws;
+      try {
+        ws = await T(eda.dmt_Workspace.getCurrentWorkspaceInfo());
+      } catch {
+        ws = void 0;
+      }
+      diag.push("workspace=" + (ws ? ws.name || ws.uuid : "timeout/none"));
+      report(1, "Finding library: personal");
+      let libUuid = await T(eda.lib_LibrariesList.getPersonalLibraryUuid());
+      let libSrc = "personal";
+      diag.push("personal=" + (libUuid || "none"));
+      let libList = [];
       if (!libUuid) {
-        eda.sys_Dialog.showInformationMessage(
-          "No personal library found. Open the Libraries panel, create a personal library, then re-run this extension.",
-          "SOMA Carrier v1.3"
-        );
+        report(1, "Finding library: list");
+        libList = await T(eda.lib_LibrariesList.getAllLibrariesList()) || [];
+        const sys = await T(eda.lib_LibrariesList.getSystemLibraryUuid(), 3e3);
+        diag.push("others=" + (libList.map((l) => l.name).join("|") || "none"));
+        const pick = libList.find((l) => l && l.uuid && l.uuid !== sys);
+        if (pick) {
+          libUuid = pick.uuid;
+          libSrc = 'library "' + pick.name + '"';
+        }
+      }
+      if (!libUuid) {
+        report(1, "Finding library: project");
+        libUuid = await T(eda.lib_LibrariesList.getProjectLibraryUuid());
+        libSrc = "project library";
+        diag.push("project=" + (libUuid || "none"));
+      }
+      if (!libUuid) {
+        eda.sys_Dialog.showInformationMessage("No writable library found. " + diag.join("; "), "SOMA Carrier v1.3");
+        try {
+          eda.sys_LoadingAndProgressBar.destroyProgressBar();
+        } catch {
+        }
         return;
       }
+      info.push("Using " + libSrc + " (" + diag.join("; ") + ")");
+      report(2, "Library: " + libSrc + " - building parts");
       const { devices } = await buildLibrary(libUuid);
       if (devices.size === 0) throw new Error("no devices could be created");
       report(23, "Creating project");

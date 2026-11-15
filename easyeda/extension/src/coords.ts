@@ -34,11 +34,15 @@ export function prot(deg: number): number {
 	return r < 0 ? r + 360 : r;
 }
 
-/** Convert a KiCad mm polygon [[x,y],...] to an EDA mil source array. */
+/** Convert a KiCad mm polygon [[x,y],...] to an EDA mil source array:
+ *  [x0,y0,'L', x1,y1, x2,y2, ...] — 'L' after the first vertex, then the
+ *  vertex run, matching real dataStr polygons.  A 'L' must always be
+ *  followed by >=2 numbers or the app rejects the polygon. */
 export function polygonSource(pts: number[][]): Array<'L' | number> {
 	const out: Array<'L' | number> = [];
-	for (const [x, y] of pts) {
-		out.push(px(x), py(y), 'L');
+	for (let i = 0; i < pts.length; i++) {
+		if (i === 1) out.push('L');
+		out.push(px(pts[i][0]), py(pts[i][1]));
 	}
 	return out;
 }

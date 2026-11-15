@@ -5,7 +5,7 @@
  * below by name. `run` executes the full rebuild; `about` shows info.
  */
 
-import { runSomaBuild } from './run';
+import { runSomaBuild, runDiagnostics } from './run';
 import extensionConfig from '../extension.json' with { type: 'json' };
 
 export function activate(status?: 'onStartupFinished', arg?: string): void {
@@ -15,6 +15,10 @@ export function activate(status?: 'onStartupFinished', arg?: string): void {
 
 export function run(): void {
 	void runSomaBuild();
+}
+
+export function diagnose(): void {
+	void runDiagnostics();
 }
 
 export function about(): void {

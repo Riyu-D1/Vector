@@ -21,7 +21,8 @@ import assert from 'node:assert/strict';
 
 import { BOARD_DATA } from '../src/board-data';
 import * as coords from '../src/coords';
-import { symbolSource, footprintSource } from '../src/eda-source';
+import { symbolSource } from '../src/eda-source';
+import { footprintOps } from '../src/fpdraw';
 import { planSchematic, symbolPins } from '../src/schplan';
 import { planPcb, LAYER } from '../src/pcbplan';
 import { PARTS, BLOCKS } from '../src/parts-table';
@@ -69,9 +70,10 @@ await t('mm->mil and y-flip', () => {
 	assert.ok(near(coords.prot(90), 270));
 	assert.ok(near(coords.prot(0), 0));
 });
-await t('polygon source emits L-joined mil points', () => {
-	const s = coords.polygonSource([[0, 0], [10, 5]]);
-	assert.deepEqual(s, [0, 0, 'L', 393.701, -196.85, 'L']);
+await t('polygon source emits L-joined mil points (no trailing L)', () => {
+	assert.deepEqual(coords.polygonSource([[0, 0], [10, 5]]), [0, 0, 'L', 393.701, -196.85]);
+	assert.deepEqual(coords.polygonSource([[0, 0], [10, 5], [20, 0]]),
+		[0, 0, 'L', 393.701, -196.85, 787.402, 0]);
 });
 
 /* 3 ---------------------------------------------------------- source gen */
@@ -95,28 +97,31 @@ await t('symbol source: doctype, pins, attrs, box', () => {
 	const names = recs.filter(r => r[0] === 'ATTR' && r[3] === 'NAME');
 	assert.equal(names.length, 2);
 });
-await t('footprint source: THT pads on layer 12 with nets matching KiCad', () => {
+await t('footprint ops: THT pads on layer 12, plated round holes, correct positions', () => {
 	const j19 = BOARD_DATA.parts.find(p => p.ref === 'J19');
-	const src = footprintSource('SOMA-X', 'J', j19);
-	const recs = parseSrc(src);
-	assert.deepEqual(recs[0], ['DOCTYPE', 'FOOTPRINT', '1.3']);
-	const pads = recs.filter(r => r[0] === 'PAD');
+	const pads = footprintOps(j19).filter(o => o.kind === 'pad');
 	assert.equal(pads.length, 2);
-	// pad 1 at local (0,0), pad2 at local (0,2.54) -> (0,-100)mil
-	assert.equal(pads[0][5], '1');
-	assert.ok(near(pads[0][6], 0));
-	assert.ok(near(pads[1][6], 0));
-	assert.ok(near(pads[1][7], -100));
-	assert.equal(pads[0][4], 12);           // multi layer
-	assert.equal(pads[0][9][0], 'ROUND');   // plated hole
+	assert.equal(pads[0].num, '1');
+	assert.ok(near(pads[0].x, 0));
+	assert.ok(near(pads[1].x, 0));
+	assert.ok(near(pads[1].y, -100));      // local (0,2.54mm) -> -100 mil
+	assert.equal(pads[0].layer, 12);       // multi layer
+	assert.equal(pads[0].hole[0], 'ROUND');
+	assert.equal(pads[0].plated, true);
 });
-await t('footprint source: SMD pad on layer 1, no hole', () => {
+await t('footprint ops: SMD pads on layer 1, no hole, unplated', () => {
 	const u2 = BOARD_DATA.parts.find(p => p.ref === 'U2');
-	const recs = parseSrc(footprintSource('SOMA-U2', 'U', u2));
-	const pads = recs.filter(r => r[0] === 'PAD');
+	const pads = footprintOps(u2).filter(o => o.kind === 'pad');
 	assert.equal(pads.length, 8);
-	assert.equal(pads[0][4], 1);
-	assert.equal(pads[0][9], null);
+	assert.equal(pads[0].layer, 1);
+	assert.equal(pads[0].hole, null);
+	assert.equal(pads[0].plated, false);
+});
+await t('footprint ops: silk/courtyard polys only use primitive-legal layers', () => {
+	const j19 = BOARD_DATA.parts.find(p => p.ref === 'J19');
+	for (const op of footprintOps(j19)) {
+		if (op.kind === 'poly') assert.equal(op.layer, 3, 'silk layer');
+	}
 });
 await t('footprint pads land on KiCad absolute pad positions', () => {
 	// for rot=0 parts, footprint local * mil + anchor must equal abs pad pos
@@ -177,14 +182,14 @@ await t('planPcb: tracks/vias/pours/holes', () => {
 	assert.equal(plan.vias.length, 164);
 	assert.equal(plan.pours.length, 2);
 	assert.ok(plan.tracks.length > 1700);
-	assert.ok(plan.outlinePolygon.length >= 15);
-	// outline bounds 135x115mm
-	const xs = []; const ys = [];
-	for (let i = 0; i < plan.outlinePolygon.length; i++) {
-		if (typeof plan.outlinePolygon[i] === 'number') {
-			(i % 2 === 0 ? xs : ys).push(plan.outlinePolygon[i]);
-		}
-	}
+	// polygonSource format: [x0,y0,'L', x1,y1, x2,y2, ...] — closed => >=5 pts => >=11
+	assert.ok(plan.outlinePolygon.length >= 11);
+	const oxs = plan.outlinePolygon.filter(e => typeof e === 'number');
+	assert.ok(near(oxs[0], oxs[oxs.length - 2]) && near(oxs[1], oxs[oxs.length - 1]), 'outline closed');
+	// outline bounds 135x115mm — filter 'L' markers first, then pairs are (x,y)
+	const nums = plan.outlinePolygon.filter(e => typeof e === 'number');
+	const xs = nums.filter((_, i) => i % 2 === 0);
+	const ys = nums.filter((_, i) => i % 2 === 1);
 	assert.ok(near(Math.max(...xs), 135 * 39.3701));
 	assert.ok(near(Math.min(...ys), -115 * 39.3701));
 	// v1.3 hole corners
@@ -236,17 +241,15 @@ await t('pad nets count per ref matches KiCad source spot-checks', () => {
 /* 7 ---------------------------------------------------------- mock-eda smoke */
 await t('mock-eda: full pipeline issues all expected calls', async () => {
 	const calls = [];
+	let uidSeq = 0;
 	const mk = name => (...a) => {
 		calls.push([name, a]);
-		if (name === 'lib_Footprint.create' || name === 'lib_Symbol.create' || name === 'lib_Device.create') {
-			return Promise.resolve('uuid-' + name + '-' + calls.length);
+		if (/^(lib_(Footprint|Symbol|Device)|dmt_(Project|Schematic|Pcb))\./.test(name) &&
+			/create|createProject|createSchematic|createPcb/.test(name)) {
+			return Promise.resolve('uuid-' + name + '-' + (++uidSeq));
 		}
-		if (name === 'lib_Footprint.getDocumentSource' || name === 'lib_Symbol.getDocumentSource') {
-			return Promise.resolve(null);
-		}
-		if (name === 'dmt_Project.createProject' || name === 'dmt_Schematic.createSchematic' || name === 'dmt_Pcb.createPcb') {
-			return Promise.resolve('uuid-' + name);
-		}
+		if (name === 'lib_Footprint.openInEditor') return Promise.resolve('tab-' + (++uidSeq));
+		if (name.endsWith('.search')) return Promise.resolve([]);
 		if (name === 'lib_LibrariesList.getPersonalLibraryUuid') return Promise.resolve('lib-uuid');
 		if (name === 'pcb_MathPolygon.createPolygon') return { polygon: a[0] };
 		return Promise.resolve(true);
@@ -258,18 +261,25 @@ await t('mock-eda: full pipeline issues all expected calls', async () => {
 	globalThis.eda = {
 		sys_LoadingAndProgressBar: { showProgressBar: () => {}, destroyProgressBar: () => {} },
 		sys_Dialog: { showInformationMessage: (...a) => calls.push(['dialog', a]) },
+		sys_Log: { add: () => {} },
 		lib_LibrariesList: { getPersonalLibraryUuid: mk('lib_LibrariesList.getPersonalLibraryUuid') },
 		lib_Footprint: {
+			search: mk('lib_Footprint.search'),
 			create: mk('lib_Footprint.create'),
-			getDocumentSource: mk('lib_Footprint.getDocumentSource'),
-			updateDocumentSource: mk('lib_Footprint.updateDocumentSource'),
+			get: mk('lib_Footprint.get'),
+			delete: mk('lib_Footprint.delete'),
+			openInEditor: mk('lib_Footprint.openInEditor'),
 		},
 		lib_Symbol: {
+			search: mk('lib_Symbol.search'),
 			create: mk('lib_Symbol.create'),
-			getDocumentSource: mk('lib_Symbol.getDocumentSource'),
+			get: mk('lib_Symbol.get'),
 			updateDocumentSource: mk('lib_Symbol.updateDocumentSource'),
 		},
-		lib_Device: { create: mk('lib_Device.create') },
+		lib_Device: {
+			search: mk('lib_Device.search'),
+			create: mk('lib_Device.create'),
+		},
 		dmt_Project: {
 			createProject: mk('dmt_Project.createProject'),
 			waitForReady: mk('dmt_Project.waitForReady'),
@@ -280,10 +290,16 @@ await t('mock-eda: full pipeline issues all expected calls', async () => {
 		},
 		dmt_Pcb: { createPcb: mk('dmt_Pcb.createPcb') },
 		dmt_Board: { createBoard: mk('dmt_Board.createBoard') },
-		dmt_EditorControl: { openDocument: mk('dmt_EditorControl.openDocument') },
+		dmt_EditorControl: {
+			openDocument: mk('dmt_EditorControl.openDocument'),
+			closeDocument: mk('dmt_EditorControl.closeDocument'),
+			activateDocument: mk('dmt_EditorControl.activateDocument'),
+			waitForDocumentReady: mk('dmt_EditorControl.waitForDocumentReady'),
+		},
 		sch_PrimitiveComponent: {
 			create: async (...a) => { calls.push(['sch_PrimitiveComponent.create', a]); return compStub(); },
 			modify: mk('sch_PrimitiveComponent.modify'),
+			getAllPinsByPrimitiveId: async () => [],
 			createNetFlag: mk('createNetFlag'),
 			createNetPort: mk('createNetPort'),
 		},
@@ -291,8 +307,13 @@ await t('mock-eda: full pipeline issues all expected calls', async () => {
 		sch_PrimitiveRectangle: { create: mk('sch_PrimitiveRectangle.create') },
 		sch_PrimitiveText: { create: mk('sch_PrimitiveText.create') },
 		sch_Document: { save: mk('sch_Document.save'), importChanges: mk('sch_Document.importChanges') },
-		pcb_Document: { save: mk('pcb_Document.save'), importChanges: async () => true },
-		pcb_PrimitiveComponent: { getAll: async () => [], create: mk('pcb_PrimitiveComponent.create') },
+		pcb_Document: { save: mk('pcb_Document.save'), importChanges: async () => { calls.push(['importChanges', []]); return true; } },
+		pcb_PrimitiveComponent: {
+			getAll: async () => [],
+			create: async (...a) => { calls.push(['pcb_PrimitiveComponent.create', a]); return compStub(); },
+			modify: mk('pcb_PrimitiveComponent.modify'),
+			getAllPinsByPrimitiveId: async () => [],
+		},
 		pcb_PrimitivePolyline: { create: mk('pcb_PrimitivePolyline.create') },
 		pcb_PrimitivePad: { create: mk('pcb_PrimitivePad.create') },
 		pcb_PrimitiveLine: { create: mk('pcb_PrimitiveLine.create') },
@@ -305,18 +326,41 @@ await t('mock-eda: full pipeline issues all expected calls', async () => {
 	await runSomaBuild();
 
 	const n = name => calls.filter(c => c[0] === name).length;
+	// unique footprints drawn via the editor-tab path
+	const fpParts = new Map();
+	for (const p of BOARD_DATA.parts) {
+		const k = p.footprint + '@' + p.rot;
+		if (!fpParts.has(k)) fpParts.set(k, p);
+	}
+	let expFpPads = 0, expFpPolys = 0;
+	for (const p of fpParts.values()) {
+		for (const op of footprintOps(p)) op.kind === 'pad' ? expFpPads++ : expFpPolys++;
+	}
+	assert.equal(fpParts.size, 26, 'unique footprint keys');
+	assert.equal(n('lib_Footprint.search'), fpParts.size);
+	assert.equal(n('lib_Footprint.create'), fpParts.size, 'one create per unique footprint');
+	assert.equal(n('lib_Footprint.openInEditor'), fpParts.size);
+	assert.equal(n('dmt_EditorControl.waitForDocumentReady'), fpParts.size);
+	assert.equal(n('dmt_EditorControl.closeDocument'), fpParts.size);
+	assert.equal(n('lib_Footprint.getDocumentSource'), 0, 'removed API must not be called');
+	assert.equal(n('lib_Footprint.updateDocumentSource'), 0, 'removed API must not be called');
 	assert.equal(n('lib_Device.create'), 55, 'devices');
 	assert.equal(n('sch_PrimitiveComponent.create'), 55, 'schematic placements');
 	assert.equal(n('sch_PrimitiveComponent.modify'), 55, 'designator sets');
 	assert.equal(n('createNetFlag') + n('createNetPort'), 152, 'one label per connected pin');
+	assert.equal(n('pcb_PrimitiveComponent.create'), 55, 'direct placements (mock getAll=[])');
 	assert.equal(n('pcb_PrimitiveLine.create'), planPcb(BOARD_DATA).tracks.length);
 	assert.equal(n('pcb_PrimitiveVia.create'), 164);
-	assert.equal(n('pcb_PrimitivePad.create'), 4);
+	// pads: footprint pads + 4 mounting holes (no free-pad fallback when fps ok)
+	assert.equal(n('pcb_PrimitivePad.create'), expFpPads + 4, 'footprint pads + mounting holes');
+	// polylines: footprint silk+courtyards + 1 board outline
+	assert.equal(n('pcb_PrimitivePolyline.create'), expFpPolys + 1, 'footprint silk/courtyard + outline');
 	assert.equal(n('pcb_PrimitivePour.create'), 2);
-	assert.equal(n('pcb_PrimitivePolyline.create'), 1);
-	assert.equal(n('pcb_Document.save'), 1);
+	assert.equal(n('pcb_Document.save'), fpParts.size + 1, 'per-footprint saves + board save');
 	assert.equal(n('sch_Document.save'), 1);
 	assert.ok(n('dialog') === 1, 'final dialog shown');
+	const dialog = calls.find(c => c[0] === 'dialog');
+	assert.ok(!/FATAL/.test(String(dialog[1][0])), 'no fatal error: ' + dialog[1][0]);
 });
 
 console.log(`\n${pass} checks passed${process.exitCode ? ' (with FAILURES)' : ''}`);

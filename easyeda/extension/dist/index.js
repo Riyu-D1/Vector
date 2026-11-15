@@ -441,6 +441,211 @@ var edaEsbuildExportName = (() => {
     return { comps, headers, wires, labels };
   }
 
+  // src/syslib-match.ts
+  var SYS_FP_MATCH = {
+    "PinHeader_1x02_P2.54mm_Vertical@0": {
+      sysFpUuid: "f8790065914e4d75b82d300fa5733686",
+      sysFpName: "hdr-th_2p-p2.54-v-m-1",
+      rot: 270,
+      dx: 0,
+      dy: -50,
+      padmap: { 1: "1", 2: "2" },
+      worst: 0
+    },
+    "PinHeader_1x02_P2.54mm_Vertical@90": {
+      sysFpUuid: "f8790065914e4d75b82d300fa5733686",
+      sysFpName: "hdr-th_2p-p2.54-v-m-1",
+      rot: 180,
+      dx: -50,
+      dy: 0,
+      padmap: { 1: "1", 2: "2" },
+      worst: 0
+    },
+    "PinHeader_1x03_P2.54mm_Vertical@0": {
+      sysFpUuid: "28ec716cb96a485887b9d342b47ecf21",
+      sysFpName: "hdr-th_3p-p2.54-v-m-1",
+      rot: 270,
+      dx: 0,
+      dy: -100,
+      padmap: { 1: "1", 2: "2", 3: "3" },
+      worst: 0
+    },
+    "PinHeader_1x04_P2.54mm_Vertical@0": {
+      sysFpUuid: "55a1ecf332f24bc1b8208f936e198213",
+      sysFpName: "hdr-th_4p-p2.54-v-m",
+      rot: 270,
+      dx: 0,
+      dy: -150,
+      padmap: { 1: "1", 2: "2", 3: "3", 4: "4" },
+      worst: 0
+    },
+    "PinHeader_1x04_P2.54mm_Vertical@90": {
+      sysFpUuid: "55a1ecf332f24bc1b8208f936e198213",
+      sysFpName: "hdr-th_4p-p2.54-v-m",
+      rot: 180,
+      dx: -150,
+      dy: 0,
+      padmap: { 1: "1", 2: "2", 3: "3", 4: "4" },
+      worst: 0
+    },
+    "PinHeader_1x05_P2.54mm_Vertical@90": {
+      sysFpUuid: "5674daca25334cc8852b80aa853eefb5",
+      sysFpName: "hdr-th_5p-p2.54-v-m",
+      rot: 180,
+      dx: -200,
+      dy: 0,
+      padmap: { 1: "1", 2: "2", 3: "3", 4: "4", 5: "5" },
+      worst: 0
+    },
+    "PinHeader_1x08_P2.54mm_Vertical@0": {
+      sysFpUuid: "5b740a7e2a6a4f148966ac2276622783",
+      sysFpName: "hdr-th_8p-p2.54-v-m",
+      rot: 270,
+      dx: 0,
+      dy: -350,
+      padmap: { 1: "1", 2: "2", 3: "3", 4: "4", 5: "5", 6: "6", 7: "7", 8: "8" },
+      worst: 0
+    },
+    "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal@0": {
+      sysFpUuid: "7defb593b8344e25b2fce79096666282",
+      sysFpName: "res-th_bd1.7-l3.5-p7.50-d0.5",
+      rot: 0,
+      dx: 150,
+      dy: 0,
+      padmap: { 1: "1", 2: "2" },
+      worst: 2.4
+    },
+    "R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal@90": {
+      sysFpUuid: "7defb593b8344e25b2fce79096666282",
+      sysFpName: "res-th_bd1.7-l3.5-p7.50-d0.5",
+      rot: 270,
+      dx: 0,
+      dy: -150,
+      padmap: { 1: "1", 2: "2" },
+      worst: 2.4
+    },
+    "C_Disc_D5.0mm_W2.5mm_P2.50mm@0": {
+      sysFpUuid: "5f8eb52a5b424593833125533c360c65",
+      sysFpName: "cap-th_bd5.0-p2.50-d1.0-fd",
+      rot: 0,
+      dx: 49.21,
+      dy: 0,
+      padmap: { 1: "1", 2: "2" },
+      worst: 0
+    },
+    "CP_Radial_D10.0mm_P5.00mm@0": {
+      sysFpUuid: "09d14ec2708540d59d6cbd7768c49d80",
+      sysFpName: "cap-th_bd12.5-p5.00-d0.6-fd",
+      rot: 0,
+      dx: 98.43,
+      dy: 0,
+      padmap: { 1: "1", 2: "2" },
+      worst: 0
+    },
+    "CP_Radial_D8.0mm_P3.50mm@0": {
+      sysFpUuid: "5160339178af4a8bb8df557483bc12da",
+      sysFpName: "cap-th_bd8.0-p3.50-d0.6-fd",
+      rot: 0,
+      dx: 68.9,
+      dy: 0,
+      padmap: { 1: "1", 2: "2" },
+      worst: 0
+    },
+    "LED_D3.0mm@0": {
+      sysFpUuid: "a4b108ce6a59473ca7573b43ac908de7",
+      sysFpName: "led-th_bd3.0-p2.54-fd",
+      rot: 0,
+      dx: 50,
+      dy: 0,
+      padmap: { 1: "1", 2: "2" },
+      worst: 0
+    },
+    "D_DO-201_P12.70mm_Horizontal@0": {
+      sysFpUuid: "2c641ee33bee4e849017a96ee992ddaa",
+      sysFpName: "do-27-bd3.5-l8.6-p12.6-d1.3-l-rd",
+      rot: 0,
+      dx: 250,
+      dy: 0,
+      padmap: { 1: "1", 2: "2" },
+      worst: 2
+    },
+    "Buzzer_12x9.5RM7.6@0": {
+      sysFpUuid: "7e7dc36c97de4e34bf6f8168571c1221",
+      sysFpName: "buz-th_bd12.0-p7.60-d0.6-fd",
+      rot: 0,
+      dx: 149.61,
+      dy: 0,
+      padmap: { 1: "1", 2: "2" },
+      worst: 0.01
+    },
+    "Molex_KK-254_AE-6410-03A_1x03_P2.54mm_Vertical@0": {
+      sysFpUuid: "f9341bbba21943f79fe42445ca62de0f",
+      sysFpName: "conn-th_3p-p2.54_22-23-2031",
+      rot: 0,
+      dx: 100,
+      dy: 0,
+      padmap: { 1: "1", 2: "2", 3: "3" },
+      worst: 0
+    },
+    "TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal@0": {
+      sysFpUuid: "8968bbc397b14e199797e74eee3df70d",
+      sysFpName: "conn-th_2p-p5.00_wj500v-5.08-2p",
+      rot: 0,
+      dx: 100,
+      dy: 0,
+      padmap: { 1: "1", 2: "2" },
+      worst: 0
+    },
+    "TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal@90": {
+      sysFpUuid: "8968bbc397b14e199797e74eee3df70d",
+      sysFpName: "conn-th_2p-p5.00_wj500v-5.08-2p",
+      rot: 270,
+      dx: 0,
+      dy: -100,
+      padmap: { 1: "1", 2: "2" },
+      worst: 0
+    },
+    "Relay_SPST_SANYOU_SRD_Series_Form_A@0": {
+      sysFpUuid: "4a843d9dc5074e98913b0e450d9951c1",
+      sysFpName: "relay-th_hf3ff-012-1hs",
+      rot: 0,
+      dx: 278.05,
+      dy: -1.48,
+      // HF3FF coil pads are numbered swapped vs the KiCad SRD footprint:
+      // KiCad 1(COIL+)->sys 2, KiCad 2(COIL-)->sys 1, 3->3, 5->5.
+      padmap: { 1: "2", 2: "1", 3: "3", 5: "5" },
+      worst: 2.07
+    },
+    "SOIC-8_3.9x4.9mm_P1.27mm@0": {
+      sysFpUuid: "8f20caaa2d364e7ea44792354afae0d5",
+      sysFpName: "so-8_l4.9-w3.9-p1.27-ls6.0-bl",
+      rot: 270,
+      dx: 0,
+      dy: 0,
+      padmap: { 1: "1", 2: "2", 3: "3", 4: "4", 5: "5", 6: "6", 7: "7", 8: "8" },
+      worst: 0.94
+    },
+    "TO-220-3_Vertical@90": {
+      sysFpUuid: "88edc288b7d440dba6a264cc79a4064f",
+      sysFpName: "to-220ab-3_l10.4-w4.6-p2.54-t",
+      rot: 0,
+      dx: 0,
+      dy: -100,
+      padmap: { 1: "1", 2: "2", 3: "3" },
+      worst: 0
+    }
+  };
+  var CUSTOM_KEYS = {
+    "AMASS_XT60-M_1x02_P7.20mm_Vertical@0": "no XT60 footprint in bundled library",
+    "Fuse_Blade_Mini_directSolder@90": "no blade-fuse footprint in bundled library",
+    "PinHeader_1x22_P2.54mm_Vertical@90": "only a 2x11 dual-row header exists",
+    "D_DO-41_SOD81_P10.16mm_Horizontal@0": "no DO-41-class diode at P10.16mm \u2014 keep KiCad geometry/silk",
+    "TestPoint_THTPad_D1.5mm_Drill0.7mm@0": "system test points are >=2.5mm pad / >=1.4mm hole"
+  };
+  function fpKeyOf(footprint, rot) {
+    return `${footprint}@${Math.round(rot * 10) % 3600 / 10}`;
+  }
+
   // src/run.ts
   var sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   var LIB_DEVICE = "3";
@@ -525,27 +730,71 @@ var edaEsbuildExportName = (() => {
     const hit = res?.find((i) => norm(i.name) === norm(name));
     return hit?.uuid;
   }
-  async function getDataStr(kind, uuid, libUuid) {
-    const api = kind === "footprint" ? eda.lib_Footprint : eda.lib_Symbol;
+  async function getItemDesc(kind, uuid, libUuid) {
+    const api = kind === "footprint" ? eda.lib_Footprint : kind === "symbol" ? eda.lib_Symbol : eda.lib_Device;
     const item = await call(
       `lib_${kind}.get`,
       api.get(uuid, libUuid),
       8e3,
       true
     );
-    const ds = item?.dataStr;
-    return typeof ds === "string" ? ds : void 0;
+    return item?.description ?? "";
   }
-  async function drawFootprint(part, fpUuid, libUuid, label) {
+  var TAG_FP_DRAWN = "soma:v1.2-drawn";
+  var TAG_SYM_SRC = "soma:v1.2-src";
+  async function waitActiveDoc(uuid, msMax = 9e3, label = "doc", tabId) {
+    const t0 = Date.now();
+    let last;
+    while (Date.now() - t0 < msMax) {
+      const info2 = await call(
+        `${label} getCurrentDocumentInfo`,
+        Promise.resolve(eda.dmt_SelectControl.getCurrentDocumentInfo()),
+        4e3,
+        true
+      );
+      if (info2) {
+        last = info2;
+        if (info2.uuid === uuid || tabId !== void 0 && info2.tabId === tabId) return info2;
+      }
+      await sleep(400);
+    }
+    slog(`${label}: active doc never became ${uuid.slice(0, 8)} (last=${last ? `${last.documentType}:${last.uuid?.slice(0, 8)} tab=${last.tabId}` : "none"})`, "warn");
+    return void 0;
+  }
+  function fpKeyOfPart(part) {
+    return fpKeyOf(part.footprint, part.rot);
+  }
+  function mappedPart(part, fpRefs) {
+    const pm = fpRefs.get(fpKeyOfPart(part))?.pm;
+    if (!pm) return part;
+    return { ...part, pads: part.pads.map((p) => ({ ...p, num: pm[p.num] ?? p.num })) };
+  }
+  function mappedBoard(data, fpRefs) {
+    return { ...data, parts: data.parts.map((p) => mappedPart(p, fpRefs)) };
+  }
+  async function footprintPadCount(label) {
+    const pads = await call(`${label} pad.getAll`, eda.pcb_PrimitivePad.getAll(), 8e3, true);
+    return Array.isArray(pads) ? pads.length : -1;
+  }
+  async function drawFootprint(part, fpUuid, libUuid, fpName, label) {
+    const wantPads = footprintOps(part).filter((o) => o.kind === "pad").length;
     const tabId = await call(`${label} openInEditor`, eda.lib_Footprint.openInEditor(fpUuid, libUuid), 15e3);
     if (!tabId) return false;
     let ok = false;
     try {
-      const ready = await call(`${label} waitForDocumentReady`, eda.dmt_EditorControl.waitForDocumentReady(tabId, 8e3), 12e3);
-      const active = ready ? await call(`${label} activateDocument`, eda.dmt_EditorControl.activateDocument(tabId), 6e3, true) : false;
-      if (!ready || active === false) {
-        warn(`${label}: footprint editor not ready \u2014 leaving it empty`);
+      await call(`${label} activateDocument`, eda.dmt_EditorControl.activateDocument(tabId), 8e3, true);
+      const info2 = await waitActiveDoc(fpUuid, 9e3, label, tabId);
+      if (!info2) {
+        warn(`${label}: footprint doc never became active \u2014 leaving it empty`);
         return false;
+      }
+      slog(`${label}: active doc ${info2.documentType}:${info2.uuid?.slice(0, 8)} tab ${info2.tabId}`);
+      const before = await footprintPadCount(label);
+      if (before >= wantPads) {
+        slog(`${label}: ${before} pads already present \u2014 skipping redraw`);
+        await call(`${label} pcb_Document.save`, eda.pcb_Document.save(), 15e3, true);
+        await call(`${label} tag`, eda.lib_Footprint.modify(fpUuid, libUuid, fpName, void 0, TAG_FP_DRAWN, void 0), 8e3, true);
+        return true;
       }
       let drawn = 0, failed = 0;
       for (const op of footprintOps(part)) {
@@ -595,100 +844,167 @@ var edaEsbuildExportName = (() => {
         }
       }
       slog(`${label}: drew ${drawn} primitives (${failed} failed)`);
+      const after = await footprintPadCount(label);
+      slog(`${label}: pads in doc ${before} -> ${after} (want ${wantPads})`);
       const saved = await call(`${label} pcb_Document.save`, eda.pcb_Document.save(), 15e3);
       if (!saved) warn(`${label}: footprint save failed`);
-      ok = drawn > 0 && failed === 0 && saved !== false && saved !== void 0;
+      ok = after >= wantPads && drawn > 0 && failed === 0 && saved !== false && saved !== void 0;
+      if (ok) {
+        await call(`${label} tag`, eda.lib_Footprint.modify(fpUuid, libUuid, fpName, void 0, TAG_FP_DRAWN, void 0), 8e3, true);
+      }
     } finally {
       const closed = await call(`${label} closeDocument`, eda.dmt_EditorControl.closeDocument(tabId), 8e3, true);
       if (!closed) warn(`${label}: footprint tab did not close \u2014 close it manually if it is still open`);
     }
     return ok;
   }
-  async function buildLibrary(libUuid) {
+  async function buildLibrary(libUuid, sysLibUuid) {
     const devices = /* @__PURE__ */ new Map();
-    const fpByKey = /* @__PURE__ */ new Map();
+    const fpRefs = /* @__PURE__ */ new Map();
     const fpState = /* @__PURE__ */ new Map();
     const symByKey = /* @__PURE__ */ new Map();
     const parts = BOARD_DATA.parts;
     let done = 0;
+    let symVerified = false;
     for (const part of parts) {
       report(2 + Math.round(20 * done / parts.length), `Library ${part.ref} (${part.footprint})`);
       done++;
       slog(`library ${part.ref} ${part.footprint}@${part.rot}`);
-      const fpKey = `${part.footprint}@${part.rot}`;
-      const fpName = `SOMA-${part.footprint}-R${part.rot}`;
-      let fpUuid = fpByKey.get(fpKey);
-      if (!fpUuid) {
-        fpUuid = await findItem("footprint", fpName, libUuid);
-        let created = false;
-        if (!fpUuid) {
-          fpUuid = await call(`lib_Footprint.create ${fpName}`, eda.lib_Footprint.create(libUuid, fpName), 1e4);
-          if (fpUuid) created = true;
-          else fpUuid = await findItem("footprint", fpName, libUuid);
+      const fpKey = fpKeyOfPart(part);
+      const fpName = `SOMA-${part.footprint}-R${Math.round(part.rot)}`;
+      let fpRef = fpRefs.get(fpKey);
+      if (!fpRef) {
+        const m = sysLibUuid ? SYS_FP_MATCH[fpKey] : void 0;
+        if (m) {
+          const probe = await call(
+            `sysfp get ${m.sysFpName}`,
+            eda.lib_Footprint.get(m.sysFpUuid, sysLibUuid),
+            8e3,
+            true
+          );
+          if (probe) {
+            fpRef = { kind: "sys", uuid: m.sysFpUuid, libUuid: sysLibUuid, rot: m.rot, dx: m.dx, dy: m.dy, pm: m.padmap, name: m.sysFpName };
+            fpState.set(fpKey, "sys");
+            slog(`${part.ref}: system footprint ${m.sysFpName} (rot ${m.rot}, off ${m.dx},${m.dy})`);
+          } else warn(`${part.ref}: system footprint ${m.sysFpName} unreachable \u2014 falling back to custom draw`);
         }
-        if (!fpUuid) {
-          warn(`${part.ref}: no footprint uuid for ${fpName}`);
-          fpState.set(fpKey, "missing");
-        } else {
-          fpByKey.set(fpKey, fpUuid);
-          let needDraw = created;
-          if (!created) {
-            const ds = await getDataStr("footprint", fpUuid, libUuid);
-            needDraw = !(ds && ds.length > 40);
+        if (!fpRef) {
+          let fpUuid = await findItem("footprint", fpName, libUuid);
+          if (!fpUuid) {
+            fpUuid = await call(`lib_Footprint.create ${fpName}`, eda.lib_Footprint.create(libUuid, fpName), 1e4);
+            if (!fpUuid) fpUuid = await findItem("footprint", fpName, libUuid);
           }
-          if (needDraw) {
-            slog(`${part.ref}: drawing footprint ${fpName}`);
-            fpState.set(fpKey, await drawFootprint(part, fpUuid, libUuid, `${part.ref} ${fpName}`) ? "ok" : "empty");
-          } else fpState.set(fpKey, "ok");
+          if (!fpUuid) {
+            warn(`${part.ref}: no footprint uuid for ${fpName} (${CUSTOM_KEYS[fpKey] ?? "custom"})`);
+            fpState.set(fpKey, "missing");
+          } else {
+            const desc = await getItemDesc("footprint", fpUuid, libUuid);
+            if (desc.includes(TAG_FP_DRAWN)) {
+              fpState.set(fpKey, "ok");
+            } else {
+              slog(`${part.ref}: drawing footprint ${fpName}`);
+              fpState.set(fpKey, await drawFootprint(part, fpUuid, libUuid, fpName, `${part.ref} ${fpName}`) ? "ok" : "empty");
+            }
+            if (fpState.get(fpKey) === "ok") {
+              fpRef = { kind: "drawn", uuid: fpUuid, libUuid, rot: 0, dx: 0, dy: 0, name: fpName };
+            }
+          }
         }
+        if (fpRef) fpRefs.set(fpKey, fpRef);
       }
       let symUuid;
+      const mapped = mappedPart(part, fpRefs);
       const pinNames = partPinNames(part);
-      const pins = symbolPins(part).map((n) => ({ num: n, name: pinNames.get(n) ?? n }));
-      const symKey = JSON.stringify(pins);
+      const pm = fpRef?.pm;
+      const pinList = symbolPins(mapped).map((n) => {
+        const orig = pm ? Object.keys(pm).find((k) => pm[k] === n) ?? n : n;
+        return { num: n, name: pinNames.get(orig) ?? orig };
+      });
+      const symKey = JSON.stringify(pinList);
       symUuid = symByKey.get(symKey);
       if (!symUuid) {
         const symName = `SOMA-${part.ref}`;
         symUuid = await findItem("symbol", symName, libUuid);
-        let created = false;
         if (!symUuid) {
           symUuid = await call(`lib_Symbol.create ${symName}`, eda.lib_Symbol.create(libUuid, symName), 1e4);
-          if (symUuid) created = true;
-          else symUuid = await findItem("symbol", symName, libUuid);
+          if (!symUuid) symUuid = await findItem("symbol", symName, libUuid);
         }
         if (!symUuid) warn(`${part.ref}: no symbol uuid for ${symName}`);
         else {
           symByKey.set(symKey, symUuid);
-          const existing = created ? void 0 : await getDataStr("symbol", symUuid, libUuid);
-          if (!existing || existing.length < 40) {
-            const src = symbolSource(symName, designatorPrefix(part.ref), pins);
+          const desc = await getItemDesc("symbol", symUuid, libUuid);
+          if (!desc.includes(TAG_SYM_SRC)) {
+            const src = symbolSource(symName, designatorPrefix(part.ref), pinList);
             const ok = await call(
               `lib_Symbol.updateDocumentSource ${symName}`,
               eda.lib_Symbol.updateDocumentSource(symUuid, libUuid, src),
               15e3
             );
             if (!ok) warn(`${part.ref}: symbol source write failed \u2014 symbol may be empty`);
+            else {
+              await call(`lib_Symbol.modify tag`, eda.lib_Symbol.modify(symUuid, libUuid, symName, void 0, TAG_SYM_SRC, void 0), 8e3, true);
+              if (!symVerified) {
+                symVerified = true;
+                const ok2 = await verifySymbolSource(symUuid, libUuid, pinList.length, `${part.ref} symverify`);
+                if (!ok2) warn("first symbol readback found no pins \u2014 symbols may still be empty; check Diagnostics output");
+              }
+            }
           }
         }
       }
       const devName = `SOMA-${part.ref}`;
       let devUuid = await findItem("device", devName, libUuid);
-      if (!devUuid && symUuid && fpUuid) {
+      if (devUuid && fpRef) {
+        const dev = await call(
+          `lib_Device.get ${devName}`,
+          eda.lib_Device.get(devUuid, libUuid),
+          8e3,
+          true
+        );
+        const assocFp = dev?.association?.footprint?.uuid;
+        const assocSym = dev?.association?.symbol?.uuid;
+        if (assocFp && fpRef && assocFp !== fpRef.uuid) {
+          slog(`${part.ref}: device assoc ${assocFp?.slice(0, 8)} != ${fpRef.uuid.slice(0, 8)} \u2014 rebuilding device`);
+          await call(`lib_Device.delete ${devName}`, eda.lib_Device.delete(devUuid, libUuid), 8e3, true);
+          devUuid = void 0;
+        } else if (assocSym && symUuid && assocSym !== symUuid) {
+          slog(`${part.ref}: device symbol assoc mismatch \u2014 rebuilding device`);
+          await call(`lib_Device.delete ${devName}`, eda.lib_Device.delete(devUuid, libUuid), 8e3, true);
+          devUuid = void 0;
+        }
+      }
+      if (!devUuid && symUuid && fpRef) {
         devUuid = await call(`lib_Device.create ${devName}`, eda.lib_Device.create(libUuid, devName, void 0, {
           symbol: { uuid: symUuid, libraryUuid: libUuid },
-          footprint: { uuid: fpUuid, libraryUuid: libUuid }
+          footprint: { uuid: fpRef.uuid, libraryUuid: fpRef.libUuid }
         }), 1e4);
         if (!devUuid) devUuid = await findItem("device", devName, libUuid);
       }
-      if (devUuid && fpUuid) devices.set(part.ref, { uuid: devUuid, fpUuid });
-      else warn(`${part.ref}: no device (sym=${!!symUuid} fp=${!!fpUuid} dev=${!!devUuid}) \u2014 schematic/board will fall back`);
+      if (devUuid && fpRef) devices.set(part.ref, { uuid: devUuid });
+      else warn(`${part.ref}: no device (sym=${!!symUuid} fp=${!!fpRef} dev=${!!devUuid}) \u2014 schematic/board will fall back`);
     }
-    const fpOk = [...fpState.values()].filter((s) => s === "ok").length;
-    info.push(`library: ${fpByKey.size} footprints (${fpOk} drawn/valid), ${symByKey.size} symbols, ${devices.size} devices`);
-    return { devices, fpState };
+    const drawnOk = [...fpState.values()].filter((s) => s === "ok").length;
+    const sysOk = [...fpState.values()].filter((s) => s === "sys").length;
+    info.push(`library: ${sysOk} system + ${drawnOk} drawn footprints, ${symByKey.size} symbols, ${devices.size} devices`);
+    return { devices, fpRefs, fpState };
   }
-  async function buildSchematic(devices, libUuid) {
-    const plan = planSchematic(BOARD_DATA);
+  async function verifySymbolSource(symUuid, libUuid, wantPins, label) {
+    const tabId = await call(`${label} openInEditor`, eda.lib_Symbol.openInEditor(symUuid, libUuid), 15e3, true);
+    if (!tabId) return false;
+    try {
+      await call(`${label} activateDocument`, eda.dmt_EditorControl.activateDocument(tabId), 8e3, true);
+      const info2 = await waitActiveDoc(symUuid, 8e3, label, tabId);
+      if (!info2) return false;
+      const src = await call(`${label} getDocumentSource`, eda.sys_FileManager.getDocumentSource(), 1e4, true);
+      const pins = typeof src === "string" ? (src.match(/"PIN"/g) ?? []).length : 0;
+      slog(`${label}: source ${typeof src === "string" ? src.length : 0} chars, ${pins} PIN records (want ${wantPins})`);
+      return pins >= wantPins;
+    } finally {
+      await call(`${label} closeDocument`, eda.dmt_EditorControl.closeDocument(tabId), 8e3, true);
+    }
+  }
+  async function buildSchematic(devices, libUuid, fpRefs) {
+    const plan = planSchematic(mappedBoard(BOARD_DATA, fpRefs));
     const uniqueIds = /* @__PURE__ */ new Map();
     const realPins = /* @__PURE__ */ new Map();
     let i = 0;
@@ -825,9 +1141,16 @@ var edaEsbuildExportName = (() => {
     }
     info.push(`${part.ref}: free-pad fallback (${ok} pads${fail ? `, ${fail} failed` : ""})`);
   }
-  async function buildPcb(uniqueIds, libUuid, devices, fpState) {
+  async function buildPcb(uniqueIds, devices, fpRefs, fpState) {
     const plan = planPcb(BOARD_DATA);
     const partByRef = new Map(BOARD_DATA.parts.map((p) => [p.ref, p]));
+    const placeOf = (ref) => {
+      const part = partByRef.get(ref);
+      const pl = plan.placements.find((p) => p.ref === ref);
+      const fpRef = part ? fpRefs.get(fpKeyOfPart(part)) : void 0;
+      if (!pl) return void 0;
+      return { pl, part, fpRef, x: pl.x + (fpRef?.dx ?? 0), y: pl.y + (fpRef?.dy ?? 0), rot: fpRef?.rot ?? 0 };
+    };
     try {
       const comps = await call("pcb getAll components", eda.pcb_PrimitiveComponent.getAll(), 15e3) ?? [];
       const wanted = new Map(plan.placements.map((p) => [p.ref, p]));
@@ -837,42 +1160,46 @@ var edaEsbuildExportName = (() => {
         const pl = wanted.get(d);
         if (!pl) continue;
         wanted.delete(d);
+        const t = placeOf(d);
         try {
-          comp.setState_X(pl.x);
-          comp.setState_Y(pl.y);
-          if (comp.setState_Rotation) comp.setState_Rotation(pl.rot);
+          comp.setState_X(t.x);
+          comp.setState_Y(t.y);
+          if (comp.setState_Rotation) comp.setState_Rotation(t.rot);
           if (comp.setState_Layer) comp.setState_Layer(pl.layer);
           await comp.done();
         } catch (err) {
           warnings.push(`${d}: move failed \u2014 ${errText(err)}`);
         }
-        const part = partByRef.get(d);
-        if (part && fpState.get(`${part.footprint}@${part.rot}`) !== "ok") {
+        const part = t.part;
+        const st = part ? fpState.get(fpKeyOfPart(part)) : void 0;
+        if (part && st !== "ok" && st !== "sys") {
           warnings.push(`${d}: imported component has empty footprint \u2014 drawing free pads`);
           await drawPartFreePads(part, pl.layer);
         }
       }
       for (const [ref, pl] of wanted) {
-        const part = partByRef.get(ref);
+        const t = placeOf(ref);
+        if (!t?.part) continue;
+        const part = t.part;
         const dev = devices.get(ref);
-        const fpOk = part && fpState.get(`${part.footprint}@${part.rot}`) === "ok";
-        if (!part) continue;
-        if (!fpOk) {
+        const st = fpState.get(fpKeyOfPart(part));
+        const fpRef = t.fpRef;
+        if (st !== "ok" && st !== "sys") {
           warnings.push(`${ref}: footprint has no content \u2014 drawing free pads`);
           await drawPartFreePads(part, pl.layer);
           continue;
         }
-        if (!dev) {
-          warnings.push(`${ref}: no device \u2014 drawing free pads`);
+        if (!fpRef || !dev) {
+          warnings.push(`${ref}: no device/footprint \u2014 drawing free pads`);
           await drawPartFreePads(part, pl.layer);
           continue;
         }
         const comp = await call(`pcb create ${ref}`, eda.pcb_PrimitiveComponent.create(
-          { libraryType: LIB_FOOTPRINT, libraryUuid: libUuid, uuid: dev.fpUuid },
+          { libraryType: LIB_FOOTPRINT, libraryUuid: fpRef.libUuid, uuid: fpRef.uuid },
           pl.layer,
-          pl.x,
-          pl.y,
-          0,
+          t.x,
+          t.y,
+          t.rot,
           false
         ), 15e3);
         const pid = comp?.getState_PrimitiveId?.();
@@ -887,7 +1214,8 @@ var edaEsbuildExportName = (() => {
           uniqueId: uniqueIds.get(ref) ?? null
         }), 8e3, true);
         const pins = await call(`pcb pins ${ref}`, eda.pcb_PrimitiveComponent.getAllPinsByPrimitiveId?.(pid), 8e3, true) ?? [];
-        const netByNum = new Map(part.pads.map((p) => [p.num, p.net]));
+        const mapped = mappedPart(part, fpRefs);
+        const netByNum = new Map(mapped.pads.map((p) => [p.num, p.net]));
         for (const pin of pins) {
           const num = pin.getState_PadNumber?.();
           const net = num ? netByNum.get(String(num)) : void 0;
@@ -1014,39 +1342,61 @@ var edaEsbuildExportName = (() => {
       lines.push(s);
       slog(`diag ${s}`);
     };
-    const ms = () => `${Date.now() - t0}ms`;
+    const ms = () => `${Math.round((Date.now() - t0) / 100) / 10}s`;
+    const dump = (o) => {
+      try {
+        return JSON.stringify(o, null, 0)?.slice(0, 400) ?? String(o);
+      } catch {
+        return String(o);
+      }
+    };
     report(5, "Diagnostics: API probe");
     const probes = [
       "lib_LibrariesList.getPersonalLibraryUuid",
       "lib_LibrariesList.getAllLibrariesList",
+      "lib_LibrariesList.getSystemLibraryUuid",
       "lib_Footprint.create",
       "lib_Footprint.search",
       "lib_Footprint.get",
-      "lib_Footprint.delete",
+      "lib_Footprint.modify",
       "lib_Footprint.openInEditor",
-      "lib_Footprint.getDocumentSource",
+      "lib_Footprint.copy",
+      "lib_Footprint.getRenderImage",
       "lib_Footprint.updateDocumentSource",
       "lib_Symbol.create",
       "lib_Symbol.search",
       "lib_Symbol.get",
+      "lib_Symbol.modify",
+      "lib_Symbol.openInEditor",
       "lib_Symbol.updateDocumentSource",
+      "lib_Symbol.getRenderImage",
       "lib_Device.create",
       "lib_Device.search",
+      "lib_Device.get",
       "lib_Device.getByLcscIds",
+      "lib_Device.delete",
       "dmt_EditorControl.openDocument",
       "dmt_EditorControl.closeDocument",
       "dmt_EditorControl.activateDocument",
+      "dmt_SelectControl.getCurrentDocumentInfo",
       "dmt_EditorControl.waitForDocumentReady",
+      "dmt_EditorControl.getDocumentReadyState",
       "pcb_Document.save",
       "pcb_PrimitivePad.create",
+      "pcb_PrimitivePad.getAll",
       "pcb_PrimitivePolyline.create",
+      "pcb_PrimitiveComponent.create",
       "pcb_MathPolygon.createPolygon",
-      "sys_Log.add"
+      "sch_PrimitiveComponent.create",
+      "sys_FileManager.getDocumentSource",
+      "sys_FileManager.setDocumentSource"
     ];
     for (const p of probes) log(`${apiPresent(p) ? "OK     " : "MISSING"} eda.${p}`);
-    report(20, "Diagnostics: library");
+    report(15, "Diagnostics: libraries");
     const useLib = await findWritableLib(lines);
     log(`library: ${useLib ? `${useLib.libSrc} ${useLib.libUuid}` : "NONE \u2014 cannot continue"}`);
+    const sysLibUuid = await call("diag getSystemLibraryUuid", eda.lib_LibrariesList.getSystemLibraryUuid(), 8e3, true);
+    log(`system library uuid -> ${sysLibUuid ?? "NONE"} (${ms()})`);
     if (!useLib) {
       report(100, "Diagnostics done");
       eda.sys_Dialog.showInformationMessage(lines.join("\n"), "SOMA diagnostics");
@@ -1057,68 +1407,104 @@ var edaEsbuildExportName = (() => {
       return;
     }
     const libUuid = useLib.libUuid;
-    report(35, "Diagnostics: footprint round-trip");
-    const diagName = `SOMA-DIAG-${Math.floor(Math.random() * 9e4) + 1e4}`;
+    report(25, "Diagnostics: footprint round-trip");
+    const diagName = `SOMA-DIAG-KEEP-${Math.floor(Math.random() * 9e4) + 1e4}`;
     let fpUuid = await call("diag lib_Footprint.create", eda.lib_Footprint.create(libUuid, diagName), 1e4);
     log(`create footprint ${diagName} -> ${fpUuid ? fpUuid.slice(0, 8) + "\u2026" : "FAIL"} (${ms()})`);
     let tabId;
     if (fpUuid) {
       tabId = await call("diag openInEditor", eda.lib_Footprint.openInEditor(fpUuid, libUuid), 15e3);
-      log(`openInEditor -> ${tabId ? "tab " + tabId.slice(0, 8) + "\u2026" : "FAIL"} (${ms()})`);
+      log(`openInEditor -> ${tabId ? "tab " + tabId : "FAIL"} (${ms()})`);
     }
-    if (tabId) {
-      const ready = await call("diag waitForDocumentReady", eda.dmt_EditorControl.waitForDocumentReady(tabId, 8e3), 12e3);
-      log(`waitForDocumentReady -> ${ready} (${ms()})`);
-      const act = await call("diag activateDocument", eda.dmt_EditorControl.activateDocument(tabId), 6e3);
+    if (tabId && fpUuid) {
+      const act = await call("diag activateDocument", eda.dmt_EditorControl.activateDocument(tabId), 8e3);
       log(`activateDocument -> ${act} (${ms()})`);
-      const pad = await call("diag pcb_PrimitivePad.create", eda.pcb_PrimitivePad.create(
-        LAYER.MULTI,
-        "1",
-        0,
-        0,
-        0,
-        [PAD_ELLIPSE, 60, 60],
-        "",
-        [HOLE_ROUND, 30],
-        0,
-        0,
-        0,
-        true,
-        0
-      ), 8e3);
-      log(`pad.create -> ${pad ? "ok id=" + String(pad.getState_PrimitiveId?.()).slice(0, 12) : "FAIL"} (${ms()})`);
-      try {
-        const poly = eda.pcb_MathPolygon.createPolygon([0, 0, "L", 100, 0, "L", 100, 100, "L", 0, 100, "L", 0, 0]);
-        const pl = await call("diag polyline", eda.pcb_PrimitivePolyline.create("", FP_LAYER.TOP_SILK, poly, 8), 8e3);
-        log(`polyline.create -> ${pl ? "ok" : "FAIL"} (${ms()})`);
-      } catch (e) {
-        log(`polyline.create -> THROW ${errText(e)} (${ms()})`);
+      const info2 = await waitActiveDoc(fpUuid, 1e4, "diag", tabId);
+      log(`active doc -> ${info2 ? `type=${info2.documentType} uuid=${info2.uuid?.slice(0, 8)} tab=${info2.tabId}` : "MISMATCH/timeout"} (${ms()})`);
+      if (info2) {
+        const pad = await call("diag pcb_PrimitivePad.create", eda.pcb_PrimitivePad.create(
+          LAYER.MULTI,
+          "1",
+          0,
+          0,
+          0,
+          [PAD_ELLIPSE, 60, 60],
+          "",
+          [HOLE_ROUND, 30],
+          0,
+          0,
+          0,
+          true,
+          0
+        ), 8e3);
+        log(`pad.create -> ${pad ? "ok id=" + String(pad.getState_PrimitiveId?.()).slice(0, 12) : "FAIL"} (${ms()})`);
+        try {
+          const poly = eda.pcb_MathPolygon.createPolygon([0, 0, "L", 100, 0, "L", 100, 100, "L", 0, 100, "L", 0, 0]);
+          const pl = await call("diag polyline", eda.pcb_PrimitivePolyline.create("", FP_LAYER.TOP_SILK, poly, 8), 8e3);
+          log(`polyline.create -> ${pl ? "ok" : "FAIL"} (${ms()})`);
+        } catch (e) {
+          log(`polyline.create -> THROW ${errText(e)} (${ms()})`);
+        }
+        const padCount = await call("diag pad.getAll", eda.pcb_PrimitivePad.getAll(), 8e3, true);
+        log(`pad.getAll -> ${Array.isArray(padCount) ? padCount.length + " pads" : "FAIL"} (${ms()})`);
+        const src = await call("diag sys_FileManager.getDocumentSource", eda.sys_FileManager.getDocumentSource(), 1e4, true);
+        log(`docSource -> ${typeof src === "string" ? `${src.length} chars` : "FAIL"} ${typeof src === "string" ? "| " + src.slice(0, 90) : ""} (${ms()})`);
+        const saved = await call("diag pcb_Document.save", eda.pcb_Document.save(), 15e3);
+        log(`save -> ${saved} (${ms()})`);
+        const closed = await call("diag closeDocument", eda.dmt_EditorControl.closeDocument(tabId), 8e3);
+        log(`closeDocument -> ${closed} (${ms()})`);
       }
-      const saved = await call("diag pcb_Document.save", eda.pcb_Document.save(), 15e3);
-      log(`save -> ${saved} (${ms()})`);
-      const closed = await call("diag closeDocument", eda.dmt_EditorControl.closeDocument(tabId), 8e3);
-      log(`closeDocument -> ${closed} (${ms()})`);
-    }
-    if (fpUuid) {
       const item = await call("diag lib_Footprint.get", eda.lib_Footprint.get(fpUuid, libUuid), 1e4);
-      const ds = item?.dataStr;
-      log(`verify dataStr -> ${ds ? ds.length + " chars" : "EMPTY/missing"} (${ms()})`);
-      const del = await call("diag lib_Footprint.delete", eda.lib_Footprint.delete(fpUuid, libUuid), 8e3, true);
-      log(`cleanup delete -> ${del} (${ms()})`);
+      log(`lib get -> ${dump(item)} (${ms()})`);
+      const hits = await call("diag lib_Footprint.search", eda.lib_Footprint.search("SOMA-DIAG-KEEP", libUuid), 8e3, true);
+      log(`lib search -> ${Array.isArray(hits) ? hits.length + " hits: " + dump(hits[0]) : "FAIL"} (${ms()})`);
+      const img = await call("diag getRenderImage", eda.lib_Footprint.getRenderImage({ footprintUuid: fpUuid, libraryUuid: libUuid }), 15e3, true);
+      log(`getRenderImage -> ${img && typeof img.size === "number" ? `blob ${img.size}b` : dump(img)} (${ms()})`);
+      log(`footprint ${diagName} KEPT for inspection`);
     }
-    report(70, "Diagnostics: symbol round-trip");
-    const symName = `SOMA-DIAG-SYM-${Math.floor(Math.random() * 9e4) + 1e4}`;
-    let symUuid = await call("diag lib_Symbol.create", eda.lib_Symbol.create(libUuid, symName), 1e4);
+    report(55, "Diagnostics: symbol round-trip");
+    const symName = `SOMA-DIAG-KEEP-SYM-${Math.floor(Math.random() * 9e4) + 1e4}`;
+    const symUuid = await call("diag lib_Symbol.create", eda.lib_Symbol.create(libUuid, symName), 1e4);
     log(`create symbol ${symName} -> ${symUuid ? symUuid.slice(0, 8) + "\u2026" : "FAIL"} (${ms()})`);
     if (symUuid) {
-      const src = symbolSource(symName, "TP", [{ num: "1", name: "P1" }]);
+      const src = symbolSource(symName, "TP", [{ num: "1", name: "P1" }, { num: "2", name: "P2" }]);
+      log(`source head -> ${src.split("\n")[0]} | ${src.length} chars`);
       const ok = await call("diag symbol updateDocumentSource", eda.lib_Symbol.updateDocumentSource(symUuid, libUuid, src), 15e3);
       log(`symbol updateDocumentSource -> ${ok} (${ms()})`);
+      const tabId2 = await call("diag symbol openInEditor", eda.lib_Symbol.openInEditor(symUuid, libUuid), 15e3, true);
+      log(`symbol openInEditor -> ${tabId2 ? "tab " + tabId2 : "FAIL"} (${ms()})`);
+      if (tabId2) {
+        await call("diag symbol activate", eda.dmt_EditorControl.activateDocument(tabId2), 8e3, true);
+        const info2 = await waitActiveDoc(symUuid, 8e3, "diag sym", tabId2);
+        log(`active doc -> ${info2 ? `type=${info2.documentType} uuid=${info2.uuid?.slice(0, 8)}` : "MISMATCH/timeout"} (${ms()})`);
+        const src2 = await call("diag sys_FileManager.getDocumentSource", eda.sys_FileManager.getDocumentSource(), 1e4, true);
+        const pinCount = typeof src2 === "string" ? (src2.match(/"PIN"/g) ?? []).length : 0;
+        log(`symbol docSource -> ${typeof src2 === "string" ? `${src2.length} chars, ${pinCount} PIN recs` : "FAIL"} (${ms()})`);
+        await call("diag symbol close", eda.dmt_EditorControl.closeDocument(tabId2), 8e3, true);
+      }
       const item = await call("diag lib_Symbol.get", eda.lib_Symbol.get(symUuid, libUuid), 1e4);
-      const ds = item?.dataStr;
-      log(`symbol dataStr -> ${ds ? ds.length + " chars" : "EMPTY/missing"} (${ms()})`);
-      const del = await call("diag lib_Symbol.delete", eda.lib_Symbol.delete?.(symUuid, libUuid), 8e3, true);
-      log(`cleanup delete -> ${del} (${ms()})`);
+      log(`symbol lib get -> ${dump(item)} (${ms()})`);
+      const img = await call("diag symbol getRenderImage", eda.lib_Symbol.getRenderImage({ symbolUuid: symUuid, libraryUuid: libUuid }), 15e3, true);
+      log(`symbol getRenderImage -> ${img && typeof img.size === "number" ? `blob ${img.size}b` : dump(img)} (${ms()})`);
+      log(`symbol ${symName} KEPT for inspection`);
+    }
+    report(80, "Diagnostics: system library");
+    if (sysLibUuid) {
+      const hits = await call("diag sys search hdr-th_2p", eda.lib_Footprint.search("hdr-th_2p", sysLibUuid), 1e4, true);
+      log(`sys search 'hdr-th_2p' -> ${Array.isArray(hits) ? hits.length + " hits " + hits.slice(0, 3).map((h) => h.name).join("|") : "FAIL"} (${ms()})`);
+      const m = SYS_FP_MATCH["PinHeader_1x02_P2.54mm_Vertical@0"];
+      const probe = await call("diag sys fp get", eda.lib_Footprint.get(m.sysFpUuid, sysLibUuid), 8e3, true);
+      log(`sys fp get ${m.sysFpName} -> ${probe ? dump(probe) : "FAIL"} (${ms()})`);
+      const copyName = `SOMA-DIAG-KEEP-COPY-${Math.floor(Math.random() * 9e4) + 1e4}`;
+      const copyUuid = await call(
+        "diag lib_Footprint.copy",
+        eda.lib_Footprint.copy(m.sysFpUuid, sysLibUuid, libUuid, void 0, copyName),
+        15e3,
+        true
+      );
+      log(`lib_Footprint.copy -> ${copyUuid ? copyUuid.slice(0, 8) + "\u2026 (" + copyName + ")" : "FAIL"} (${ms()})`);
+      const devs = await call("diag getByLcscIds", eda.lib_Device.getByLcscIds(["C2564", "C118536"]), 1e4, true);
+      log(`lib_Device.getByLcscIds -> ${Array.isArray(devs) ? devs.length + " hits " + devs.slice(0, 2).map((d) => d.name).join("|") : dump(devs)} (${ms()})`);
     }
     report(100, "Diagnostics done");
     try {
@@ -1151,10 +1537,12 @@ ${diag.join("\n")}`, "SOMA Carrier v1.3");
       }
       const { libUuid, libSrc } = lib;
       slog(`library ${libSrc} ${libUuid}`);
+      const sysLibUuid = await call("getSystemLibraryUuid", eda.lib_LibrariesList.getSystemLibraryUuid(), 8e3, true);
+      info.push(`system library: ${sysLibUuid ? sysLibUuid.slice(0, 8) + "\u2026" : "NONE \u2014 all footprints custom-drawn"}`);
       report(2, `Library: ${libSrc} \u2014 building parts`);
-      const { devices, fpState } = await buildLibrary(libUuid);
-      const fpOk = [...fpState.values()].filter((s) => s === "ok").length;
-      if (devices.size === 0 && fpOk === 0) {
+      const { devices, fpRefs, fpState } = await buildLibrary(libUuid, sysLibUuid);
+      const usable = [...fpState.values()].filter((s) => s === "ok" || s === "sys").length;
+      if (devices.size === 0 && usable === 0) {
         warn("no library items usable \u2014 continuing with free-pad PCB only");
       }
       report(23, "Creating project");
@@ -1171,9 +1559,13 @@ ${diag.join("\n")}`, "SOMA Carrier v1.3");
         await sleep(1500);
         const infoSch = await call("getSchematicInfo", eda.dmt_Schematic.getSchematicInfo(schUuid), 8e3, true);
         const pageUuid = infoSch?.page?.[0]?.uuid;
-        if (pageUuid) await call("open schematic page", eda.dmt_EditorControl.openDocument(pageUuid), 1e4, true);
-        await sleep(500);
-        uniqueIds = await buildSchematic(devices, libUuid);
+        if (pageUuid) {
+          const schTab = await call("open schematic page", eda.dmt_EditorControl.openDocument(pageUuid), 1e4, true);
+          const schDoc = await waitActiveDoc(pageUuid, 8e3, "sch", schTab);
+          if (!schDoc) warn("schematic page did not become active \u2014 symbols/wires may land elsewhere");
+        }
+        await sleep(300);
+        uniqueIds = await buildSchematic(devices, libUuid, fpRefs);
         const schSaved = await call("sch_Document.save", eda.sch_Document.save(), 15e3);
         if (!schSaved) warnings.push("schematic save failed");
         report(48, "Schematic saved");
@@ -1186,15 +1578,16 @@ ${diag.join("\n")}`, "SOMA Carrier v1.3");
       await sleep(1500);
       await call("createBoard", eda.dmt_Board.createBoard(schUuid, pcbUuid), 15e3, true);
       await sleep(800);
-      await call("open pcb", eda.dmt_EditorControl.openDocument(pcbUuid), 15e3);
-      await sleep(800);
+      const pcbTab = await call("open pcb", eda.dmt_EditorControl.openDocument(pcbUuid), 15e3);
+      const pcbDoc = await waitActiveDoc(pcbUuid, 1e4, "pcb", pcbTab);
+      if (!pcbDoc) warn("pcb document did not become active \u2014 board primitives may land elsewhere");
       if (schUuid) {
         report(50, "Importing to PCB");
         const imported = await call("importChanges", eda.pcb_Document.importChanges(schUuid, true), 3e4);
         if (!imported) warnings.push("importChanges failed \u2014 components may be missing");
         await sleep(800);
       }
-      await buildPcb(uniqueIds, libUuid, devices, fpState);
+      await buildPcb(uniqueIds, devices, fpRefs, fpState);
       report(93, "Saving PCB");
       const pcbSaved = await call("pcb_Document.save", eda.pcb_Document.save(), 2e4);
       if (!pcbSaved) warnings.push("pcb save failed");
@@ -1226,7 +1619,7 @@ ${diag.join("\n")}`, "SOMA Carrier v1.3");
     uuid: "ef3ba0a4f2054bf790165892b134131d",
     displayName: "SOMA Carrier v1.3 Rebuild",
     description: "Rebuilds the SOMA v1.3 carrier board schematic + PCB natively in EasyEDA Pro",
-    version: "1.1.0",
+    version: "1.2.0",
     publisher: "SOMA",
     engines: {
       eda: "^3.2.0"
@@ -1259,7 +1652,7 @@ ${diag.join("\n")}`, "SOMA Carrier v1.3");
             },
             {
               id: "diagnose",
-              title: "Diagnostics (one-footprint round-trip)",
+              title: "Diagnostics (keeps test items)",
               registerFn: "diagnose"
             },
             {
@@ -1282,7 +1675,7 @@ ${diag.join("\n")}`, "SOMA Carrier v1.3");
             },
             {
               id: "diagnoseSch",
-              title: "Diagnostics (one-footprint round-trip)",
+              title: "Diagnostics (keeps test items)",
               registerFn: "diagnose"
             }
           ]
@@ -1300,7 +1693,7 @@ ${diag.join("\n")}`, "SOMA Carrier v1.3");
             },
             {
               id: "diagnosePcb",
-              title: "Diagnostics (one-footprint round-trip)",
+              title: "Diagnostics (keeps test items)",
               registerFn: "diagnose"
             }
           ]

@@ -3,7 +3,7 @@
 	"uuid": "ef3ba0a4f2054bf790165892b134131d",
 	"displayName": "SOMA Carrier v1.3 Rebuild",
 	"description": "Rebuilds the SOMA v1.3 carrier board schematic + PCB natively in EasyEDA Pro",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"publisher": "SOMA",
 	"engines": {
 		"eda": "^3.2.0"
@@ -36,7 +36,7 @@
 					},
 					{
 						"id": "diagnose",
-						"title": "Diagnostics (one-footprint round-trip)",
+						"title": "Diagnostics (keeps test items)",
 						"registerFn": "diagnose"
 					},
 					{
@@ -59,7 +59,7 @@
 					},
 					{
 						"id": "diagnoseSch",
-						"title": "Diagnostics (one-footprint round-trip)",
+						"title": "Diagnostics (keeps test items)",
 						"registerFn": "diagnose"
 					}
 				]
@@ -77,7 +77,7 @@
 					},
 					{
 						"id": "diagnosePcb",
-						"title": "Diagnostics (one-footprint round-trip)",
+						"title": "Diagnostics (keeps test items)",
 						"registerFn": "diagnose"
 					}
 				]

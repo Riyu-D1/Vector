@@ -269,3 +269,151 @@ Secondary defects found and fixed while in here:
   `src/parts-table.ts` remain available).
 - Mounting holes, pours, silk-text approximation, and the free-pad
   fallback are unchanged from the notes above.
+
+---
+
+# Fix 2 — saves "succeeded" but verify reported empty (v1.2.0)
+
+## Symptom (real GUI run of v1.1.0 diagnostics on 3.2.209)
+
+- All API probes OK; library `SOMA` selected (`personal=none`).
+- Footprint round-trip: `create` ✓ → `openInEditor` ✓ (4.7 s) →
+  `waitForDocumentReady` → **undefined after ~20 s (timeout)** →
+  `activateDocument` ✓ → pad ✓ → polyline ✓ → `save` ✓ → `close` ✓ →
+  **`verify dataStr → EMPTY/missing`** → `delete` ✓.
+- Symbol round-trip: `create` ✓ → `updateDocumentSource` ✓ →
+  **`dataStr → EMPTY/missing`** → `delete` ✓.
+
+## Root cause — the verify read a field that does not exist
+
+`lib_Footprint.get()` / `lib_Symbol.get()` (and `search()`) return
+**metadata only**. The `ILIB_FootprintItem` / `ILIB_SymbolItem`
+interfaces in this build have `uuid/name/libraryUuid/description/…` —
+**no `dataStr` property**. The v1.1 diagnostic read `item.dataStr`, got
+`undefined`, and reported EMPTY. It says nothing about whether content
+persisted. (The two stale `soma-*` component rows in `SOMA.elib` with
+empty `dataStr` are a separate v1.0.0 artifact — footprint docs in Pro
+are stored as separate `documents`/`resources` records, not inline
+`dataStr`.)
+
+Two more confirmed dead ends, verified against the `pro-ui` handler map
+(not just the type declarations):
+
+1. **`waitForDocumentReady` and `getDocumentReadyState` have NO
+   registered handlers** in 3.2.209 — the call hangs forever and the
+   ~20 s "undefined" was our own timeout wrapper firing. The SDK
+   docstring also explains the mechanism: lazy-opened tabs only finish
+   loading **after `activateDocument`**, and v1.1 waited before
+   activating — a guaranteed stall even where a handler exists.
+2. **`lib_*.getDocumentSource` has no handler** (same class of hang as
+   Fix 1). Documented in `api-types.d.ts`, absent at runtime.
+
+The working readback path in this build is therefore:
+
+```
+openInEditor -> activateDocument -> poll
+  dmt_SelectControl.getCurrentDocumentInfo() until uuid/type match ->
+  sys_FileManager.getDocumentSource() on the ACTIVE document
+```
+
+`sys_FileManager.getDocumentSource()` is registered and reads the
+currently active document's source — this is the route the bundled SDK
+examples use.
+
+## Symbols were probably fine all along
+
+Direct inspection confirmed `eda-source.ts` already emits valid Pro
+`DOCTYPE/SYMBOL/1.0` JSON-record grammar (`HEAD`, `PART`, `PIN`,
+`ATTR`, `POLY`) — the same grammar stored for system symbols. The
+"empty" symbol verdict was the same false-negative `dataStr` check.
+v1.2.0 keeps the generator and adds a real verify: the first written
+symbol is opened, activated, read back via
+`sys_FileManager.getDocumentSource()`, and its `"PIN"` records are
+counted.
+
+## What changed (v1.2.0)
+
+- **No more `dataStr` verification anywhere.** Content checks now use
+  active-doc source reads and primitive counts only.
+- **Footprint draw sequence hardened**: `openInEditor →
+  activateDocument → poll getCurrentDocumentInfo (uuid match) → count
+  pads → draw → re-count → save → close`. If the tab never becomes the
+  active doc, drawing is skipped (a warning names it) instead of
+  primitives landing in whatever document had focus.
+- **`waitForDocumentReady`/`getDocumentReadyState` removed** from the
+  build and diagnostics — they have no handlers and hang.
+- **`lib_Footprint.getDocumentSource`/`updateDocumentSource` remain
+  uncalled** (handler absent / wrong wire format).
+- **Re-run safety without re-drawing**: after a verified draw, the
+  library item's `description` is tagged `soma:v1.2-drawn` /
+  `soma:v1.2-src` via `lib_*.modify`. Later runs skip tagged items; an
+  untagged-but-populated footprint is detected by the pad count and
+  skipped, never double-drawn.
+- **System-library footprints for 21 of 26 keys.** New
+  `src/syslib-match.ts` maps every `(footprint, rotation)` key to a
+  bundled `easyeda-std` footprint found by geometric pad matching
+  (pad count, relative positions under rotation+translation, pad
+  numbers, hole ≥ drill). Devices associate the system footprint
+  directly (`lib_Device.create` accepts foreign-library uuids) and
+  `pcb_PrimitiveComponent.create` places it with a per-key rotation +
+  origin offset so system pads land on the KiCad pad positions. The five
+  unmatched keys (XT60, blade-fuse direct-solder, 1x22 header, DO-41,
+  1.5 mm test point) stay on the draw-in-editor path — see
+  `CUSTOM_KEYS` in `syslib-match.ts`.
+- **Pad-number domain mapping.** KiCad pad numbers are translated into
+  each footprint's numbering before symbol/schematic/PCB net assignment
+  (`FpRef.pm`). Identity for all matches except K1: the `hf3ff-012-1hs`
+  relay footprint numbers its coil pads swapped, so KiCad 1→sys 2,
+  2→1, 3→3, 5→5.
+- **Device reuse checks associations.** An existing `SOMA-<ref>` device
+  pointing at a stale footprint/symbol uuid is deleted and recreated, so
+  re-runs migrate from the old empty-footprint devices to the new
+  system-backed ones.
+- **Diagnostics rewritten**: items are named `SOMA-DIAG-KEEP-*` and
+  **kept** (no delete) for post-run inspection; readback is multi-route
+  (lib `get`, `search`, render image, pad count, active-doc source);
+  the active doc's uuid/type is printed before drawing; system-library
+  probes cover `getSystemLibraryUuid`, a footprint `search`/`get`,
+  `lib_Footprint.copy`, and `lib_Device.getByLcscIds`.
+- Tests: 22 checks pass, including match-table coverage (every board
+  key is in `SYS_FP_MATCH` or `CUSTOM_KEYS`, padmaps cover every pad
+  number, worst-fit < 5 mil) and a rewritten mock-eda smoke test that
+  asserts the new call sequence (21 sys probes, 5 custom draws, zero
+  calls to the unhandled APIs, active-doc polling, tag writes, sys-lib
+  device associations, K1 → `hf3ff` uuid).
+
+## What to do in EasyEDA (exact steps)
+
+1. **Import** `easyeda/extension/dist/soma-carrier-v13-builder_v1.2.0.eext`
+   (copied to `~/Downloads`; same extension uuid, replaces v1.1.0).
+2. **SOMA v1.3 → Diagnostics (keeps test items)** — expect:
+   `activateDocument -> true`, `active doc -> type=… uuid=…`,
+   `pad.getAll -> 1 pads`, `docSource -> … chars`,
+   `symbol docSource -> … chars, 2 PIN recs`, and system-library hits.
+   Afterward you'll find `SOMA-DIAG-KEEP-*` footprints/symbols in the
+   SOMA library — open one in the library editor to eyeball the pad.
+   Delete them whenever convenient.
+3. **SOMA v1.3 → Build SOMA Carrier v1.3…** — expect far fewer editor
+   tabs (only the 5 custom footprints are drawn; the other 21 come from
+   the system library). The summary reports
+   `N system + M drawn footprints, K symbols, 55 devices`.
+4. Verify the board: all 55 components placed (K1 relay is the HF3FF
+   footprint — coil pads intentionally renumbered), mounting holes,
+   tracks, vias, pours, then DRC.
+
+## Still open / honest caveats
+
+- System-footprint selection is geometry-verified but not a
+  manufacturer-exact substitution in all cases (e.g. the D10 radial cap
+  uses a `bd12.5` body — pad pitch and drills match, courtyard is
+  larger; the TO-220 uses the horizontal-hole `…-t` variant). Check the
+  substitutions that matter for fabrication in `src/syslib-match.ts`.
+- The relay's swapped coil numbering is handled by the padmap; if EasyEDA
+  imports pin→pad by pin NAME rather than number, K1's coil nets could
+  swap — verify RLY_LOW/RLY_SW on the PCB.
+- `sys_FileManager.getDocumentSource` reads the ACTIVE doc — if the
+  app's notion of "active" differs when tabs are closed programmatically,
+  a read could see a stale document; the uuid/type check in
+  `waitActiveDoc` guards this.
+- The 5 custom footprints still depend on `openInEditor` behaving in the
+  library editor; diagnostics exercises exactly that path first.

@@ -426,6 +426,13 @@ async function buildPcb(
 				await comp.done();
 			}
 			catch (err) { warnings.push(`${d}: move failed — ${errText(err)}`); }
+			// an imported component whose footprint stayed empty has no
+			// copper — overlay free pads so nets still connect
+			const part = partByRef.get(d);
+			if (part && fpState.get(`${part.footprint}@${part.rot}`) !== 'ok') {
+				warnings.push(`${d}: imported component has empty footprint — drawing free pads`);
+				await drawPartFreePads(part, pl.layer);
+			}
 		}
 		for (const [ref, pl] of wanted) {
 			const part = partByRef.get(ref);

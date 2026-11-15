@@ -846,6 +846,11 @@ var edaEsbuildExportName = (() => {
         } catch (err) {
           warnings.push(`${d}: move failed \u2014 ${errText(err)}`);
         }
+        const part = partByRef.get(d);
+        if (part && fpState.get(`${part.footprint}@${part.rot}`) !== "ok") {
+          warnings.push(`${d}: imported component has empty footprint \u2014 drawing free pads`);
+          await drawPartFreePads(part, pl.layer);
+        }
       }
       for (const [ref, pl] of wanted) {
         const part = partByRef.get(ref);

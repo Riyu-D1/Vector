@@ -382,6 +382,8 @@ await t('mock-eda: full pipeline issues all expected calls', async () => {
 			return Promise.resolve(Array.from({ length: cnt }, (_, i) => ({ i })));
 		}
 		if (name === 'sch_PrimitivePin.create') { if (activeDoc?.documentType === 'Symbol') symPinCount++; return Promise.resolve({ id: 1 }); }
+		if (name === 'pcb_Drc.check') return Promise.resolve([]);
+		if (name === 'dmt_Project.getCurrentProjectInfo') return Promise.resolve(projectItem);
 		if (name === 'lib_Device.get') return Promise.resolve({ uuid: a[0], description: '', association: devAssoc.get(a[0]) });
 		if (name.endsWith('.search')) return Promise.resolve([]);
 		if (name === 'lib_LibrariesList.getPersonalLibraryUuid') return Promise.resolve('lib-uuid');
@@ -400,6 +402,19 @@ await t('mock-eda: full pipeline issues all expected calls', async () => {
 		setState_Net: () => {},
 		done: async () => {},
 	});
+	// v2: the build runs inside the user's OPEN project — a Board item
+	// already carries schematic + pcb uuids
+	const projectItem = {
+		uuid: 'proj-uuid',
+		name: 'soma-carrier-v13',
+		friendlyName: 'SOMA Carrier v1.3 (EasyEDA)',
+		data: [{
+			itemType: 'Board',
+			name: 'Board_1',
+			schematic: { itemType: 'Schematic', uuid: 'sch-uuid', name: 'SCH_Main', page: [{ uuid: 'p1' }] },
+			pcb: { itemType: 'PCB', uuid: 'pcb-uuid', name: 'PCB_Main' },
+		}],
+	};
 	globalThis.eda = {
 		sys_LoadingAndProgressBar: { showProgressBar: (p, t) => calls.push(['progress', [p, t]]), destroyProgressBar: () => {} },
 		sys_Dialog: { showInformationMessage: (...a) => calls.push(['dialog', a]) },
@@ -442,13 +457,19 @@ await t('mock-eda: full pipeline issues all expected calls', async () => {
 		dmt_Project: {
 			createProject: mk('dmt_Project.createProject'),
 			waitForReady: mk('dmt_Project.waitForReady'),
+			getCurrentProjectInfo: mk('dmt_Project.getCurrentProjectInfo'),
 		},
 		dmt_Schematic: {
 			createSchematic: mk('dmt_Schematic.createSchematic'),
+			createSchematicPage: mk('dmt_Schematic.createSchematicPage'),
 			getSchematicInfo: () => Promise.resolve({ page: [{ uuid: 'p1' }] }),
+			deleteSchematic: mk('dmt_Schematic.deleteSchematic'),
 		},
-		dmt_Pcb: { createPcb: mk('dmt_Pcb.createPcb') },
-		dmt_Board: { createBoard: mk('dmt_Board.createBoard') },
+		dmt_Pcb: { createPcb: mk('dmt_Pcb.createPcb'), deletePcb: mk('dmt_Pcb.deletePcb') },
+		dmt_Board: {
+			createBoard: mk('dmt_Board.createBoard'),
+			getAllBoardsInfo: () => Promise.resolve([projectItem.data[0]]),
+		},
 		dmt_EditorControl: {
 			openDocument: mk('dmt_EditorControl.openDocument'),
 			closeDocument: mk('dmt_EditorControl.closeDocument'),
@@ -461,9 +482,13 @@ await t('mock-eda: full pipeline issues all expected calls', async () => {
 		sch_PrimitiveComponent: {
 			create: async (...a) => { calls.push(['sch_PrimitiveComponent.create', a]); return compStub(); },
 			modify: mk('sch_PrimitiveComponent.modify'),
+			getAll: async () => { calls.push(['sch_PrimitiveComponent.getAll', []]); return []; },
 			getAllPinsByPrimitiveId: async () => [],
 			createNetFlag: mk('createNetFlag'),
 			createNetPort: mk('createNetPort'),
+		},
+		sch_PrimitiveAttribute: {
+			createNetLabel: mk('createNetLabel'),
 		},
 		sch_PrimitiveWire: { create: mk('sch_PrimitiveWire.create') },
 		sch_PrimitiveRectangle: { create: mk('sch_PrimitiveRectangle.create') },
@@ -473,23 +498,26 @@ await t('mock-eda: full pipeline issues all expected calls', async () => {
 			getAll: mk('sch_PrimitivePin.getAll'),
 		},
 		sch_Document: { save: mk('sch_Document.save'), importChanges: mk('sch_Document.importChanges') },
-		pcb_Document: { save: mk('pcb_Document.save'), importChanges: async () => { calls.push(['importChanges', []]); return true; } },
+		pcb_Document: { save: mk('pcb_Document.save'), importChanges: async (...a) => { calls.push(['importChanges', a]); return true; } },
 		pcb_PrimitiveComponent: {
 			getAll: async () => [],
 			create: async (...a) => { calls.push(['pcb_PrimitiveComponent.create', a]); return compStub(); },
 			modify: mk('pcb_PrimitiveComponent.modify'),
 			getAllPinsByPrimitiveId: async () => [pinStub()],
 		},
-		pcb_PrimitivePolyline: { create: mk('pcb_PrimitivePolyline.create') },
+		pcb_PrimitivePolyline: { create: mk('pcb_PrimitivePolyline.create'), getAll: mk('pcb_PrimitivePolyline.getAll') },
 		pcb_PrimitivePad: {
 			create: mk('pcb_PrimitivePad.create'),
 			getAll: mk('pcb_PrimitivePad.getAll'),
 		},
-		pcb_PrimitiveLine: { create: mk('pcb_PrimitiveLine.create') },
-		pcb_PrimitiveVia: { create: mk('pcb_PrimitiveVia.create') },
-		pcb_PrimitivePour: { create: mk('pcb_PrimitivePour.create') },
+		pcb_PrimitiveLine: { create: mk('pcb_PrimitiveLine.create'), getAll: mk('pcb_PrimitiveLine.getAll') },
+		pcb_PrimitiveVia: { create: mk('pcb_PrimitiveVia.create'), getAll: mk('pcb_PrimitiveVia.getAll') },
+		pcb_PrimitivePour: { create: mk('pcb_PrimitivePour.create'), getAll: mk('pcb_PrimitivePour.getAll') },
 		pcb_PrimitiveString: { create: mk('pcb_PrimitiveString.create') },
 		pcb_MathPolygon: { createPolygon: mk('pcb_MathPolygon.createPolygon') },
+		pcb_Drc: { check: mk('pcb_Drc.check') },
+		pcb_ManufactureData: { getGerberFile: mk('pcb_ManufactureData.getGerberFile') },
+		sys_FileSystem: { saveFile: mk('sys_FileSystem.saveFile') },
 	};
 	const { runSomaBuild } = await import('../src/run');
 	await runSomaBuild();
@@ -569,6 +597,18 @@ await t('mock-eda: full pipeline issues all expected calls', async () => {
 		const dc = calls.find(c => c[0] === 'lib_Device.create' && c[1]?.[1] === `SOMA-${ref}`);
 		assert.equal(dc?.[1]?.[5]?.supplierId, lcsc, `${ref} supplierId`);
 	}
+	// Fix A: never create a project — the open project's board supplies
+	// the schematic + pcb uuids
+	assert.equal(n('dmt_Project.createProject'), 0, 'createProject must never be called');
+	assert.equal(n('dmt_Project.getCurrentProjectInfo'), 2, 'project probed at start + ensureDocs');
+	assert.equal(n('dmt_Board.createBoard'), 0, 'existing board reused — no new board');
+	assert.equal(n('dmt_Schematic.createSchematic'), 0, 'existing schematic reused');
+	assert.equal(n('dmt_Pcb.createPcb'), 0, 'existing pcb reused');
+	const opens = calls.filter(c => c[0] === 'dmt_EditorControl.openDocument').map(c => c[1][0]);
+	assert.deepEqual(opens, ['p1', 'pcb-uuid'], 'schematic page then pcb opened');
+	const imp = calls.find(c => c[0] === 'importChanges');
+	assert.equal(imp?.[1]?.[0], 'sch-uuid', 'importChanges from the board schematic');
+	assert.equal(n('sch_PrimitiveComponent.getAll'), 1, 're-run dedup probes existing comps');
 	assert.equal(n('sch_PrimitiveComponent.create'), 55, 'schematic placements');
 	assert.equal(n('sch_PrimitiveComponent.modify'), 55, 'designator sets');
 	// every schematic/pcb component references the personal library
@@ -578,7 +618,10 @@ await t('mock-eda: full pipeline issues all expected calls', async () => {
 	for (const c of calls.filter(c => c[0] === 'pcb_PrimitiveComponent.create')) {
 		assert.equal(c[1]?.[0]?.libraryUuid, 'lib-uuid', 'pcb comp lib');
 	}
-	assert.equal(n('createNetFlag') + n('createNetPort'), 152, 'one label per connected pin');
+	// Fix B: net labels on every connected pin + power/ground flags on top
+	assert.equal(n('createNetLabel'), 152, 'net label on every connected pin');
+	assert.equal(n('createNetFlag'), 86, 'power/ground flags');
+	assert.equal(n('createNetPort'), 0, 'labels succeed — no ports needed');
 	assert.equal(n('pcb_PrimitiveComponent.create'), 55, 'direct placements (mock getAll=[])');
 	assert.equal(n('pcb_PrimitiveLine.create'), planPcb(BOARD_DATA).tracks.length);
 	assert.equal(n('pcb_PrimitiveVia.create'), 164);
@@ -589,6 +632,10 @@ await t('mock-eda: full pipeline issues all expected calls', async () => {
 	assert.equal(n('pcb_PrimitivePour.create'), 2);
 	assert.equal(n('pcb_Document.save'), allKeys.length + 1, 'per-footprint saves + board save');
 	assert.equal(n('sch_Document.save'), U + 1, 'per-symbol saves + schematic save');
+	// Fix E + fab output
+	assert.equal(n('pcb_Drc.check'), 1, 'DRC verbose check');
+	assert.equal(n('pcb_ManufactureData.getGerberFile'), 1, 'gerber generated');
+	assert.equal(n('sys_FileSystem.saveFile'), 1, 'gerber saved');
 	// progress titles show "part N/55" through the library loop
 	const titles = calls.filter(c => c[0] === 'progress').map(c => String(c[1][1]));
 	assert.ok(titles.some(t => t.includes('part 1/55')), 'progress shows part 1/55');
@@ -596,6 +643,48 @@ await t('mock-eda: full pipeline issues all expected calls', async () => {
 	assert.ok(n('dialog') === 1, 'final dialog shown');
 	const dialog = calls.find(c => c[0] === 'dialog');
 	assert.ok(!/FATAL/.test(String(dialog[1][0])), 'no fatal error: ' + dialog[1][0]);
+	// Fix D: summary carries the counts
+	assert.ok(/parts: 55\/55/.test(String(dialog[1][0])), 'summary counts parts');
+	assert.ok(/tracks:/.test(String(dialog[1][0])) && /DRC:/.test(String(dialog[1][0])), 'summary counts tracks + DRC');
+});
+
+/* 9 ---------------------------------------------------------- v1.3 data (final brief) */
+await t('all 55 designators present in schematic plan + pcb placements', () => {
+	const schRefs = new Set(planSchematic(BOARD_DATA).comps.map(c => c.ref));
+	const pcbRefs = new Set(planPcb(BOARD_DATA).placements.map(p => p.ref));
+	for (const p of BOARD_DATA.parts) {
+		assert.ok(schRefs.has(p.ref), `sch missing ${p.ref}`);
+		assert.ok(pcbRefs.has(p.ref), `pcb missing ${p.ref}`);
+	}
+});
+await t('every net has at least 2 pins', () => {
+	const perNet = new Map();
+	for (const p of BOARD_DATA.parts) for (const q of p.pads) {
+		if (!q.net) continue;
+		perNet.set(q.net, (perNet.get(q.net) ?? 0) + 1);
+	}
+	for (const net of BOARD_DATA.nets) {
+		assert.ok((perNet.get(net) ?? 0) >= 2, `net ${net} has ${perNet.get(net) ?? 0} pins`);
+	}
+});
+await t('track count equals KiCad source', () => {
+	assert.equal(BOARD_DATA.tracks.length, BOARD_DATA.meta.counts.tracks);
+	assert.equal(BOARD_DATA.vias.length, BOARD_DATA.meta.counts.vias);
+	const plan = planPcb(BOARD_DATA);
+	assert.equal(plan.tracks.length + plan.skippedTracks, BOARD_DATA.tracks.length);
+});
+await t('board outline is closed and rectangular', () => {
+	const o = BOARD_DATA.outline;
+	assert.ok(o.length >= 4);
+	// closed polygon in the plan: first vertex == last vertex
+	const plan = planPcb(BOARD_DATA);
+	const nums = plan.outlinePolygon.filter(e => typeof e === 'number');
+	assert.ok(near(nums[0], nums[nums.length - 2]) && near(nums[1], nums[nums.length - 1]), 'closed');
+	// nonzero 135x115 area
+	const xs = o.map(p => p[0]); const ys = o.map(p => p[1]);
+	assert.ok(near(Math.max(...xs) - Math.min(...xs), 135) && near(Math.max(...ys) - Math.min(...ys), 115));
 });
 
 console.log(`\n${pass} checks passed${process.exitCode ? ' (with FAILURES)' : ''}`);
+// pending call() timeouts keep the loop alive — exit explicitly
+process.exit(process.exitCode ?? 0);

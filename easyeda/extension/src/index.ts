@@ -24,9 +24,9 @@ export function diagnose(): void {
 export function about(): void {
 	eda.sys_Dialog.showInformationMessage(
 		`SOMA Carrier v1.3 rebuild extension v${extensionConfig.version}.\n\n` +
-		'Creates a new project "SOMA Carrier v1.3 (EasyEDA)", builds the schematic,\n' +
-		'generates the PCB (135x115 mm, 2 layers) with replicated v1.3 routing,\n' +
-		'and saves. Source: soma-carrier-v13.kicad_pcb (KiCad 10).',
+		'Builds inside your OPEN project "SOMA Carrier v1.3 (EasyEDA)": the schematic,\n' +
+		'the PCB (135x115 mm, 2 layers) with replicated v1.3 routing, DRC and gerber\n' +
+		'export. Source: soma-carrier-v13.kicad_pcb (KiCad 10).',
 		'SOMA Carrier v1.3',
 	);
 }

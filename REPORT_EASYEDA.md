@@ -703,3 +703,172 @@ footprints use the KiCad pad numbers verbatim.
   flipping it back on restores the v1.3 behaviour (sys keys resolved
   via search hits, K1 padmap applied) — useful only if a future
   EasyEDA version fixes system-library reads.
+
+# Final (v2.0.0) — build inside the user's open project, DRC + gerber, <30 s diagnostics
+
+## What changed (v1.4.0 → v2.0.0)
+
+- **Fix A — no project is ever created.** `dmt_Project.createProject`
+  (proven to FAIL on 3.2.209 HALF_OFFLINE) is gone from the build path;
+  the mock test asserts it is called **0** times. The build now starts
+  with `dmt_Project.getCurrentProjectInfo()`; if nothing is open the run
+  stops with one dialog: *"Open your project 'SOMA Carrier v1.3
+  (EasyEDA)' first, then run Build again"*.
+  `ensureProjectDocs()` then finds the board / schematic / PCB inside
+  the open project — from `proj.data` Board items and from
+  `dmt_Board.getAllBoardsInfo()` — and creates only what is missing,
+  logging which variant worked:
+  `dmt_Board.createBoard()` (empty project → sch+pcb pair),
+  `dmt_Schematic.createSchematic()` / `dmt_Pcb.createPcb()` (no-arg —
+  their parameter is a *board* name, not the doc name),
+  `dmt_SourceSchematic.addSchematic` / `dmt_SourcePcb.addPcb`
+  (source-API fallbacks, `projectId` keyed), and
+  `dmt_Board.createBoard(sch,pcb)` to link loose docs.
+- **Fix B — schematic.** Existing components are reused by designator
+  (re-run safe). Every connected pin gets a short named stub plus a
+  **net label** on its end (`sch_PrimitiveAttribute.createNetLabel`,
+  presence-checked — it is typed "since EDA v4"); power/ground pins
+  additionally get `createNetFlag('Power'|'Ground')`; if the label API
+  is absent the code falls back to `createNetPort('BI')`.
+- **Fix C — PCB.** `pcb_Document.importChanges(schUuid, true)` after
+  opening the project's PCB; missing components fall back to
+  `pcb_PrimitiveComponent.create` + per-pad `setState_Net`. Outline via
+  `pcb_PrimitivePolyline` on layer 11; tracks/vias/pours as before —
+  plus `pour.rebuildCopperRegion()` after each pour. Re-runs skip
+  primitives that already exist at the full planned count
+  (outline polys, tracks, vias, pours).
+- **Fix D — summary.** The final dialog now leads with counts:
+  parts placed/reused, nets labeled (labels/flags/ports), tracks
+  ok/failed (+existing), vias, pours, DRC violations, gerber status —
+  then info and every warning with real error text.
+- **Fix E — DRC.** `pcb_Drc.check(true, false, true)` (verbose) runs
+  after the PCB save; the category tree is flattened to a violation
+  count with up to 12 sample messages in warnings. Non-array results
+  fall back to the boolean gate `check(true, false, false)`.
+- **Fab output.** `pcb_ManufactureData.getGerberFile('SOMA-Carrier-v13_Gerber')`
+  → `sys_FileSystem.saveFile('SOMA-Carrier-v13_Gerber.zip')`; both
+  presence-checked and time-bounded — if declined, the summary says to
+  use File → Export instead.
+- **Fix F — diagnostics.** Rewritten: API probes (sync), open-project
+  info, personal library + `lib_Device.search('SOMA-')`, then the
+  document chain A–C on **throwaway** `dmt_Schematic.createSchematic()` /
+  `dmt_Pcb.createPcb()` docs inside the open project (place first SOMA
+  device if any, one track, `importChanges`, saves), deleted afterwards
+  via `deleteSchematic`/`deletePcb`. A hard 28 s budget (`to()` shrinks
+  every timeout to fit) keeps it under 30 s.
+- Menu label is now **Diagnostics (under 30s)**; About text updated.
+
+## Tests — 30 checks pass (was 26)
+
+```
+ok  55 parts / 4 holes / 1836 tracks / 164 vias / 2 zones / 37 nets
+ok  every part has pads and a footprint
+ok  all 55 refs have a PARTS-table block entry
+ok  no B-side parts (transform assumes front)
+ok  all track/via nets exist on pads
+ok  mm->mil and y-flip
+ok  polygon source emits L-joined mil points (no trailing L)
+ok  symbol source: doctype, pins, attrs, box
+ok  footprint ops: THT pads on layer 12, plated round holes, correct positions
+ok  footprint ops: SMD pads on layer 1, no hole, unplated
+ok  footprint ops: silk/courtyard polys only use primitive-legal layers
+ok  footprint pads land on KiCad absolute pad positions
+ok  planSchematic covers all parts and all nets
+ok  no overlapping component slots
+ok  planPcb: placements at v1.3 anchors (mil, y-flipped)
+ok  planPcb: tracks/vias/pours/holes
+ok  every track endpoint lands within 2mm of a pad or via (same net) or another track vertex
+ok  pad nets count per ref matches KiCad source spot-checks
+ok  every board (footprint,rot) key is covered by SYS_FP_MATCH or CUSTOM_KEYS
+ok  fpKeyOf normalizes rotation forms
+ok  match table sanity: uuids, finite offsets, padmaps preserve pad count
+ok  symbolPinList: KiCad numbering when no padmap
+ok  symbolPinList: fp-domain numbering applies the padmap (K1 coil swap)
+ok  symbolOps: one pin op per pin + 1 rect + 2 texts, mirrored sides
+ok  symbolKey dedups identical pin sets
+ok  mock-eda: full pipeline issues all expected calls        (v2 flow)
+ok  all 55 designators present in schematic plan + pcb placements   NEW
+ok  every net has at least 2 pins                                  NEW
+ok  track count equals KiCad source                                NEW
+ok  board outline is closed and rectangular                        NEW
+```
+
+New v1.3-data assertions (per the final brief): all 55 designators in
+both plans, every net in `nets[]` has ≥2 pins, `tracks.length ==
+meta.counts.tracks` (1836, plus 57 degenerate segs reported separately),
+outline polygon first==last and 135×115.
+
+## Dry run — `test/dry-run.mjs` (mocked eda, full build verbatim)
+
+```
+=== SOMA v1.3 dry run (mocked eda) ===
+footprints:  26 created (26 unique keys)
+symbols:     46 created (46 unique pin sets, 157 pins drawn)
+devices:     55 created, 55 verified
+project:     createProject=0 (must be 0), getCurrentProjectInfo=2
+schematic:   55 comps, 152 stubs, 152 netlabels, 86 flags, 0 ports
+pcb:         importChanges=1, 55 comps placed
+copper:      1779 tracks, 164 vias, 2 pours, 518 polylines (fp silk + outline)
+pads:        99 (26 footprint keys + 4 mounting holes)
+finish:      DRC checks=1, gerber=1, saveFile=1
+```
+
+(1779 = 1836 KiCad segments − 57 zero-length ones the planner drops.)
+
+## API names used in v2.0.0
+
+- Works on 3.2.209 (proven earlier): everything in the library
+  draw/tag/verify path plus `pcb_Document.importChanges`,
+  `sch_PrimitiveComponent.*`, `sch_PrimitivePin/Rectangle/Text/Wire`,
+  `pcb_PrimitivePad/Line/Via/Pour/Polyline/Component/String`,
+  `pcb_MathPolygon.createPolygon`, `dmt_EditorControl.*`,
+  `dmt_SelectControl.getCurrentDocumentInfo`.
+- Newly used (typed in the bundled 3.2 SDK, unverified in the real GUI):
+  `dmt_Project.getCurrentProjectInfo`, `dmt_Board.getAllBoardsInfo` /
+  `createBoard`, `dmt_Schematic.createSchematic` / `getSchematicInfo` /
+  `createSchematicPage` / `deleteSchematic`, `dmt_Pcb.createPcb` /
+  `deletePcb`, `dmt_SourceSchematic.addSchematic`,
+  `dmt_SourcePcb.addPcb`, `sch_PrimitiveAttribute.createNetLabel`
+  (typed "since EDA v4" — presence-checked, port fallback),
+  `pcb_PrimitiveLine/Via/Pour/Polyline.getAll` (re-run guards),
+  `IPCB_PrimitivePour.rebuildCopperRegion`, `pcb_Drc.check`,
+  `pcb_ManufactureData.getGerberFile`, `sys_FileSystem.saveFile`.
+
+## Known gaps / honest caveats
+
+- **Not GUI-verified.** Every v2 addition is typed in the bundled SDK
+  and exercised against the mock, but none of it has run inside real
+  EasyEDA yet — the exact `libraryUuid` forms, `importChanges` semantics
+  on a user project, `createNetLabel` presence on 3.2.209, DRC tree
+  shape, and the gerber export are the things to eyeball on first run.
+- `sch_PrimitiveAttribute.createNetLabel` may be absent on 3.2.209;
+  the code detects that at runtime and falls back to net ports, so the
+  schematic gets labelled either way.
+- The DRC verbose tree's exact node shape is undocumented; the
+  summariser counts leaf error objects and prints up to 12 samples — if
+  it reports "0 violations" while the DRC panel shows some, trust the
+  panel and send the `[SOMA]` log.
+- Re-run guards skip tracks/vias/pours only when the board already has
+  ≥ the planned count; a partial first run tops up rather than
+  duplicating.
+- `sys_FileSystem.saveFile` may open a save dialog or be blocked in
+  HALF_OFFLINE; the summary reports which happened.
+
+## Exact user steps
+
+1. Open EasyEDA Pro 3.2.209 and open your project
+   **"SOMA Carrier v1.3 (EasyEDA)"** (must be the open project — the
+   extension builds inside it; it never creates one).
+2. Extension Manager → Import →
+   `~/Downloads/soma-carrier-v13-builder_v2.0.0.eext`
+   (same extension uuid — replaces v1.x).
+3. Optional but recommended: **SOMA v1.3 → Diagnostics (under 30s)** —
+   watch the API probe table, the project doc line, the throwaway
+   schematic/PCB round-trip, and the delete confirmations.
+4. **SOMA v1.3 → Build SOMA Carrier v1.3…** — one click. Progress bar
+   walks library → schematic → PCB → DRC → gerber.
+5. Read the final summary dialog (counts for parts / labels / tracks /
+   vias / pours / DRC / gerber) — **send that summary plus a screenshot
+   of the PCB** back. Full detail is in the `[SOMA]` log lines.
+6. Re-runnable: tagged library items and existing components/tracks are
+   skipped, not duplicated.

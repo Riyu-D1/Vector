@@ -417,3 +417,158 @@ counted.
   `waitActiveDoc` guards this.
 - The 5 custom footprints still depend on `openInEditor` behaving in the
   library editor; diagnostics exercises exactly that path first.
+
+---
+
+# Fix 3 — symbols save empty; system-library footprint get/copy fail (v1.3.0)
+
+## Symptom (real GUI run of v1.2.0 diagnostics on 3.2.209)
+
+- **Footprint draw path confirmed working end-to-end**: `openInEditor`
+  (4.5 s) → `activateDocument` true → active doc type 4, uuid match →
+  pad ✓ → polyline ✓ → `pad.getAll` 1 → `getDocumentSource` 27 232 chars
+  (`{"type":"DOCHEAD"}||{"docType":"PCB",…}`) → save ✓ → close ✓.
+- **Symbols silently empty**: `lib_Symbol.create` ✓ →
+  `updateDocumentSource` with the `DOCTYPE/SYMBOL/1.0` line grammar
+  (1 165 chars) returned **true** → open/activate (type 2, uuid match) →
+  `getDocumentSource` returned **350 chars, 0 `"PIN"` records**. The
+  write was accepted and ignored.
+- **System-library lookup failed**: system lib uuid
+  `0819f05c4eef4c71ace90d822a990e87`; `lib_Footprint.search('hdr-th_2p')`
+  → **10 hits OK**; `lib_Footprint.get(mappedUuid, sysLibUuid)` → FAIL;
+  `lib_Footprint.copy(mappedUuid, sysLibUuid, SOMA, …)` → FAIL;
+  `lib_Device.getByLcscIds(['C2564','C118536'])` → 2 hits (contents were
+  not printed by v1.2.0 diagnostics — they are printed in full now).
+- Misc: `lib get` returns `libraryUuid ""`, `lib search` returns the
+  literal string `"SOMA"` for the personal library under HALF_OFFLINE.
+
+## Root cause
+
+- **The live document source is the segmented `DOCHEAD` format**, the
+  same one the PCB doc exposes. The `DOCTYPE/SYMBOL/1.0` *line* grammar
+  is what the `.elib` file stores on disk — `updateDocumentSource`
+  accepted it but never converted it into live records, so the symbol
+  saved with zero pins. Generating `DOCHEAD` segments by hand is fragile;
+  the documented route for symbol content is the same one already proven
+  for footprints: **draw primitives inside the open library-editor tab**.
+  `api-types.d.ts` marks `sch_PrimitivePin` as symbol-editor-only and the
+  bundled SDK examples create pins exactly this way
+  (`sch_PrimitivePin.create(x, y, num, name, rot, len, null, 'None', 'Passive')`
+  inside a `lib_Symbol.openInEditor` tab).
+- **The hardcoded footprint uuid + configured system-library uuid pair
+  was not the identity `get`/`copy` accept** in HALF_OFFLINE. `search()`
+  succeeds and each hit carries its own `uuid` *and* `libraryUuid` —
+  those are the values device/pcb associations consume, so the fix is to
+  resolve through the hit instead of the constant. No `copy()` into the
+  personal library is needed: `lib_Device.create` and
+  `pcb_PrimitiveComponent.create` both accept foreign-library uuids
+  (verified for associations in the API types; GUI verify pending).
+
+## What changed (v1.3.0)
+
+- **Symbols are drawn, not source-written.** New `src/symdraw.ts` plans
+  the same DIP geometry as before (pin pitch 10, half-length-10 pins on a
+  100-wide box, name + `PREFIX?` labels) as primitive ops. `run.ts` opens
+  each symbol via `lib_Symbol.openInEditor`, activates it, polls
+  `getCurrentDocumentInfo` for uuid/type match, then creates
+  `sch_PrimitivePin` per pin, `sch_PrimitiveRectangle` for the body, and
+  `sch_PrimitiveText` for labels — counting pins via
+  `sch_PrimitivePin.getAll` before and after.
+- **Two persistence routes.** After drawing, the tab is saved with
+  `sch_Document.save()` (the sibling of `pcb_Document.save()` proven by
+  the footprint path) **and** the live `getDocumentSource` text is pushed
+  back through `lib_Symbol.updateDocumentSource` — the live source *is*
+  the segmented DOCHEAD format that call accepts, unlike the 1.0-line
+  grammar v1.2 sent. A symbol is `ok` only when the pin count is met and
+  at least one write returns true.
+- **Reopen-verify, not save-verify.** "Saved" proved nothing in v1.2, so
+  the first drawn symbol is closed, reopened, and its pin count checked
+  again — only that proves the library item persisted. Old
+  `soma:v1.2-src` tags are no longer trusted (they marked writes that
+  returned true but produced empty items); symbols are tagged
+  `soma:v1.3-drawn` only after a verified draw. Footprints keep their
+  `soma:v1.2-drawn`/`soma:v1.3-drawn` trust — that path is proven.
+- **System footprints resolve via the search hit.** `resolveSysFootprint`
+  calls `lib_Footprint.search(sysFpName, sysLibUuid)` and uses the exact
+  hit's `uuid` + `libraryUuid`; `get()` remains only as a fallback when
+  search is unavailable. `lib_Footprint.copy` is no longer used.
+  Diagnostics prints every hit (name/uuid/libraryUuid), the exact args of
+  each probe, and full error payloads instead of `FAIL`.
+- **System devices probed end-to-end.** Diagnostics dumps every
+  `getByLcscIds` hit including its `symbol`/`footprint` associations,
+  fetches one device item, then creates a personal `SOMA-DIAG-KEEP-DEV-*`
+  device bound to the system footprint + a fresh symbol and reads it
+  back — the same association shape the build uses for all 21 keys.
+- **Empty-pad guard on the board.** After `importChanges` moves and
+  `pcb_PrimitiveComponent.create` places a part, the component's pin
+  count is checked (`getAllPinsByPrimitiveId`); a component that landed
+  with 0 pads despite a "resolved" footprint gets the free-pad overlay
+  instead of silent missing copper.
+- **Correctness over elegance.** If a sys-lib footprint cannot be
+  resolved, the key falls back to the proven draw-in-editor path
+  automatically; all 26 keys can be custom-drawn if system access stays
+  unreliable. K1's padmap (KiCad 1→sys 2, 2→1, 3→3, 5→5) is unchanged and
+  now drives symbol pin numbering too, so pin→pad import lands on the
+  right copper.
+- **Diagnostics rewritten for the new path.** Symbol round-trip prints
+  the full empty-doc source, draws pins/box/text, prints the post-draw
+  source head + PIN-record count, saves both ways, closes, reopens, and
+  counts pins again. All `SOMA-DIAG-KEEP-*` artifacts are kept.
+- Tests: **26 checks pass** — new symdraw unit tests (KiCad-domain vs
+  fp-domain pin lists, K1 coil swap, op shapes, dedup key) and a
+  rewritten mock-eda smoke test asserting the new call sequence (21 sys
+  searches, 5 custom draws, 46 unique symbols drawn via primitives with
+  pin-count readbacks, one reopen-verify, zero calls to unhandled APIs,
+  sys-lib associations on devices and board components, K1 → `hf3ff`).
+
+## What to do in EasyEDA (exact steps)
+
+1. **Import** `~/Downloads/soma-carrier-v13-builder_v1.3.0.eext`
+   (same extension uuid, replaces v1.2.0).
+2. **SOMA v1.3 → Diagnostics (keeps test items)** — watch for:
+   - `EMPTY SOURCE (… chars): …` — the real empty symbol doc;
+   - `drew N symbol primitives (0 failed)`, `post-draw source … PIN recs`
+     and **`REOPENED -> 2 pins via getAll`** — pins must persist across
+     reopen, not just exist in the open tab;
+   - `sys search -> 10 hits` with per-hit `uuid=`/`lib=` lines;
+   - `sys fp get(hit args) -> {…}` succeeding where `(mapped args)`
+     failed, or both failing with the full error text shown;
+   - `device.create with sys fp assoc -> uuid …` + `created device read`
+     — proves the association resolves.
+   Afterwards the `SOMA-DIAG-KEEP-*` footprint/symbol/device sit in the
+   SOMA library — open the symbol to eyeball pins/box, then delete all
+   three whenever convenient.
+3. **Only if diagnostics pass**, run **SOMA v1.3 → Build SOMA Carrier
+   v1.3…**. Old `soma:v1.2-src` symbols are redrawn automatically;
+   expect `21 system + 5 drawn footprints, ~46 symbols, 55 devices` in
+   the summary line (symbol count is the deduplicated pin-set count).
+4. Verify the board: 55 components placed, K1 on the `hf3ff` footprint
+   with coil pads intentionally renumbered (check RLY_LOW/RLY_SW land on
+   the correct pads), mounting holes, tracks, vias, both pours, then DRC.
+5. If the summary reports footprint fallbacks or symbol warnings, read
+   the `[SOMA]` lines in the system log — every failing call name and
+   error payload is logged.
+
+## Still open / honest caveats
+
+- **Headless ≠ GUI.** The 26 checks run against a mock that reproduces
+  the observed API contract (search-hit uuids, per-symbol pin
+  persistence). Whether `sch_PrimitivePin.create` commits to the library
+  via `sch_Document.save`, `updateDocumentSource(liveSource)`, or
+  something else entirely is exactly what step 2's reopen-verify decides —
+  Diagnostics prints which write route reported success. If *neither*
+  persists pins across reopen, that is a hard blocker: report the diag
+  output and we switch to generating `DOCHEAD` segments directly via
+  `sys_FileManager.setDocumentSource` (probed OK, last resort because the
+  segment schema is undocumented).
+- Pin shape/type are set to `None`/`Passive` for all pins — electrically
+  correct for import mapping; cosmetic clock/power decorations can be
+  added later.
+- Symbol labels are drawn as plain text (`SOMA-<ref>`, `PREFIX?`); if
+  EasyEDA needs proper `Designator`/`Name` *attribute* records for BOM
+  fields, `sch_PrimitiveAttribute` is the follow-up — verify in-GUI
+  whether the plain texts satisfy the panel.
+- If a sys-hit `uuid`/`libraryUuid` pair still fails in
+  `lib_Device.create`/board placement, that key auto-falls back to a
+  drawn footprint — the summary's `M drawn` count shows how many fell
+  back; the diag `device.create with sys fp assoc` line predicts it.

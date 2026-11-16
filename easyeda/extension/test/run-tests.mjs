@@ -335,12 +335,26 @@ await t('mock-eda: full pipeline issues all expected calls', async () => {
 	let fpPadCount = 0;
 	let symPinCount = 0;
 	const symPinsSaved = new Map();
+	// remember what association each created device was asked for so
+	// lib_Device.get can answer the build's verify read-back
+	const devAssoc = new Map();
+	// uuid returned per created library item, keyed by 'api|name'
+	const createdItemUuid = new Map();
 	const persistSym = () => { if (activeDoc?.documentType === 'Symbol') symPinsSaved.set(activeDoc.uuid, symPinCount); };
 	const mk = name => (...a) => {
 		calls.push([name, a]);
 		if (/^(lib_(Footprint|Symbol|Device)|dmt_(Project|Schematic|Pcb))\./.test(name) &&
 			/create|createProject|createSchematic|createPcb/.test(name)) {
-			return Promise.resolve('uuid-' + name + '-' + (++uidSeq));
+			const id = 'uuid-' + name + '-' + (++uidSeq);
+			if (name === 'lib_Device.create') {
+				const assoc = a[3] ?? {};
+				devAssoc.set(id, {
+					symbol: { uuid: assoc.symbol?.uuid ?? assoc.symbolUuid },
+					footprint: { uuid: assoc.footprint?.uuid ?? assoc.footprintUuid },
+				});
+			}
+			else createdItemUuid.set(`${name}|${a[1]}`, id);
+			return Promise.resolve(id);
 		}
 		if (name === 'lib_Footprint.openInEditor' || name === 'lib_Symbol.openInEditor') {
 			activeDoc = { documentType: name.includes('Symbol') ? 'Symbol' : 'Footprint', uuid: a[0], tabId: 'tab-' + (++uidSeq) };
@@ -368,10 +382,7 @@ await t('mock-eda: full pipeline issues all expected calls', async () => {
 			return Promise.resolve(Array.from({ length: cnt }, (_, i) => ({ i })));
 		}
 		if (name === 'sch_PrimitivePin.create') { if (activeDoc?.documentType === 'Symbol') symPinCount++; return Promise.resolve({ id: 1 }); }
-		if (name === 'lib_Footprint.search' && a[1] === 'syslib-uuid') {
-			const m = Object.values(SYS_FP_MATCH).find(m => m.sysFpName === a[0]);
-			return Promise.resolve(m ? [{ name: m.sysFpName, uuid: m.sysFpUuid, libraryUuid: 'syslib-uuid' }] : []);
-		}
+		if (name === 'lib_Device.get') return Promise.resolve({ uuid: a[0], description: '', association: devAssoc.get(a[0]) });
 		if (name.endsWith('.search')) return Promise.resolve([]);
 		if (name === 'lib_LibrariesList.getPersonalLibraryUuid') return Promise.resolve('lib-uuid');
 		if (name === 'lib_LibrariesList.getSystemLibraryUuid') return Promise.resolve('syslib-uuid');
@@ -390,7 +401,7 @@ await t('mock-eda: full pipeline issues all expected calls', async () => {
 		done: async () => {},
 	});
 	globalThis.eda = {
-		sys_LoadingAndProgressBar: { showProgressBar: () => {}, destroyProgressBar: () => {} },
+		sys_LoadingAndProgressBar: { showProgressBar: (p, t) => calls.push(['progress', [p, t]]), destroyProgressBar: () => {} },
 		sys_Dialog: { showInformationMessage: (...a) => calls.push(['dialog', a]) },
 		sys_Log: { add: () => {} },
 		sys_FileManager: {
@@ -425,6 +436,7 @@ await t('mock-eda: full pipeline issues all expected calls', async () => {
 			search: mk('lib_Device.search'),
 			create: mk('lib_Device.create'),
 			get: mk('lib_Device.get'),
+			modify: mk('lib_Device.modify'),
 			delete: mk('lib_Device.delete'),
 		},
 		dmt_Project: {
@@ -483,48 +495,42 @@ await t('mock-eda: full pipeline issues all expected calls', async () => {
 	await runSomaBuild();
 
 	const n = name => calls.filter(c => c[0] === name).length;
-	// unique footprints: system-matched keys resolve via the search hit;
-	// CUSTOM_KEYS leftovers go through the draw-in-editor path
+	// v1.4: every (footprint,rotation) key is drawn — no system-library use
 	const fpParts = new Map();
 	for (const p of BOARD_DATA.parts) {
 		const k = fpKeyOf(p.footprint, p.rot);
 		if (!fpParts.has(k)) fpParts.set(k, p);
 	}
-	const sysKeys = [...fpParts.keys()].filter(k => SYS_FP_MATCH[k]);
-	const customKeys = [...fpParts.keys()].filter(k => !SYS_FP_MATCH[k]);
 	assert.equal(fpParts.size, 26, 'unique footprint keys');
-	assert.equal(sysKeys.length, 21, 'system-matched keys');
-	assert.deepEqual(customKeys.sort(), Object.keys(CUSTOM_KEYS).sort(), 'custom keys == CUSTOM_KEYS');
+	const allKeys = [...fpParts.keys()];
 	let expFpPads = 0, expFpPolys = 0;
-	for (const k of customKeys) {
+	for (const k of allKeys) {
 		for (const op of footprintOps(fpParts.get(k))) op.kind === 'pad' ? expFpPads++ : expFpPolys++;
 	}
-	// unique symbol set (pin-list dedup, fp-domain numbering)
+	// unique symbol set (pin-list dedup, identity KiCad numbering in v1.4)
 	const symUniq = new Map();
 	for (const p of BOARD_DATA.parts) {
-		const m = SYS_FP_MATCH[fpKeyOf(p.footprint, p.rot)];
-		const pl = symbolPinList(p, m?.padmap);
+		const pl = symbolPinList(p);
 		const k = symbolKey(pl);
 		if (!symUniq.has(k)) symUniq.set(k, pl.length);
 	}
 	const U = symUniq.size;
 	const expSymPins = [...symUniq.values()].reduce((a, b) => a + b, 0);
 
-	// custom fp path: name+list search (2 calls) + create + draw per key
-	assert.equal(n('lib_Footprint.search'), 2 * customKeys.length + sysKeys.length,
-		'personal search per custom key + sys search per sys key');
+	// drawn fp path per key: name+list search (2 calls) + create + draw
+	assert.equal(n('lib_Footprint.search'), 2 * allKeys.length,
+		'personal name+list search per footprint key');
 	const sysFpSearches = calls.filter(c => c[0] === 'lib_Footprint.search' && c[1]?.[1] === 'syslib-uuid');
-	assert.equal(sysFpSearches.length, sysKeys.length, 'sys fp resolved via search hits');
-	assert.equal(n('lib_Footprint.create'), customKeys.length, 'one create per custom footprint');
-	assert.equal(n('lib_Footprint.openInEditor'), customKeys.length);
-	// sys path: search-hit uuid is used — no sys-lib get/copy needed
-	assert.equal(n('lib_Footprint.get'), customKeys.length, 'metadata get only for drawn fps');
-	assert.equal(n('lib_Footprint.copy'), 0, 'copy not needed — assoc takes foreign uuids');
+	assert.equal(sysFpSearches.length, 0, 'system library not touched — all footprints drawn');
+	assert.equal(n('lib_Footprint.create'), allKeys.length, 'one create per footprint key');
+	assert.equal(n('lib_Footprint.openInEditor'), allKeys.length);
+	assert.equal(n('lib_Footprint.get'), allKeys.length, 'metadata get per drawn fp');
+	assert.equal(n('lib_Footprint.copy'), 0, 'system copy never attempted');
 	// readiness: activate + poll info — never waitForDocumentReady
 	assert.equal(n('dmt_EditorControl.waitForDocumentReady'), 0, 'hanging API must not be called');
 	assert.ok(n('dmt_SelectControl.getCurrentDocumentInfo') > 0, 'active-doc polling');
 	// fp tabs + symbol draw tabs + 1 symbol reopen-verify tab
-	assert.equal(n('dmt_EditorControl.closeDocument'), customKeys.length + U + 1);
+	assert.equal(n('dmt_EditorControl.closeDocument'), allKeys.length + U + 1);
 	assert.equal(n('lib_Footprint.getDocumentSource'), 0, 'removed API must not be called');
 	assert.equal(n('lib_Footprint.updateDocumentSource'), 0, 'removed API must not be called');
 	// symbol draw path: primitives on the editor tab + live-source push +
@@ -538,35 +544,55 @@ await t('mock-eda: full pipeline issues all expected calls', async () => {
 	assert.equal(n('lib_Symbol.updateDocumentSource'), U, 'live source pushed per symbol');
 	assert.equal(n('sys_FileManager.getDocumentSource'), U, 'post-draw source read per symbol');
 	// content tagging after verified work
-	assert.equal(n('lib_Footprint.modify'), customKeys.length, 'fp drawn tags');
+	assert.equal(n('lib_Footprint.modify'), allKeys.length, 'fp drawn tags');
 	assert.equal(n('lib_Symbol.modify'), U, 'symbol drawn tags');
+	// devices: one create + verify read + tag per part; all associations
+	// point at drawn personal-library items (search-hit lib = 'lib-uuid'
+	// fallback in the mock)
 	assert.equal(n('lib_Device.create'), 55, 'devices');
-	// every sys-matched device associates the SYSTEM library footprint
+	assert.equal(n('lib_Device.get'), 55, 'association verify reads');
+	assert.equal(n('lib_Device.modify'), 55, 'verified device tags');
 	const sysDevCalls = calls.filter(c =>
-		c[0] === 'lib_Device.create' && c[1]?.[3]?.footprint?.libraryUuid === 'syslib-uuid');
-	const sysPartRefs = new Set(BOARD_DATA.parts.filter(p => SYS_FP_MATCH[fpKeyOf(p.footprint, p.rot)]).map(p => p.ref));
-	assert.equal(sysDevCalls.length, sysPartRefs.size, 'devices with system-footprint assoc');
-	// K1 device must associate the hf3ff relay footprint
-	const k1dev = sysDevCalls.find(c => c[1]?.[1] === 'SOMA-K1');
-	assert.equal(k1dev?.[1]?.[3]?.footprint?.uuid, SYS_FP_MATCH['Relay_SPST_SANYOU_SRD_Series_Form_A@0'].sysFpUuid);
+		c[0] === 'lib_Device.create' &&
+		(c[1]?.[3]?.footprint?.libraryUuid === 'syslib-uuid' || c[1]?.[3]?.symbol?.libraryUuid === 'syslib-uuid'));
+	assert.equal(sysDevCalls.length, 0, 'no device associates the system library');
+	// K1: identity pad numbering — the device assoc points at its own
+	// drawn footprint uuid (no hf3ff, no coil-pad swap)
+	const k1fpUuid = createdItemUuid.get('lib_Footprint.create|SOMA-Relay_SPST_SANYOU_SRD_Series_Form_A-R0');
+	const k1dev = calls.find(c => c[0] === 'lib_Device.create' && c[1]?.[1] === 'SOMA-K1');
+	assert.ok(k1fpUuid, 'k1 drawn footprint created');
+	assert.equal(k1dev?.[1]?.[3]?.footprint?.uuid, k1fpUuid, 'K1 associates the drawn footprint');
+	assert.equal(k1dev?.[1]?.[5]?.supplierId, 'C93716', 'K1 LCSC number as BOM attribute');
+	// verified LCSC equivalents ride along as supplierId BOM attributes
+	const lcscByRef = { Q2: 'C2564', Q1: 'C118536', Q3: 'C118536', D5: 'C2457' };
+	for (const [ref, lcsc] of Object.entries(lcscByRef)) {
+		const dc = calls.find(c => c[0] === 'lib_Device.create' && c[1]?.[1] === `SOMA-${ref}`);
+		assert.equal(dc?.[1]?.[5]?.supplierId, lcsc, `${ref} supplierId`);
+	}
 	assert.equal(n('sch_PrimitiveComponent.create'), 55, 'schematic placements');
 	assert.equal(n('sch_PrimitiveComponent.modify'), 55, 'designator sets');
+	// every schematic/pcb component references the personal library
+	for (const c of calls.filter(c => c[0] === 'sch_PrimitiveComponent.create')) {
+		assert.equal(c[1]?.[0]?.libraryUuid, 'lib-uuid', 'sch comp lib');
+	}
+	for (const c of calls.filter(c => c[0] === 'pcb_PrimitiveComponent.create')) {
+		assert.equal(c[1]?.[0]?.libraryUuid, 'lib-uuid', 'pcb comp lib');
+	}
 	assert.equal(n('createNetFlag') + n('createNetPort'), 152, 'one label per connected pin');
 	assert.equal(n('pcb_PrimitiveComponent.create'), 55, 'direct placements (mock getAll=[])');
-	// sys-matched parts are created straight from the system library
-	const sysCompCalls = calls.filter(c =>
-		c[0] === 'pcb_PrimitiveComponent.create' && c[1]?.[0]?.libraryUuid === 'syslib-uuid');
-	assert.equal(sysCompCalls.length, sysPartRefs.size, 'board components from system lib');
 	assert.equal(n('pcb_PrimitiveLine.create'), planPcb(BOARD_DATA).tracks.length);
 	assert.equal(n('pcb_PrimitiveVia.create'), 164);
-	// pads: custom-footprint pads + 4 mounting holes (no free-pad fallback
-	// when every key is sys-matched or drawn ok and comps land with pins)
+	// pads: all 26 drawn footprints + 4 mounting holes
 	assert.equal(n('pcb_PrimitivePad.create'), expFpPads + 4, 'footprint pads + mounting holes');
-	// polylines: custom-footprint silk + 1 board outline
+	// polylines: all drawn footprint silk + 1 board outline
 	assert.equal(n('pcb_PrimitivePolyline.create'), expFpPolys + 1, 'footprint silk + outline');
 	assert.equal(n('pcb_PrimitivePour.create'), 2);
-	assert.equal(n('pcb_Document.save'), customKeys.length + 1, 'per-footprint saves + board save');
+	assert.equal(n('pcb_Document.save'), allKeys.length + 1, 'per-footprint saves + board save');
 	assert.equal(n('sch_Document.save'), U + 1, 'per-symbol saves + schematic save');
+	// progress titles show "part N/55" through the library loop
+	const titles = calls.filter(c => c[0] === 'progress').map(c => String(c[1][1]));
+	assert.ok(titles.some(t => t.includes('part 1/55')), 'progress shows part 1/55');
+	assert.ok(titles.some(t => t.includes('part 55/55')), 'progress shows part 55/55');
 	assert.ok(n('dialog') === 1, 'final dialog shown');
 	const dialog = calls.find(c => c[0] === 'dialog');
 	assert.ok(!/FATAL/.test(String(dialog[1][0])), 'no fatal error: ' + dialog[1][0]);

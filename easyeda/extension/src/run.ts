@@ -2,38 +2,33 @@
  * Orchestrates the SOMA Carrier v1.3 rebuild inside EasyEDA Pro 3.2.
  *
  * Pipeline:
- *   1. resolve footprints per (footprint,rotation) key:
- *      - verified system-library matches from syslib-match.ts are resolved
- *        through lib_Footprint.search (the proven call on this build —
- *        lib_Footprint.get on the hardcoded uuid failed in HALF_OFFLINE)
- *        and the search hit's own uuid + libraryUuid are used directly
- *        (device association + pcb_PrimitiveComponent.create accept
- *        foreign-library uuids), with a rotation + origin offset so their
- *        pads land on the KiCad pad positions;
- *      - every key whose system footprint does not resolve is drawn on an
- *        open footprint-editor tab (pcb_PrimitivePad /
- *        pcb_PrimitivePolyline + pcb_Document.save), after
- *        activateDocument + a getCurrentDocumentInfo uuid check —
- *        waitForDocumentReady has no handler in 3.2.209 and hangs;
- *      - drawn footprints/symbols get a `soma:v1.3-drawn` description tag
- *        via lib_*.modify so re-runs skip work they already did (pad/pin
- *        counts are verified inside the doc before and after drawing).
+ *   1. draw EVERY (footprint,rotation) key on an open footprint-editor
+ *      tab (pcb_PrimitivePad / pcb_PrimitivePolyline + pcb_Document.save)
+ *      after activateDocument + a getCurrentDocumentInfo uuid check —
+ *      waitForDocumentReady has no handler in 3.2.209 and hangs.
+ *      v1.4: system-library footprints are DISABLED — search hits
+ *      resolve, but get/copy fail and lib_Device.create rejects a
+ *      system-footprint association, so all 26 keys are drawn with
+ *      KiCad-exact pads and identity pad numbering (the K1 coil-pad swap
+ *      only applied to the abandoned hf3ff substitution — the drawn pads
+ *      keep the KiCad numbers 1/2/3/5).  The syslib-match table and its
+ *      resolution code stay behind USE_SYS_FOOTPRINTS (off by default);
  *   2. reuse-or-create symbols drawn on an open symbol-editor tab with
- *      sch_PrimitivePin/Rectangle/Text (fp-domain pin numbering so
- *      pin->pad import maps to the right copper) + devices in a writable
- *      library — the 1.0-line updateDocumentSource grammar was silently
- *      dropped by 3.2.209 (returned true, stayed empty), so symbols are
- *      drawn like footprints are;
+ *      sch_PrimitivePin/Rectangle/Text (KiCad pad numbering so pin->pad
+ *      import maps to the right copper) + devices in a writable library —
+ *      lib_Device.create is retried across the library-uuid variants this
+ *      build reports (search-hit uuid vs list uuid vs the literal "SOMA")
+ *      and each created device is read back and tagged `soma:v1.4-dev`;
  *   3. create project + schematic + pcb + board link
  *   4. place schematic components, wire stubs + net flags/ports
- *   5. importChanges into PCB, position components (with sys-fp
- *      offsets), draw outline, mounting holes, replicated tracks, vias
- *      and GND pours
+ *   5. importChanges into PCB, position components, draw outline,
+ *      mounting holes, replicated tracks, vias and GND pours
  *   6. save both documents and report a summary
  *
  * Every eda call is time-bounded via `call()` — a hung RPC surfaces as a
- * warning instead of freezing the run.  Re-runs are safe: existing
- * library items are looked up by title and reused, so the 重复数据
+ * warning instead of freezing the run.  Re-runs are resumable: items
+ * verified by a previous run carry a description tag and are skipped, and
+ * untagged items are looked up by title and reused/filled, so the 重复数据
  * error cannot occur.  If a footprint ends up with no usable content the
  * part falls back to board-level free pads, so copper/net connectivity
  * is preserved either way.
@@ -46,6 +41,7 @@ import { planSchematic, STUB_LEN } from './schplan';
 import { symbolKey, symbolOps, symbolPinList } from './symdraw';
 import { prot, px, py, polygonSource } from './coords';
 import { CUSTOM_KEYS, fpKeyOf, SYS_FP_MATCH, type SysFpMatch } from './syslib-match';
+import { PARTS } from './parts-table';
 import type { BoardData, PartData } from './board-data-types';
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -64,8 +60,25 @@ const ALIGN_LEFT_TOP = 1 as EPCB_PrimitiveStringAlignMode.LEFT_TOP;
 const PIN_SHAPE_NONE = 'None' as ESCH_PrimitivePinShape.NONE;
 const PIN_TYPE_PASSIVE = 'Passive' as ESCH_PrimitivePinType.PASSIVE;
 
+/* v1.4: system-library footprints proved unusable in 3.2.209 HALF_OFFLINE
+ * (search returns hits but get/copy fail, and lib_Device.create rejects a
+ * system-footprint association).  Every key is drawn in the editor with
+ * KiCad-exact pads — identity pad numbering everywhere.  The syslib-match
+ * machinery stays for reference behind this flag. */
+const USE_SYS_FOOTPRINTS = false;
+
 const warnings: string[] = [];
 const info: string[] = [];
+
+/* The library uuid that API calls actually accept in HALF_OFFLINE is
+ * murky: getAllLibrariesList gives one value, search hits on personal
+ * items report the literal library NAME ("SOMA") as libraryUuid, and
+ * lib_*.get reports "".  assocLibUuid caches the search-hit value — the
+ * identity associations and item creates are most likely to accept.
+ * devLibArg caches whichever candidate lib_Device.create first accepted
+ * so the remaining 54 devices don't repeat dead attempts. */
+let assocLibUuid: string | undefined;
+let devLibArg: string | undefined;
 
 function report(p: number, title: string): void {
 	try { eda.sys_LoadingAndProgressBar.showProgressBar(p, title); } catch { /* noop */ }
@@ -75,10 +88,33 @@ function slog(msg: string, type?: ESYS_LogType): void {
 	try { eda.sys_Log.add(`[SOMA] ${msg}`, type); } catch { /* noop */ }
 }
 
+/* v1.3 printed "[object Object]" for real API errors: some calls RESOLVE
+ * with an error payload instead of rejecting, and some reject with an
+ * object whose fields are non-enumerable (JSON.stringify -> "{}").  Dig
+ * the usual message fields first, then enumerate own properties. */
 function errText(e: unknown): string {
 	if (e instanceof Error) return e.message;
-	try { const s = JSON.stringify(e); return s && s !== '{}' ? s : String(e); }
-	catch { return String(e); }
+	if (e !== null && typeof e === 'object') {
+		const o = e as Record<string, unknown>;
+		for (const k of ['message', 'msg', 'error', 'errMsg', 'reason', 'code']) {
+			const v = o[k];
+			if (typeof v === 'string' && v) return v;
+			if (typeof v === 'number') return `${k}=${v}`;
+		}
+		try {
+			const s = JSON.stringify(o);
+			if (s && s !== '{}') return s;
+		}
+		catch { /* circular — fall through to property enumeration */ }
+		try {
+			const parts = Object.getOwnPropertyNames(o)
+				.filter(k => typeof o[k] !== 'function')
+				.map(k => `${k}=${typeof o[k] === 'object' ? JSON.stringify(o[k]) : String(o[k])}`);
+			if (parts.length) return parts.join(' ');
+		}
+		catch { /* noop */ }
+	}
+	return String(e);
 }
 
 function warn(msg: string): void {
@@ -131,7 +167,10 @@ async function findItem(kind: 'footprint' | 'symbol' | 'device', name: string, l
 	const res = await call(`lib_${kind}.search "${name}"`,
 		api.search(name, libUuid) as Promise<ILIB_FootprintSearchItem[] | undefined>, 8000, true);
 	const hit = res?.find(i => norm(i.name) === norm(name));
-	if (hit?.uuid) return hit.uuid;
+	if (hit?.uuid) {
+		if (hit.libraryUuid) assocLibUuid = hit.libraryUuid;
+		return hit.uuid;
+	}
 	const list = await call(`lib_${kind}.search '' list`,
 		(kind === 'symbol'
 			? eda.lib_Symbol.search('', libUuid, [], undefined, 300, 1)
@@ -139,7 +178,9 @@ async function findItem(kind: 'footprint' | 'symbol' | 'device', name: string, l
 				? eda.lib_Device.search('', libUuid, undefined, undefined, 300, 1)
 				: eda.lib_Footprint.search('', libUuid, undefined, 300, 1)) as Promise<ILIB_FootprintSearchItem[] | undefined>,
 		15000, true);
-	return list?.find(i => norm(i.name) === norm(name))?.uuid;
+	const hit2 = list?.find(i => norm(i.name) === norm(name));
+	if (hit2?.uuid && hit2.libraryUuid) assocLibUuid = hit2.libraryUuid;
+	return hit2?.uuid;
 }
 
 /** ILIB_*.get() returns METADATA ONLY — there is no dataStr field on the
@@ -155,14 +196,20 @@ async function getItemDesc(kind: 'footprint' | 'symbol' | 'device', uuid: string
 }
 
 /* Markers written via lib_*.modify(description=...) after verified work —
- * the only persistent readback channel that exists in 3.2.209.
- * Footprints drawn by v1.2/v1.3 are trusted (draw path proven in-GUI);
+ * the only persistent readback channel that exists in 3.2.209.  These
+ * tags are what makes a re-run resumable: a tagged item is skipped
+ * entirely instead of re-drawn/re-created.
+ * Footprints drawn by v1.2/v1.3 stay trusted (same draw path);
  * `soma:v1.2-src` symbols are NOT trusted — that tag marked a write whose
- * grammar was silently dropped, so such symbols are redrawn. */
-const TAG_FP_DRAWN = 'soma:v1.3-drawn';
-const TAG_FP_DRAWN_PREV = 'soma:v1.2-drawn';
-const TAG_SYM_DRAWN = 'soma:v1.3-drawn';
-const fpTagOk = (desc: string) => desc.includes(TAG_FP_DRAWN) || desc.includes(TAG_FP_DRAWN_PREV);
+ * grammar was silently dropped, so such symbols are redrawn; devices are
+ * tagged `soma:v1.4-dev` only after their association reads back. */
+const TAG_FP_DRAWN = 'soma:v1.4-drawn';
+const TAG_FP_DRAWN_PREV = ['soma:v1.3-drawn', 'soma:v1.2-drawn'];
+const TAG_SYM_DRAWN = 'soma:v1.4-drawn';
+const TAG_SYM_DRAWN_PREV = ['soma:v1.3-drawn'];
+const TAG_DEV_OK = 'soma:v1.4-dev';
+const fpTagOk = (desc: string) => desc.includes(TAG_FP_DRAWN) || TAG_FP_DRAWN_PREV.some(t => desc.includes(t));
+const symTagOk = (desc: string) => desc.includes(TAG_SYM_DRAWN) || TAG_SYM_DRAWN_PREV.some(t => desc.includes(t));
 
 /** Poll getCurrentDocumentInfo until the ACTIVE document is ours —
  *  matched by doc uuid OR by the tab id we activated (in 3.2.209 an
@@ -321,6 +368,70 @@ async function resolveSysFootprint(m: SysFpMatch, sysLibUuid: string, label: str
 	return undefined;
 }
 
+/* ---------------- devices ---------------- */
+
+type DeviceAssoc = NonNullable<Parameters<typeof eda.lib_Device.create>[3]>;
+
+/** lib_Device.create across the libraryUuid variants this build might
+ *  accept.  v1.3 failed here with an "[object Object]" error: the create
+ *  RESOLVES with an error payload rather than rejecting, so a result is
+ *  only a win when it is a non-empty string.  Tried per candidate:
+ *  the {uuid,libraryUuid} association form, then the flat same-library
+ *  {symbolUuid,footprintUuid} form.  The winning outer arg is cached in
+ *  devLibArg so later devices don't repeat dead attempts. */
+async function createDevice(libUuid: string, devName: string, symUuid: string, fpRef: FpRef,
+	prop: ILIB_DeviceExtendPropertyItem, label: string): Promise<{ uuid: string; lib: string } | undefined> {
+	const symLib = assocLibUuid ?? libUuid;
+	const fpLib = fpRef.kind === 'sys' ? fpRef.libUuid : symLib;
+	const cands: Array<string | undefined> = [];
+	for (const c of [devLibArg, symLib, libUuid, 'SOMA']) {
+		if (c !== undefined && !cands.includes(c)) cands.push(c);
+	}
+	cands.push(undefined);   // last resort — let the API pick a default
+	const shapes: Array<[string, (l: string | undefined) => DeviceAssoc]> = [
+		['ref', l => ({
+			symbol: { uuid: symUuid, libraryUuid: l ?? symLib },
+			footprint: { uuid: fpRef.uuid, libraryUuid: fpRef.kind === 'sys' ? fpRef.libUuid : (l ?? fpLib) },
+		})],
+		['flat', () => ({ symbolUuid: symUuid, footprintUuid: fpRef.uuid })],
+	];
+	const errs: string[] = [];
+	for (const cand of cands) {
+		for (const [shapeName, mkAssoc] of shapes) {
+			const r = await call(`${label} lib_Device.create lib=${cand ?? 'undefined'} assoc=${shapeName}`,
+				eda.lib_Device.create(cand as string, devName, undefined, mkAssoc(cand), undefined, prop), 12000);
+			if (typeof r === 'string' && r) {
+				devLibArg = cand;
+				slog(`${label}: device created via lib=${cand ?? 'undefined'} assoc=${shapeName}`);
+				return { uuid: r, lib: cand ?? symLib };
+			}
+			if (r !== undefined) errs.push(`lib=${cand ?? 'undefined'}/${shapeName}: ${errText(r)}`);
+		}
+	}
+	for (const e of errs) warn(`${label}: device create ${e}`);
+	return undefined;
+}
+
+/** Create + read-back-verify a device.  `soma:v1.4-dev` is written only
+ *  when lib_Device.get shows BOTH associations — that tag is what later
+ *  runs trust for the resumable skip. */
+async function deviceCreateVerified(libUuid: string, devName: string, symUuid: string, fpRef: FpRef,
+	prop: ILIB_DeviceExtendPropertyItem, label: string): Promise<{ uuid: string; lib: string } | undefined> {
+	const made = await createDevice(libUuid, devName, symUuid, fpRef, prop, label);
+	if (!made) return undefined;
+	const dev = await call(`${label} lib_Device.get`, eda.lib_Device.get(made.uuid, made.lib) as Promise<ILIB_DeviceItem | undefined>, 8000, true);
+	const aSym = dev?.association?.symbol?.uuid;
+	const aFp = dev?.association?.footprint?.uuid;
+	if (aSym === symUuid && aFp === fpRef.uuid) {
+		await call(`${label} lib_Device.modify tag`,
+			eda.lib_Device.modify(made.uuid, made.lib, devName, undefined, undefined, TAG_DEV_OK, undefined), 8000, true);
+	}
+	else {
+		warn(`${label}: device created but association unverified (sym=${aSym?.slice(0, 8) ?? 'none'} fp=${aFp?.slice(0, 8) ?? 'none'})`);
+	}
+	return made;
+}
+
 /* ---------------- symbol drawing (editor-tab path) ---------------- */
 
 /** Count pins inside the open symbol doc — same role as pad.getAll for
@@ -428,11 +539,11 @@ async function verifySymbolPersisted(symUuid: string, libUuid: string, wantPins:
 /* ---------------- library generation ---------------- */
 
 async function buildLibrary(libUuid: string, sysLibUuid: string | undefined): Promise<{
-	devices: Map<string, { uuid: string }>;
+	devices: Map<string, { uuid: string; lib: string }>;
 	fpRefs: Map<string, FpRef>;
 	fpState: Map<string, FpState>;
 }> {
-	const devices = new Map<string, { uuid: string }>();
+	const devices = new Map<string, { uuid: string; lib: string }>();
 	// footprints deduplicated by (footprint type, rotation)
 	const fpRefs = new Map<string, FpRef>();
 	const fpState = new Map<string, FpState>();
@@ -441,7 +552,7 @@ async function buildLibrary(libUuid: string, sysLibUuid: string | undefined): Pr
 	let done = 0;
 	let symVerified = false;
 	for (const part of parts) {
-		report(2 + Math.round(20 * done / parts.length), `Library ${part.ref} (${part.footprint})`);
+		report(2 + Math.round(20 * done / parts.length), `part ${done + 1}/${parts.length}: ${part.ref}`);
 		done++;
 		slog(`library ${part.ref} ${part.footprint}@${part.rot}`);
 		const fpKey = fpKeyOfPart(part);
@@ -449,7 +560,10 @@ async function buildLibrary(libUuid: string, sysLibUuid: string | undefined): Pr
 
 		let fpRef = fpRefs.get(fpKey);
 		if (!fpRef) {
-			const m = sysLibUuid ? SYS_FP_MATCH[fpKey] : undefined;
+			// USE_SYS_FOOTPRINTS=false in v1.4 — the system library is
+			// unusable in HALF_OFFLINE (get/copy + device assoc all fail),
+			// so every key goes through the proven draw-in-editor path.
+			const m = USE_SYS_FOOTPRINTS && sysLibUuid ? SYS_FP_MATCH[fpKey] : undefined;
 			if (m) {
 				// system-library footprint — resolve via search (the call that
 				// works on this build) and use the hit's own uuid +
@@ -464,19 +578,21 @@ async function buildLibrary(libUuid: string, sysLibUuid: string | undefined): Pr
 				else warn(`${part.ref}: system footprint ${m.sysFpName} unresolvable — falling back to custom draw`);
 			}
 			if (!fpRef) {
-				// custom-draw path (unmatched keys, or sys fp probe failed)
+				// draw-in-editor path — all 26 keys in v1.4: KiCad-exact
+				// pads, identity pad numbering (no padmap)
 				let fpUuid = await findItem('footprint', fpName, libUuid);
 				if (!fpUuid) {
 					fpUuid = await call(`lib_Footprint.create ${fpName}`, eda.lib_Footprint.create(libUuid, fpName), 10000);
 					if (!fpUuid) fpUuid = await findItem('footprint', fpName, libUuid); // duplicate-title → it already exists
 				}
-				if (!fpUuid) {
+				if (!fpUuid || typeof fpUuid !== 'string') {
 					warn(`${part.ref}: no footprint uuid for ${fpName} (${CUSTOM_KEYS[fpKey] ?? 'custom'})`);
 					fpState.set(fpKey, 'missing');
 				}
 				else {
 					const desc = await getItemDesc('footprint', fpUuid, libUuid);
 					if (fpTagOk(desc)) {
+						slog(`${part.ref}: footprint ${fpName} verified earlier — skipping draw`);
 						fpState.set(fpKey, 'ok');
 					}
 					else {
@@ -484,17 +600,17 @@ async function buildLibrary(libUuid: string, sysLibUuid: string | undefined): Pr
 						fpState.set(fpKey, await drawFootprint(part, fpUuid, libUuid, fpName, `${part.ref} ${fpName}`) ? 'ok' : 'empty');
 					}
 					if (fpState.get(fpKey) === 'ok') {
-						fpRef = { kind: 'drawn', uuid: fpUuid, libUuid, rot: 0, dx: 0, dy: 0, name: fpName };
+						fpRef = { kind: 'drawn', uuid: fpUuid, libUuid: assocLibUuid ?? libUuid, rot: 0, dx: 0, dy: 0, name: fpName };
 					}
 				}
 			}
 			if (fpRef) fpRefs.set(fpKey, fpRef);
 		}
 
-		// symbol — deduplicated by pin-set (fp-domain numbering so the
-		// device pin->pad map lands on the right copper); drawn on an open
-		// symbol-editor tab — the updateDocumentSource 1.0 grammar is
-		// silently dropped in 3.2.209
+		// symbol — deduplicated by pin-set (KiCad pad numbering in v1.4:
+		// drawn footprints use KiCad numbers so pin->pad import maps to the
+		// right copper); drawn on an open symbol-editor tab — the
+		// updateDocumentSource 1.0 grammar is silently dropped in 3.2.209
 		let symUuid: string | undefined;
 		const pinList = symbolPinList(part, fpRef?.pm);
 		const symKey = symbolKey(pinList);
@@ -506,11 +622,14 @@ async function buildLibrary(libUuid: string, sysLibUuid: string | undefined): Pr
 				symUuid = await call(`lib_Symbol.create ${symName}`, eda.lib_Symbol.create(libUuid, symName), 10000);
 				if (!symUuid) symUuid = await findItem('symbol', symName, libUuid);
 			}
-			if (!symUuid) warn(`${part.ref}: no symbol uuid for ${symName}`);
+			if (!symUuid || typeof symUuid !== 'string') {
+				warn(`${part.ref}: no symbol uuid for ${symName}`);
+				symUuid = undefined;
+			}
 			else {
 				symByKey.set(symKey, symUuid);
 				const desc = await getItemDesc('symbol', symUuid, libUuid);
-				if (!desc.includes(TAG_SYM_DRAWN)) {
+				if (!symTagOk(desc)) {
 					slog(`${part.ref}: drawing symbol ${symName} (${pinList.length} pins)`);
 					const drawn = await drawSymbol(symName, symUuid, libUuid, part, pinList, `${part.ref} ${symName}`);
 					if (!drawn) warn(`${part.ref}: symbol ${symName} may still be empty — device will lack pins`);
@@ -525,63 +644,93 @@ async function buildLibrary(libUuid: string, sysLibUuid: string | undefined): Pr
 			}
 		}
 
-		// device — reuse by name, else create with symbol+footprint association
+		// device — tagged verified items are skipped outright (resumable);
+		// an untagged legacy device has its association checked and is
+		// rebuilt when it points at a stale footprint/symbol
 		const devName = `SOMA-${part.ref}`;
+		const spec = PARTS[part.ref];
+		const prop: ILIB_DeviceExtendPropertyItem = {
+			name: part.value,
+			designator: designatorPrefix(part.ref),
+			addIntoBom: true,
+			addIntoPcb: true,
+		};
+		if (spec?.lcsc) prop.supplierId = spec.lcsc;   // verified LCSC equivalent — BOM attribute only
 		let devUuid = await findItem('device', devName, libUuid);
+		if (devUuid && typeof devUuid !== 'string') devUuid = undefined;
 		if (devUuid && fpRef) {
-			// existing device from an older run may point at a stale/empty
-			// footprint — check the association and rebuild if it mismatches
+			const desc = await getItemDesc('device', devUuid, libUuid);
+			if (desc.includes(TAG_DEV_OK)) {
+				slog(`${part.ref}: device verified earlier — skipping create`);
+				devices.set(part.ref, { uuid: devUuid, lib: devLibArg ?? assocLibUuid ?? libUuid });
+				continue;
+			}
 			const dev = await call(`lib_Device.get ${devName}`,
 				eda.lib_Device.get(devUuid, libUuid) as Promise<ILIB_DeviceItem | undefined>, 8000, true);
 			const assocFp = dev?.association?.footprint?.uuid;
 			const assocSym = dev?.association?.symbol?.uuid;
-			if (assocFp && fpRef && assocFp !== fpRef.uuid) {
-				slog(`${part.ref}: device assoc ${assocFp?.slice(0, 8)} != ${fpRef.uuid.slice(0, 8)} — rebuilding device`);
+			if (dev && assocFp === fpRef.uuid && (!symUuid || assocSym === symUuid)) {
+				// association already correct — tag it so the next run skips
+				await call(`lib_Device.modify ${devName} tag`,
+					eda.lib_Device.modify(devUuid, libUuid, devName, undefined, undefined, TAG_DEV_OK, undefined), 8000, true);
+				devices.set(part.ref, { uuid: devUuid, lib: devLibArg ?? assocLibUuid ?? libUuid });
+				continue;
+			}
+			if (dev && (assocFp || assocSym)) {
+				slog(`${part.ref}: device assoc sym=${assocSym?.slice(0, 8)} fp=${assocFp?.slice(0, 8)} mismatched — rebuilding`);
 				await call(`lib_Device.delete ${devName}`, eda.lib_Device.delete(devUuid, libUuid), 8000, true);
 				devUuid = undefined;
 			}
-			else if (assocSym && symUuid && assocSym !== symUuid) {
-				slog(`${part.ref}: device symbol assoc mismatch — rebuilding device`);
-				await call(`lib_Device.delete ${devName}`, eda.lib_Device.delete(devUuid, libUuid), 8000, true);
-				devUuid = undefined;
+			// unreadable association (get failed): keep the existing device —
+			// deleting a possibly-good device on a flaky read is worse
+			else if (!dev) {
+				devices.set(part.ref, { uuid: devUuid, lib: devLibArg ?? assocLibUuid ?? libUuid });
+				continue;
 			}
+			// assoc read ok but BOTH fields empty — fall through to rebuild
+			else devUuid = undefined;
 		}
 		if (!devUuid && symUuid && fpRef) {
-			devUuid = await call(`lib_Device.create ${devName}`, eda.lib_Device.create(libUuid, devName, undefined, {
-				symbol: { uuid: symUuid, libraryUuid: libUuid },
-				footprint: { uuid: fpRef.uuid, libraryUuid: fpRef.libUuid },
-			}, undefined, { designator: designatorPrefix(part.ref), addIntoBom: true, addIntoPcb: true }), 10000);
-			if (!devUuid) devUuid = await findItem('device', devName, libUuid);
+			const made = await deviceCreateVerified(libUuid, devName, symUuid, fpRef, prop, part.ref);
+			if (made) devices.set(part.ref, made);
+			else {
+				// create may have succeeded while reporting an error —
+				// recover the item by title before giving up
+				const retry = await findItem('device', devName, libUuid);
+				if (retry) devices.set(part.ref, { uuid: retry, lib: devLibArg ?? assocLibUuid ?? libUuid });
+			}
 		}
-		if (devUuid && fpRef) devices.set(part.ref, { uuid: devUuid });
-		else warn(`${part.ref}: no device (sym=${!!symUuid} fp=${!!fpRef} dev=${!!devUuid}) — schematic/board will fall back`);
+		if (!devices.has(part.ref)) {
+			warn(`${part.ref}: no device (sym=${!!symUuid} fp=${!!fpRef}) — schematic/board will fall back`);
+		}
 	}
 	const drawnOk = [...fpState.values()].filter(s => s === 'ok').length;
 	const sysOk = [...fpState.values()].filter(s => s === 'sys').length;
-	info.push(`library: ${sysOk} system + ${drawnOk} drawn footprints, ${symByKey.size} symbols, ${devices.size} devices`);
+	info.push(`library: ${drawnOk} drawn${sysOk ? ` + ${sysOk} system` : ''} footprints, ${symByKey.size} symbols, ${devices.size} devices`);
 	return { devices, fpRefs, fpState };
 }
 
 /* ---------------- schematic ---------------- */
 
 async function buildSchematic(
-	devices: Map<string, { uuid: string }>,
+	devices: Map<string, { uuid: string; lib: string }>,
 	libUuid: string,
 	fpRefs: Map<string, FpRef>,
 ): Promise<Map<string, string>> {
 	// feed fp-domain pad numbers so stub labels land on pins whose numbers
-	// match the footprint pads (matters for non-identity padmaps — K1)
+	// match the footprint pads (v1.4: identity — drawn pads carry KiCad
+	// numbers; the padmap only matters if USE_SYS_FOOTPRINTS is enabled)
 	const plan = planSchematic(mappedBoard(BOARD_DATA, fpRefs));
 	const uniqueIds = new Map<string, string>();
 	const realPins = new Map<string, Map<string, { x: number; y: number; dir: -1 | 1 }>>();
 	let i = 0;
 	for (const c of plan.comps) {
-		report(25 + Math.round(22 * i / plan.comps.length), `Schematic ${c.ref}`);
+		report(25 + Math.round(22 * i / plan.comps.length), `part ${i + 1}/${plan.comps.length}: ${c.ref}`);
 		i++;
 		const dev = devices.get(c.ref);
 		if (!dev) { warnings.push(`${c.ref}: skipped — no device`); continue; }
 		const comp = await call(`sch create ${c.ref}`, eda.sch_PrimitiveComponent.create(
-			{ libraryType: LIB_DEVICE, libraryUuid: libUuid, uuid: dev.uuid },
+			{ libraryType: LIB_DEVICE, libraryUuid: dev.lib, uuid: dev.uuid },
 			c.cx, c.cy, undefined, 0, false, true, true,
 		), 15000);
 		if (!comp) { warn(`${c.ref}: sch create failed`); continue; }
@@ -688,7 +837,7 @@ async function drawPartFreePads(part: PartData, topLayer: number): Promise<void>
 
 async function buildPcb(
 	uniqueIds: Map<string, string>,
-	devices: Map<string, { uuid: string }>,
+	devices: Map<string, { uuid: string; lib: string }>,
 	fpRefs: Map<string, FpRef>,
 	fpState: Map<string, FpState>,
 ): Promise<void> {
@@ -874,9 +1023,16 @@ function apiPresent(path: string): boolean {
 	catch { return false; }
 }
 
-/** Diagnostics v1.3: creates SOMA-DIAG-KEEP-* items and does NOT delete
+/** Diagnostics v1.4: creates SOMA-DIAG-KEEP-* items and does NOT delete
  *  them, so results can be inspected afterwards (EasyEDA library panel,
  *  or read-only sqlite inspection of SOMA.elib).
+ *
+ *  Covers: API surface -> library discovery -> footprint draw round-trip
+ *  -> symbol draw+reopen round-trip -> lib_Device.create across the
+ *  libraryUuid variants this build reports (search-hit / discovered /
+ *  literal "SOMA" / undefined) with association read-back -> a kept
+ *  end-to-end project (schematic + component + importChanges + PCB pad
+ *  count + one track + save) -> read-only system-library info probes.
  *
  *  Readback reality in 3.2.209 (from the pro-ui handler map):
  *   - ILIB_*.get()/search() return metadata only — no dataStr field.
@@ -894,6 +1050,8 @@ function apiPresent(path: string): boolean {
  *     the active doc, then CLOSE + REOPEN to prove persistence.
  */
 export async function runDiagnostics(): Promise<void> {
+	assocLibUuid = undefined;
+	devLibArg = undefined;
 	const lines: string[] = [];
 	const t0 = Date.now();
 	const log = (s: string) => { lines.push(s); slog(`diag ${s}`); };
@@ -908,17 +1066,25 @@ export async function runDiagnostics(): Promise<void> {
 		'lib_LibrariesList.getPersonalLibraryUuid', 'lib_LibrariesList.getAllLibrariesList',
 		'lib_LibrariesList.getSystemLibraryUuid',
 		'lib_Footprint.create', 'lib_Footprint.search', 'lib_Footprint.get', 'lib_Footprint.modify',
-		'lib_Footprint.openInEditor', 'lib_Footprint.copy', 'lib_Footprint.getRenderImage',
+		'lib_Footprint.openInEditor', 'lib_Footprint.getRenderImage',
 		'lib_Footprint.updateDocumentSource',
 		'lib_Symbol.create', 'lib_Symbol.search', 'lib_Symbol.get', 'lib_Symbol.modify',
 		'lib_Symbol.openInEditor', 'lib_Symbol.updateDocumentSource', 'lib_Symbol.getRenderImage',
-		'lib_Device.create', 'lib_Device.search', 'lib_Device.get', 'lib_Device.getByLcscIds', 'lib_Device.delete',
+		'lib_Device.create', 'lib_Device.search', 'lib_Device.get', 'lib_Device.modify',
+		'lib_Device.getByLcscIds', 'lib_Device.delete',
 		'dmt_EditorControl.openDocument', 'dmt_EditorControl.closeDocument',
 		'dmt_EditorControl.activateDocument', 'dmt_SelectControl.getCurrentDocumentInfo',
 		'dmt_EditorControl.waitForDocumentReady', 'dmt_EditorControl.getDocumentReadyState',
-		'pcb_Document.save', 'pcb_PrimitivePad.create', 'pcb_PrimitivePad.getAll',
+		'dmt_Project.createProject', 'dmt_Project.waitForReady',
+		'dmt_Schematic.createSchematic', 'dmt_Schematic.getSchematicInfo',
+		'dmt_Pcb.createPcb', 'dmt_Board.createBoard',
+		'pcb_Document.save', 'pcb_Document.importChanges',
+		'pcb_PrimitivePad.create', 'pcb_PrimitivePad.getAll',
 		'pcb_PrimitivePolyline.create', 'pcb_PrimitiveComponent.create',
+		'pcb_PrimitiveComponent.getAll', 'pcb_PrimitiveComponent.getAllPinsByPrimitiveId',
+		'pcb_PrimitiveLine.create',
 		'pcb_MathPolygon.createPolygon', 'sch_PrimitiveComponent.create',
+		'sch_PrimitiveComponent.getAllPinsByPrimitiveId',
 		'sch_Document.save', 'sch_PrimitivePin.create', 'sch_PrimitivePin.getAll',
 		'sch_PrimitiveRectangle.create', 'sch_PrimitiveText.create',
 		'sys_FileManager.getDocumentSource', 'sys_FileManager.setDocumentSource',
@@ -1061,45 +1227,150 @@ export async function runDiagnostics(): Promise<void> {
 		log(`symbol ${symName} KEPT for inspection`);
 	}
 
-	/* ---- system-library probes (full errors + exact args) ---- */
-	report(80, 'Diagnostics: system library');
-	if (sysLibUuid) {
-		/** Await p and return the raw result or the full error — diag needs
-		 *  the error payload and the exact call args in the report. */
-		const attempt = async <T>(desc: string, p: Promise<T> | undefined, timeoutMs: number): Promise<{ hit: boolean; val?: T }> => {
-			if (!p || typeof p.then !== 'function') { log(`${desc} -> api unavailable (${ms()})`); return { hit: false }; }
-			try {
-				const val = await Promise.race([
-					p,
-					new Promise<T>((_r, rej) => setTimeout(() => rej(new Error(`timeout after ${timeoutMs}ms`)), timeoutMs)),
-				]);
-				return { hit: val !== undefined && val !== null && val !== false, val };
-			}
-			catch (e) { log(`${desc} -> FAIL ${errText(e)} (${ms()})`); return { hit: false }; }
-		};
+	/** Await p and return the raw result or the full error — diag needs
+	 *  the error payload and the exact call args in the report. */
+	const attempt = async <T>(desc: string, p: Promise<T> | undefined, timeoutMs: number): Promise<{ hit: boolean; val?: T }> => {
+		if (!p || typeof p.then !== 'function') { log(`${desc} -> api unavailable (${ms()})`); return { hit: false }; }
+		try {
+			const val = await Promise.race([
+				p,
+				new Promise<T>((_r, rej) => setTimeout(() => rej(new Error(`timeout after ${timeoutMs}ms`)), timeoutMs)),
+			]);
+			return { hit: val !== undefined && val !== null && val !== false, val };
+		}
+		catch (e) { log(`${desc} -> FAIL ${errText(e)} (${ms()})`); return { hit: false }; }
+	};
 
-		const m = SYS_FP_MATCH['PinHeader_1x02_P2.54mm_Vertical@0'];
-		const sr = await attempt(`lib_Footprint.search('hdr-th_2p', '${sysLibUuid}')`,
+	/* ---- device create from the DRAWN symbol + footprint ----
+	 *  v1.3's device.create against a system-footprint association failed
+	 *  with an "[object Object]" payload (a resolved error object, not a
+	 *  rejection).  With all footprints drawn into the personal library the
+	 *  association is internal — figure out which libraryUuid arg the
+	 *  create accepts: the search-hit value, the discovered lib uuid, the
+	 *  literal "SOMA", or undefined.  A create only wins on a uuid string;
+	 *  anything else is printed verbatim. */
+	report(80, 'Diagnostics: device from drawn items');
+	let devUuid: string | undefined;
+	let devLib: string | undefined;
+	if (fpUuid && symUuid) {
+		const fpHitLib = (await call('diag fp search-hit', eda.lib_Footprint.search(diagName, libUuid), 8000, true))
+			?.find(h => norm(h.name) === norm(diagName))?.libraryUuid;
+		const symHitLib = (await call('diag sym search-hit', eda.lib_Symbol.search(symName, libUuid), 8000, true))
+			?.find(h => norm(h.name) === norm(symName))?.libraryUuid;
+		log(`personal-lib search-hit libraryUuid -> fp=${fpHitLib ?? 'none'} sym=${symHitLib ?? 'none'} (discovered libUuid=${libUuid})`);
+		const devName = `SOMA-DIAG-KEEP-DEV-${Math.floor(Math.random() * 90000) + 10000}`;
+		const cands: Array<string | undefined> = [];
+		for (const c of [symHitLib, fpHitLib, libUuid, 'SOMA', undefined]) if (!cands.includes(c)) cands.push(c);
+		const shapes: Array<[string, (l: string | undefined) => DeviceAssoc]> = [
+			['ref', l => ({
+				symbol: { uuid: symUuid, libraryUuid: l ?? libUuid },
+				footprint: { uuid: fpUuid, libraryUuid: l ?? libUuid },
+			})],
+			['flat', () => ({ symbolUuid: symUuid, footprintUuid: fpUuid })],
+		];
+		outer:
+		for (const cand of cands) {
+			for (const [shapeName, mkAssoc] of shapes) {
+				const r = await attempt(`lib_Device.create(lib=${cand ?? 'undefined'},assoc=${shapeName})`,
+					eda.lib_Device.create(cand as string, devName, undefined, mkAssoc(cand), undefined, { designator: 'TP', addIntoBom: true, addIntoPcb: true }), 12000);
+				if (r.hit && typeof r.val === 'string' && r.val) {
+					log(`  -> uuid ${r.val.slice(0, 8)} via lib=${cand ?? 'undefined'} assoc=${shapeName} (${ms()})`);
+					devUuid = r.val; devLib = cand ?? libUuid;
+					break outer;
+				}
+				log(`  lib=${cand ?? 'undefined'} assoc=${shapeName} -> ${r.hit ? 'non-uuid result ' + dump(r.val) : 'FAIL'} (${ms()})`);
+			}
+		}
+		if (devUuid) {
+			const dg = await attempt(`lib_Device.get('${devUuid.slice(0, 8)}…','${devLib}')`, eda.lib_Device.get(devUuid, devLib), 8000);
+			const assoc = (dg.val as ILIB_DeviceItem | undefined)?.association;
+			log(`device read -> sym=${assoc?.symbol?.uuid ?? 'NONE'} fp=${assoc?.footprint?.uuid ?? 'NONE'} (${ms()})`);
+			log(`device ${devName} KEPT for inspection`);
+		}
+		else log('device create FAILED on every libraryUuid variant — build devices will fail too');
+	}
+	else log('skipping device test — drawn footprint/symbol missing');
+
+	/* ---- downstream path: project -> schematic -> importChanges -> pcb ----
+	 *  The library phase proves nothing about the build's second half, so
+	 *  exercise it end-to-end with the diag device: a real project, one
+	 *  schematic component, an importChanges into a linked PCB, a pad
+	 *  count on the imported component, one track, then save.  Everything
+	 *  is KEPT (SOMA-DIAG-KEEP-PROJ-*) for inspection. */
+	report(88, 'Diagnostics: project/sch/pcb round-trip');
+	if (devUuid) {
+		const projName = `SOMA-DIAG-KEEP-PROJ-${Math.floor(Math.random() * 90000) + 10000}`;
+		const pr = await attempt('dmt_Project.createProject', eda.dmt_Project.createProject(projName), 20000);
+		log(`createProject -> ${pr.hit ? pr.val : 'FAIL'} (${ms()})`);
+		let schU: string | undefined;
+		if (pr.hit && typeof pr.val === 'string') {
+			await attempt('dmt_Project.waitForReady', eda.dmt_Project.waitForReady(pr.val, 15000), 20000);
+			await sleep(800);
+			const sr = await attempt('dmt_Schematic.createSchematic', eda.dmt_Schematic.createSchematic('SOMA-DIAG-SCH'), 15000);
+			log(`createSchematic -> ${sr.hit ? sr.val : 'FAIL'} (${ms()})`);
+			if (sr.hit && typeof sr.val === 'string') schU = sr.val;
+		}
+		if (schU) {
+			await sleep(1500);
+			const schInfo = await call('diag getSchematicInfo', eda.dmt_Schematic.getSchematicInfo(schU), 8000, true);
+			const pageUuid = schInfo?.page?.[0]?.uuid;
+			if (pageUuid) {
+				const t = await call('diag open sch page', eda.dmt_EditorControl.openDocument(pageUuid), 10000, true);
+				const di = await waitActiveDoc(pageUuid, 8000, 'diag sch', t);
+				log(`sch page active -> ${di ? `type=${di.documentType}` : 'MISMATCH/timeout'} (${ms()})`);
+			}
+			else log('schematic has no page uuid — component may land elsewhere');
+			const comp = await attempt(`sch_PrimitiveComponent.create(dev=${devUuid.slice(0, 8)},lib=${devLib})`,
+				eda.sch_PrimitiveComponent.create({ libraryType: LIB_DEVICE, libraryUuid: devLib ?? libUuid, uuid: devUuid }, 600, 600, undefined, 0, false, true, true), 15000);
+			const compVal = comp.val as ISCH_PrimitiveComponent | undefined;
+			const pid = comp.hit ? compVal?.getState_PrimitiveId?.() : undefined;
+			log(`sch comp create -> ${comp.hit && pid ? `pid=${String(pid).slice(0, 12)}` : `FAIL ${dump(comp.val)}`} (${ms()})`);
+			if (pid) {
+				const pins = await attempt('sch comp pins', eda.sch_PrimitiveComponent.getAllPinsByPrimitiveId(pid), 8000);
+				log(`sch comp pins -> ${Array.isArray(pins.val) ? pins.val.length : 'FAIL'} (${ms()})`);
+			}
+			const sv = await attempt('sch_Document.save', eda.sch_Document.save(), 15000);
+			log(`sch save -> ${sv.val} (${ms()})`);
+			const pr2 = await attempt('dmt_Pcb.createPcb', eda.dmt_Pcb.createPcb('SOMA-DIAG-PCB'), 15000);
+			log(`createPcb -> ${pr2.hit ? pr2.val : 'FAIL'} (${ms()})`);
+			if (pr2.hit && typeof pr2.val === 'string') {
+				const pcbU = pr2.val;
+				await sleep(1200);
+				const bd = await attempt('dmt_Board.createBoard', eda.dmt_Board.createBoard(schU, pcbU), 15000);
+				log(`createBoard -> ${bd.hit ? bd.val : 'FAIL'} (${ms()})`);
+				const pt = await call('diag open pcb', eda.dmt_EditorControl.openDocument(pcbU), 15000, true);
+				const pdi = await waitActiveDoc(pcbU, 10000, 'diag pcb', pt);
+				log(`pcb active -> ${pdi ? `type=${pdi.documentType} uuid=${pdi.uuid?.slice(0, 8)}` : 'MISMATCH/timeout'} (${ms()})`);
+				const imp = await attempt('pcb_Document.importChanges(sch,force=true)', eda.pcb_Document.importChanges(schU, true), 30000);
+				log(`importChanges -> ${imp.val} (${ms()})`);
+				const comps = (await call('diag pcb comps', eda.pcb_PrimitiveComponent.getAll(), 15000, true)) ?? [];
+				log(`pcb components -> ${comps.length} (${ms()})`);
+				for (const c of comps.slice(0, 4)) {
+					const cpid = c.getState_PrimitiveId?.();
+					const cpads = cpid ? await call('diag pcb comp pins', eda.pcb_PrimitiveComponent.getAllPinsByPrimitiveId?.(cpid), 8000, true) : undefined;
+					log(`  pcb comp ${c.getState_Designator?.() ?? '?'} pads=${Array.isArray(cpads) ? cpads.length : 'FAIL'} (${ms()})`);
+				}
+				const tr = await attempt('pcb_PrimitiveLine.create track', eda.pcb_PrimitiveLine.create('DIAG', LAYER.TOP as TPCB_LayersOfLine, 0, 0, 500, 500, 10), 8000);
+				log(`track create -> ${tr.hit ? 'ok' : 'FAIL'} (${ms()})`);
+				const psv = await attempt('pcb_Document.save', eda.pcb_Document.save(), 20000);
+				log(`pcb save -> ${psv.val} (${ms()})`);
+			}
+			log(`project ${projName} KEPT — schematic + pcb artifacts inside`);
+		}
+	}
+	else log('skipping e2e — no device');
+
+	/* ---- system-library info probes (read-only; footprints no longer
+	 *  used from here — kept because the hits dump useful uuids) ---- */
+	report(95, 'Diagnostics: system library (info)');
+	if (sysLibUuid) {
+		const sr = await attempt(`lib_Footprint.search('hdr-th_2p','${sysLibUuid}')`,
 			eda.lib_Footprint.search('hdr-th_2p', sysLibUuid) as Promise<ILIB_FootprintSearchItem[]>, 10000);
 		const hits = sr.val;
 		log(`sys search -> ${Array.isArray(hits) ? hits.length + ' hits' : dump(hits)} (${ms()})`);
-		const hit = hits?.find(h => norm(h.name) === norm(m.sysFpName));
-		for (const h of hits ?? []) {
-			log(`  hit ${h.name} uuid=${h.uuid ?? 'NONE'} lib=${h.libraryUuid ?? 'NONE'}${h === hit ? '  <== MATCH' : ''}`);
+		for (const h of (hits ?? []).slice(0, 5)) {
+			log(`  hit ${h.name} uuid=${h.uuid ?? 'NONE'} lib=${h.libraryUuid ?? 'NONE'}`);
 		}
-		const fpUuid = hit?.uuid ?? m.sysFpUuid;
-		const fpLib = hit?.libraryUuid || sysLibUuid;
-		if (!hit?.uuid) log(`no exact hit for ${m.sysFpName} — falling back to mapped uuid`);
-		const g = await attempt(`lib_Footprint.get('${fpUuid}', '${fpLib}')`, eda.lib_Footprint.get(fpUuid, fpLib), 8000);
-		log(`sys fp get(${hit?.uuid ? 'hit' : 'mapped'} args) -> ${g.hit ? dump(g.val) : 'FAIL'} (${ms()})`);
-		const g2 = hit && (hit.uuid !== m.sysFpUuid || fpLib !== sysLibUuid)
-			? await attempt(`lib_Footprint.get('${m.sysFpUuid}', '${sysLibUuid}')`, eda.lib_Footprint.get(m.sysFpUuid, sysLibUuid), 8000)
-			: undefined;
-		if (g2) log(`sys fp get(mapped args) -> ${g2.hit ? dump(g2.val) : 'FAIL'} (${ms()})`);
-		const copyName = `SOMA-DIAG-KEEP-COPY-${Math.floor(Math.random() * 90000) + 10000}`;
-		const cp = await attempt(`lib_Footprint.copy('${fpUuid}', '${fpLib}', '${libUuid}', null, '${copyName}')`,
-			eda.lib_Footprint.copy(fpUuid, fpLib, libUuid, undefined, copyName), 15000);
-		log(`copy -> ${cp.hit ? dump(cp.val) + ' KEPT as ' + copyName : 'FAIL'} (${ms()})`);
 		const devs = await attempt(`lib_Device.getByLcscIds(['C2564','C118536'])`,
 			eda.lib_Device.getByLcscIds(['C2564', 'C118536']), 10000);
 		const devList = devs.val;
@@ -1107,27 +1378,8 @@ export async function runDiagnostics(): Promise<void> {
 		for (const d of devList ?? []) {
 			log(`  dev ${d.name} uuid=${d.uuid} lib=${d.libraryUuid} sym=${d.symbol?.name}@${d.symbol?.uuid} fp=${d.footprint?.name}@${d.footprint?.uuid} fplib=${d.footprint?.libraryUuid}`);
 		}
-		// prove a system-device association actually resolves: fetch the
-		// first hit's device item, then create a personal device bound to
-		// its symbol+footprint and read it back
-		const d0 = devList?.[0];
-		if (d0?.uuid) {
-			const gi = await attempt(`lib_Device.get('${d0.uuid}', '${d0.libraryUuid}')`,
-				eda.lib_Device.get(d0.uuid, d0.libraryUuid), 8000);
-			log(`sys device get -> ${gi.hit ? dump(gi.val) : 'FAIL'} (${ms()})`);
-			const ddevName = `SOMA-DIAG-KEEP-DEV-${Math.floor(Math.random() * 90000) + 10000}`;
-			const dc = await attempt(`lib_Device.create('${libUuid}', '${ddevName}', assoc sym=${symUuid ?? 'none'} fp=${fpUuid})`,
-				eda.lib_Device.create(libUuid, ddevName, undefined, {
-					symbol: symUuid ? { uuid: symUuid, libraryUuid: libUuid } : { uuid: d0.symbol.uuid, libraryUuid: d0.symbol.libraryUuid },
-					footprint: { uuid: fpUuid, libraryUuid: fpLib },
-				}), 12000);
-			log(`device.create with sys fp assoc -> ${dc.hit ? 'uuid ' + String(dc.val).slice(0, 8) + ' KEPT as ' + ddevName : 'FAIL'} (${ms()})`);
-			if (dc.hit && dc.val) {
-				const dg = await attempt(`lib_Device.get('${dc.val}', '${libUuid}')`, eda.lib_Device.get(dc.val, libUuid), 8000);
-				log(`created device read -> ${dg.hit ? dump(dg.val) : 'FAIL'} (${ms()})`);
-			}
-		}
 	}
+	else log('no system library uuid — all footprints drawn (expected on this build)');
 
 	report(100, 'Diagnostics done');
 	try { eda.sys_LoadingAndProgressBar.destroyProgressBar(); } catch { /* noop */ }
@@ -1139,6 +1391,8 @@ export async function runDiagnostics(): Promise<void> {
 export async function runSomaBuild(): Promise<void> {
 	warnings.length = 0;
 	info.length = 0;
+	assocLibUuid = undefined;
+	devLibArg = undefined;
 	const started = Date.now();
 	report(1, 'SOMA v1.3: starting');
 	slog('build start');

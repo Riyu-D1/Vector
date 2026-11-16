@@ -3,7 +3,7 @@
 	"uuid": "ef3ba0a4f2054bf790165892b134131d",
 	"displayName": "SOMA Carrier v1.3 Rebuild",
 	"description": "Rebuilds the SOMA v1.3 carrier board schematic + PCB natively in EasyEDA Pro",
-	"version": "1.3.0",
+	"version": "1.4.0",
 	"publisher": "SOMA",
 	"engines": {
 		"eda": "^3.2.0"

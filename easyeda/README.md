@@ -5,17 +5,19 @@ import) using the official Pro extension API. Designed for EasyEDA Pro
 **v3.2.209** (Intel Mac build tested against its bundled `pro-api` 0.3.59
 declarations and a live HALF_OFFLINE install).
 
-Deliverable: `easyeda/extension/dist/soma-carrier-v13-builder_v1.1.0.eext`
+Deliverable: `easyeda/extension/dist/soma-carrier-v13-builder_v1.4.0.eext`
 
 ## What it does when run
 
 1. Builds library parts in a writable library (personal `SOMA` library if
-   present): 26 footprints + ~40 symbols + 55 devices (`SOMA-*` names),
+   present): 26 footprints + ~46 symbols + 55 devices (`SOMA-*` names),
    built from the extracted v1.3 geometry — pads land exactly where KiCad
    had them. Footprints are drawn on an open footprint-editor tab via
-   `pcb_PrimitivePad`/`pcb_PrimitivePolyline` and saved; symbols go through
-   `lib_Symbol.updateDocumentSource`. Existing `SOMA-*` items are **reused
-   by title** — re-runs do not duplicate (empty footprints are redrawn).
+   `pcb_PrimitivePad`/`pcb_PrimitivePolyline` and saved; symbols are drawn
+   the same way on a symbol-editor tab via
+   `sch_PrimitivePin`/`Rectangle`/`Text`. Verified items carry
+   `soma:v1.4-*` tags and are **skipped on re-run** — the build is
+   resumable.
 2. Creates project **"SOMA Carrier v1.3 (EasyEDA)"** with a schematic and
    PCB linked as one board.
 3. Draws the schematic: all 55 parts in 7 labelled blocks (power +
@@ -40,20 +42,23 @@ to board-level free pads so copper/nets stay correct.
    extension writes its generated `SOMA-*` parts there; it warns and
    stops cleanly if none exists).
 3. **Settings → Extensions → Extension Manager → Import** → choose
-   `easyeda/extension/dist/soma-carrier-v13-builder_v1.1.0.eext`
-   (import over v1.0.0 replaces it — same extension uuid).
+   `easyeda/extension/dist/soma-carrier-v13-builder_v1.4.0.eext`
+   (import over an older version replaces it — same extension uuid).
 4. Enable the extension if prompted (it needs document + library
    permissions — it creates projects/documents/library items).
 5. **Optional but recommended first**: SOMA v1.3 menu →
-   **Diagnostics (one-footprint round-trip)** — a ~10-second test that
-   creates a throwaway footprint, draws a pad + silk, saves, re-reads
-   `dataStr`, deletes it, and reports exactly which API step fails.
+   **Diagnostics (keeps test items)** — draws a footprint + symbol in the
+   SOMA library, creates a device from them across the `libraryUuid`
+   candidates, then exercises the project → schematic → importChanges →
+   PCB path end-to-end, printing every result with real error text. All
+   `SOMA-DIAG-KEEP-*` items are kept for inspection.
 6. From the **SOMA v1.3** top menu → **Build SOMA Carrier v1.3…**
 7. Watch the progress bar title — it shows the current step/part — and
    read the final summary dialog. Routing ~1800 segments takes a few
    minutes.
 
-Re-runs are safe for the library (titles are reused) but each run still
+Re-runs are safe — items already tagged `soma:v1.4-*` are verified and
+skipped, so an interrupted run resumes where it left off. Each run still
 creates a **new project** — delete older `SOMA Carrier v1.3 (EasyEDA)`
 projects if you only want the latest.
 

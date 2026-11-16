@@ -572,3 +572,134 @@ counted.
   `lib_Device.create`/board placement, that key auto-falls back to a
   drawn footprint — the summary's `M drawn` count shows how many fell
   back; the diag `device.create with sys fp assoc` line predicts it.
+
+# Fix 4 — system-library devices unverifiable; all 26 footprints drawn (v1.4.0)
+
+## Symptom (real GUI run of v1.3.0 on 3.2.209, HALF_OFFLINE)
+
+- `lib_Device.create` against system-library associations failed (or
+  created devices whose associations could not be verified); errors
+  printed as `[object Object]` because the API rejects with object
+  payloads, not `Error` instances.
+- `lib_Footprint.get` / `lib_Footprint.copy` against search-hit uuids
+  from the system library returned object-shaped errors while
+  `lib_Footprint.search` itself worked — read/write to the system
+  library is asymmetric in HALF_OFFLINE mode.
+- On re-run the extension created duplicate items (`重复数据`) because
+  nothing marked already-finished items as good.
+
+## Root cause
+
+The system library is readable by *search* only in this build:
+`search` returns hits with `uuid`/`libraryUuid`, but `get`/`copy` —
+and by extension any device/board association that needs to resolve
+those items — is unreliable. The draw-in-editor footprint path added
+in Fix 1 already produces KiCad-exact copper for the 5 custom keys and
+survives close/reopen; extending it to all 26 keys removes the
+system-library dependency entirely. A side benefit: with no system
+footprint there is no foreign pad numbering, so K1's coil-pad swap
+(`{1→2, 2→1}` padmap for `hf3ff`) is no longer needed — drawn
+footprints use the KiCad pad numbers verbatim.
+
+## What changed (v1.4.0)
+
+- **All 26 footprint keys are drawn.** `USE_SYS_FOOTPRINTS = false`
+  (const at the top of `run.ts`) bypasses `SYS_FP_MATCH` entirely; the
+  table stays in `syslib-match.ts` behind the flag for reference. Every
+  `fpRef` is now `{ kind: 'drawn', uuid, libUuid, rot: 0 }` with
+  **identity pad numbering** — `padmap` is gone from the default path,
+  so `symbolPinList` and `mappedPart`/`mappedBoard` use KiCad numbers
+  everywhere, including K1.
+- **Real error text.** `errText()` unwraps `message`/`msg`/`error`/
+  `errMsg`/`reason`/`code`, JSON-serializes plain objects, and
+  enumerates own properties as a last resort — no more
+  `[object Object]` in logs or dialogs.
+- **Device create → verify → tag.** `createDevice()` tries the outer
+  `libraryUuid` candidates in order — cached winner, search-hit
+  `libraryUuid`, personal uuid, the literal string `"SOMA"`, then
+  `undefined` — against two association shapes (`{symbol:{uuid,
+  libraryUuid},footprint:{…}}` and flat `symbolUuid`/`footprintUuid`),
+  logging every failure verbatim. `deviceCreateVerified()` then reads
+  the device back with `lib_Device.get` and only tags it
+  `soma:v1.4-dev` when **both** `association.symbol.uuid` and
+  `association.footprint.uuid` match what was asked for. Schematic and
+  PCB placement use the library uuid that actually worked
+  (`devices: ref → {uuid, lib}`), not a guess.
+- **Resumable/idempotent.** Verified items carry description tags —
+  footprints `soma:v1.4-drawn` (v1.2/v1.3 drawn tags still trusted),
+  symbols `soma:v1.4-drawn` (v1.3 tag trusted; the v1.2 source tag is
+  *not*, those symbols may be empty), devices `soma:v1.4-dev`. On
+  re-run, tagged items are reused by name search and skipped; devices
+  whose stored associations no longer match are deleted and recreated.
+- **Progress.** The library loop now titles the bar `part N/55:
+  <ref>`; the schematic loop shows `comp N/55`.
+- **Verified LCSC numbers stay as BOM attributes.** `supplierId` on the
+  created device carries `C93716` (K1), `C2457` (D5), `C118536`
+  (Q1/Q3), `C2564` (Q2) — attributes only, no system-device lookup on
+  the build path.
+- **Diagnostics rewritten end-to-end.** It now draws a
+  `SOMA-DIAG-KEEP-*` footprint and symbol in the SOMA library, creates
+  a device binding the two across every candidate `libraryUuid` ×
+  association shape (each result printed), reads the device back and
+  prints both association uuids, then runs the real downstream path:
+  create a kept `SOMA-DIAG-KEEP-*` project, open a schematic page,
+  place the device with `sch_PrimitiveComponent.create`, save, create
+  + open the PCB, `importChanges`, enumerate components and count pads
+  per component via `getAllPinsByPrimitiveId`, draw one track, save —
+  every step prints the raw result or the full error text. The slim
+  system-library probes are kept read-only (search + get) purely as
+  evidence.
+- Tests: **26 checks pass** — the mock-eda smoke test now asserts the
+  all-drawn pipeline (0 system searches, 26 footprint draws, 55
+  device create+get+tag, personal-library uuid on every sch/pcb
+  component, K1 associating its own drawn footprint, `part 1/55` and
+  `part 55/55` progress titles).
+
+## What to do in EasyEDA (exact steps)
+
+1. **Import** `~/Downloads/soma-carrier-v13-builder_v1.4.0.eext`
+   (same extension uuid, replaces v1.3.0).
+2. **SOMA v1.3 → Diagnostics (keeps test items)** — watch for:
+   - `fp create`/`sym create` uuids, `REOPENED -> …` pin/pad counts
+     persisting after close/reopen;
+   - the device-create matrix: `lib_Device.create[lib=<…>,assoc=<ref|
+     flat>] -> uuid=…` — **at least one row must print a uuid**;
+   - `device read` printing `sym=<symUuid> fp=<fpUuid>` matching the
+     created items;
+   - downstream: `sch place -> …`, `importChanges -> …`,
+     `pcb component … pads=N` with **N > 0**, `track -> …`, `pcb save`.
+   The `SOMA-DIAG-KEEP-*` items/project stay in the SOMA library and
+   project list afterwards — open them to eyeball the results.
+3. **Only if diagnostics pass**, run **SOMA v1.3 → Build SOMA Carrier
+   v1.3…**. Expect `26/26 footprints ok` (all drawn), `46 symbols ok`,
+   `55 devices` — and the progress bar to show `part N/55`. The run is
+   resumable: if it is interrupted, re-running skips items already
+   tagged `soma:v1.4-drawn`/`soma:v1.4-dev`.
+4. Verify the board: 55 components placed **with pads** (K1's relay
+   footprint is drawn from the KiCad file — coil pads keep KiCad
+   numbering 1/2/3/5), mounting holes, tracks, vias, both pours, then
+   DRC. Check the `[SOMA]` log lines for any `device:`/`fp:`/`sym:`
+   failures — they now print the full API error text.
+5. If a part fails mid-run, the log says which `part N/55` it was;
+   delete nothing, fix nothing by hand — just re-run the extension and
+   it resumes.
+
+## Still open / honest caveats
+
+- **Headless ≠ GUI.** The 26 checks run against a mock that returns
+  well-formed results. The real questions Diagnostics answers in-GUI:
+  which `libraryUuid` candidate `lib_Device.create` accepts, whether
+  the created device survives `lib_Device.get` with both associations
+  intact, and whether `importChanges` lands components with pads.
+- **`"SOMA"` as a `libraryUuid`.** In HALF_OFFLINE the personal library
+  may expose its name rather than a uuid; the candidate matrix covers
+  it, and whichever candidate wins is reused for placement.
+- **Devices whose `get` never echoes associations.** If the device
+  creates OK but `lib_Device.get` returns an item without matching
+  `association.symbol.uuid`/`footprint.uuid`, the build treats it as
+  untrusted and will not tag it — the summary's `devices` count drops
+  and the schematic step is skipped rather than building on a lie.
+- The sys-footprint code path still exists behind `USE_SYS_FOOTPRINTS`;
+  flipping it back on restores the v1.3 behaviour (sys keys resolved
+  via search hits, K1 padmap applied) — useful only if a future
+  EasyEDA version fixes system-library reads.

@@ -1,0 +1,17 @@
+section,qty,item,unit_usd,line_usd,status,source_and_date
+Actuators (J2 shoulder + J3 elbow),2,Tarot TL2955 4008 330KV motor,45.99,91.98,sourced,Foxtech via cad/act2/BOM.md study read 2026-10-28
+Actuators (J2 shoulder + J3 elbow),2,ST B-G431B-ESC1 motor controller,39.26,78.52,sourced,ST eStore via cad/act2/BOM.md study read 2026-10-28
+Actuators (J2 shoulder + J3 elbow),2,"Rest of each module (AS5600+magnet, 6808/6702/685 bearings, ~50 dowels, filament)",19.75,39.50,estimate [U],module total ~105 minus motor and ESC per cad/act2/BOM.md
+J1 base yaw,1,Feetech STS3250 servo + horn,,,UNPRICED,no price checked yet
+J1 base yaw,1,AXK5578 thrust bearing + 2 washers + 6707 bearing,,,UNPRICED,
+Wrist J4-J6 + gripper,4,Feetech STS3215 12V servo + metal horn,19.90-21.99,79.60-87.96,STALE [U],docs/BOM.md Oct 2025 listings (DFRobot 19.90 / Waveshare 21.99); recheck
+Wrist J4-J6 + gripper,1,Spur gear m1 16T (reBot GEAR-1M16C),,,UNPRICED,
+Wrist J4-J6 + gripper,2,Gear rack m1 6x12 cut to 36 mm,,,UNPRICED,
+Wrist J4-J6 + gripper,3,STS3215 3-pin cables 200-300 mm,,,UNPRICED,
+Bearings: J2/J3 back,2,6803ZZ 17x26x5,,,UNPRICED,
+Fasteners,1,"M3 screws/inserts per cad/arm2, arm2b, act2 BOMs (about 80 pcs) + Loctite 243",,,UNPRICED,
+Printed arm parts,1,"Filament PETG / PA-CF for links, base, flanges (weight not measured)",,,UNPRICED,
+Electronics,1,"Carrier PCB v1.3 fab (JLCPCB) + parts incl. relay, P-FET, ESP32-S3, TJA1051T/3",,,UNPRICED,pcb13/bom.csv lists only the v1.3 changes
+Electronics,1,12 V supply (current rating TBD from stall tests),,,UNPRICED,
+Electronics,1,E-stop NC button + wiring,,,UNPRICED,
+SUBTOTAL priced so far,,"sourced (170.50) + estimate (39.50) + stale servos (79.60-87.96)",,289.60-297.96,PARTIAL,everything UNPRICED above is extra

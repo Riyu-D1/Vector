@@ -1,0 +1,1 @@
+Read ~/Vector/ARM_KNUCKLE_V5.md then do /Users/deepakdiwan/Vector/stages/S1_base_J1.md exactly; stop when the gate passes and the commit is pushed.

@@ -1,0 +1,13 @@
+# Stage F1 — free stress simulation (FEA) of the SOMA shoulder link, with a 3D colour-gradient viewer. Work on a COPY.
+> Rules 0.1–0.10 of `~/Vector/ARM_KNUCKLE_V5.md` apply, with these overrides:
+> (a) Work ONLY in a new worktree `~/Vector-wt/fea`, branch `arm-fea` (new, from the commit tagged `sim-1-done`: `cd ~/Vector && git worktree add -b arm-fea ~/Vector-wt/fea sim-1-done`), in a NEW folder `fea/`. Never edit any existing file in cad/, sim/, pcb/, pcb12/, pcb13/. Read geometry only. Before committing, `git status --short` must show only `??`/`A ` lines under `fea/`.
+> (b) The user will NOT use Fusion (credits). Use only free tools. FreeCAD is at `/Applications/FreeCAD.app` (use its bundled `freecadcmd` and Python). Look for CalculiX `ccx` inside the app bundle first; only if it is missing try `brew install calculix-ccx` once. If neither works within about 20 minutes, fall back to a pure-Python FEM (scikit-fem or similar, in a venv under `fea/.venv`) and say so in the status.
+> (c) Max 2 hours total; if blocked write the status and stop, do not loop. Status file `fea/STATUS-fea.md`.
+
+## Steps
+1. Identify the J2 shoulder link(s): read `~/Vector-wt/sim/STATUS-sim.md` (body-to-STL assignment, joint positions) and the `cad/` generator. Prefer a STEP file of the link; if only STL exists, build a solid mesh from it (FreeCAD or gmsh) and note it. Copy the geometry into `fea/input/` (copy, do not move).
+2. Static stress analysis. Material PETG-CF: E = 4.0 GPa, nu = 0.35; working limit 25 MPa cross-layer [assumptions, flag as unverified in the status]. Fix the face that bolts to the J2 actuator output flange. Load case A: 3.5 N·m torque at the J2 axis (rated) plus the weight of a 0.5 kg payload at the gripper tip, using the real reach from the sim model, plus gravity. Load case B: the same at 2x (shock).
+3. Run the solver. Report literal numbers: max von Mises stress, max displacement, safety factor against 25 MPa for A and B. Run a coarse and a fine mesh and report both max stresses.
+4. 3D viewer with a colour gradient like Fusion: `fea/view_stress.py` opens an interactive rotatable window (FreeCAD GUI FEM result with von Mises colour map, or PyVista/ParaView from a `.vtu`) and the exact run command goes in the status. Also PNG renders `fea/stress_caseA.png` and `fea/stress_caseB.png` with a colour bar in MPa and displacement exaggerated ×20. Test that the viewer opens (launch it, `screencapture`, then kill it).
+5. Add a ranked top-3 list of the highest-stress regions with a suggestion each (fillet radius, wall thickness, thicker section). Do NOT modify the CAD.
+6. `git add fea && git commit -m "F1: FEA of shoulder link (copy)" && git tag fea-1-done && git push -u origin arm-fea --tags`. STOP.

@@ -1,0 +1,15 @@
+# Stage D8 — Generative-design (topology optimisation) pass on the long links, to see how they could look and how much mass they save (exploratory)
+> Rules 0.1-0.10 of `~/Vector/ARM_KNUCKLE_V5.md` apply. Never edit existing branches. Create worktree `~/Vector-wt/genlinks` on new branch `arm-genlinks` from `main` (= arm-final2 79394a1). Work only in `genlinks/`. Tag `gen-1-done`, push branch+tags, STOP. Do not merge to main. Another Devin runs in parallel on `arm-cradlefix`: do not touch the wrist parts (w_*), cradle, or its files.
+
+## Goal
+Exploratory (user: "just to see how it would look, not 100%"): run a free topology/generative pass on the LONG printed links only, and show organic lightweight versions + the mass saved. Candidates (from `final/PRINT_LIST.md`): upper_out, upper_back (upper arm, 187.5 mm), dogleg_l/r, fore_l2/fore_r2 (171.6 mm forearm plates), link1. Pick the 2-3 where it pays most.
+
+## Constraints
+PETG-CF (cross-layer 25 MPa [U], along-layer 50 MPa [U]), Bambu A1, printable with no/minimal supports (overhang <=45 deg), print orientation chosen so main bending stress runs along layers. Keep ALL interfaces exactly: bolt holes, bearing/actuator seats, horn faces, joint axes (keep-out regions). Realistic static loads only (slow light-duty arm, 0.5 kg max payload close in, 0.41 kg at full reach; use `software/robot-os/soma_arm/gravity.py` for joint/link loads and the worst pose Q_WORST), SF >= 2 on the real static worst case, no stacked dynamic factors. Free tools only (FreeCAD FEM + CalculiX at /Applications/FreeCAD.app/Contents/Resources/bin/, gmsh, pyvista in an existing venv, or a simple python SIMP topology optimiser / sparse-solver; install nothing paid). Lessons: rigid glue gives optimistic stress; use real bolt-load patches as distributed loads; B32 not B31; check C3D10 inversions; don't let solves crawl - cap solve time and say so.
+
+## Tasks
+1. Build the load cases per chosen link (reaction forces/moments from the worst poses), keep-out zones, design domain from the current STL/STEP.
+2. Run the optimisation (volume fraction ~0.3-0.5), smooth + convert to a printable solid (STL/STEP), re-mesh and run a verification FEM on the result at the real load with real stress numbers and an interactive 3D result (pyvista -> HTML, Fusion-style colour gradient) saved in `genlinks/fea/`.
+3. Report per link: mass before/after (g, solid-equivalent and at the print infill), max stress vs allowable, deflection at the tip, printability (overhang scan/orientation), interface check (holes unchanged), and whether it passes SF >= 2. Be honest if a result is not trustworthy.
+4. Renders: before/after side by side for each link, plus full-arm iso with the new links swapped in (use `final/export_assembly.py` pattern, on a copy). Check no collisions vs the existing parts over the joint sweeps (posed-mesh method from `final2/f2_collision.py`, J2/J3/J1 sweeps at <=5 deg) and note any.
+5. `genlinks/STATUS-genlinks.md` (honest, with failures, [U] list, total mass saved and whether it is worth adopting), commit, tag, push. STOP.

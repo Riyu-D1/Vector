@@ -1,0 +1,17 @@
+# Stage P6 — PCB v1.5: fix the findings from CHECK-pcb14 (ESP32 socket mirror first)
+> Rules 0.1-0.10 of `~/Vector/ARM_KNUCKLE_V5.md` and `~/Vector/ROUTING_GUIDE.md` apply. Never edit existing files/branches. Step 0: `cd ~/Vector && /usr/bin/git fetch origin --tags`; create worktree `~/Vector-wt/pcb15` on new branch `pcb-v15` from `origin/pcb-v14-check` (contains pcb14/ and pcb14/check/CHECK-pcb14.md + proposed_fixes.md). Copy `pcb14/` (excluding `check/`) to `pcb15/`, rename files `soma-carrier-v15*`. Work only in `pcb15/`. Leave pcb14/ untouched. Tag `pcb15-done`, push branch+tags, STOP. Do not merge to main.
+
+## Step 1 — verify F1 independently FIRST (do not trust the report)
+Fetch the official Espressif ESP32-S3-DevKitC-1 pinout/schematic (docs.espressif.com, cite URL, quote J1/J3 pin order). Work out, from the board file's actual socket footprint (pad 1 position, pad order along the row) and the silk "USB->W / TOP=J1 BOT=J3", which module pin each socket pad N really meets. State the result with the coordinates you used. If F1 is wrong, say so and do not apply it; if right, apply it.
+
+## Step 2 — apply fixes (proposed_fixes.md)
+- F1: correct the pad->net map (generator `gen_pcb.py` pad map and the routes). Keep all firmware GPIO assignments (README) identical; only copper moves. Do not use GPIO0/3/45/46 or USB 19/20 or UART0 43/44 for signals.
+- F2: NeoPixel DIN: add a 74AHCT125 (SOIC/DIP, choose DIP-14 socketed if the board is THT; check the BOM stays JLCPCB/hand-solder friendly) powered from +5V with 0.1 uF decoupling, plus 330 ohm series resistor on DIN and a footprint for a 470-1000 uF cap at the strip supply (or a header-adjacent pad). Update bom.csv.
+- F3: widen +12V_IN/+12V/+12V_MOT/+12V_SW/+12V_RP to >= 4.5 mm where geometry allows (else flood/zone on the spare layer), parallel vias (>= 4) at every high-current layer change, or avoid layer changes; keep the 10 A fuse; note relay contact rating 10 A in README.
+- F4: add the optional divider/clamp footprint on BUSA_DATA at the ESP32 end (populate only if bench shows > 3.6 V), keep R1.
+- F5/F6: README fuse text to 10 A; re-pin J13 to GND,3V3,SW(ENC_SW),DT(ENC_B),CLK(ENC_A) so a KY-040 plugs straight in, update silk to match.
+- Cosmetic: fix the 16 silk overlaps and raise silk text to >= 1.0 mm; label "use one 5 V source only" near J2/J3; add flyback diode footprint for BZ1; IRF4905 tab/drain marker; silk title v1.5.
+Keep the hand-routed look (0/45 deg only, double 45 deg corners, parallel bundles, few vias, no autorouter, no stubs).
+
+## Step 3 — prove it
+Re-run everything from CHECK-pcb14: KiCad DRC all severities, `verify_nets.py`, `audit_pins.py`, `check_pads.py` (update names to v15), plus an independent check that each ESP32 socket pad N carries the net for the true module pin (print the table, compare to Espressif). Required: 0 shorts, 0 clearance, 0 unconnected (GND pours filled, stitched), 3V3 and 5V pins not on GND. Show before/after via count and the count of FAIL rows re-checked PASS. Render top/bottom and LOOK at them (check silk title says v1.5). Re-export Gerbers/drill/bom.csv and `soma-carrier-v15-jlcpcb.zip`. Write `pcb15/STATUS-pcb15.md` (honest, failures, [U] list: relay pins, 2N2222A E-B-C part, Mini-360 pad order, cap ratings >= 25 V on 12 V rail, TVS type) and update the board-size/case notes only if the outline changed (it should not). Safety notes: 12 V, 10 A fuse, relay switching motor power, battery handling, no mains. Commit, tag, push. STOP.
